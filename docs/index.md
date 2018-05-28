@@ -83,7 +83,7 @@ Noor is an experimental CUDA/GPU Monte-Carlo pathtracer.  It started (Noor 1.0) 
 * All the rest of the assets are created by me using Autodesk Maya
 
 #### ScreenShots:
-[![metals](screenshots/50percent/metals.jpg){:height="128px" width="512px"}](screenshots/100percent/metal.jpg)
+[![metals](screenshots/50percent/metals.jpg "testing"){:height="128px" width="512px"}](screenshots/100percent/metal.jpg)
 [![smooth plastic](screenshots/50percent/screenshot-23-05-2018-10-05-35.jpg)](screenshots/100percent/screenshot-23-05-2018-10-05-35.jpg)
 [![rough plastic](screenshots/50percent/screenshot-23-05-2018-10-08-01.jpg)](screenshots/100percent/screenshot-23-05-2018-10-08-01.jpg)
 [![smooth gold](screenshots/50percent/screenshot-22-05-2018-13-28-56.jpg)](screenshots/100percent/screenshot-22-05-2018-13-28-56.jpg)
