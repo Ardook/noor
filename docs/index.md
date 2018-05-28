@@ -1,5 +1,5 @@
 #### Noor
-Noor is an experimental CUDA/GPU Monte-Carlo pathtracer.  It started (Noor 1.0) as part of a final class project (real-time Whitted raytracer) in 2009 and was recently resurrected as a pathtracer to assist me (I am dyslexic) in learning and reinforcing the ideas and the topics covered in the PBRT book.  Noor is not yet ready to be  released but I've made the source code available to the public.  I'll keep breaking, fixing, and rewriting it on a daily basis.  So please keep that in mind if you decide to download the [source code.](https://github.com/Ardook/noor)
+Noor is an experimental CUDA/GPU Monte-Carlo pathtracer.  It started (Noor 1.0) as part of a final class project (real-time Whitted raytracer) in 2009 and was recently resurrected as a pathtracer to assist me (I am dyslexic) in learning and reinforcing the ideas and the topics covered in the PBRT book.  Noor is not yet ready to be  released but I've made the source code public for the curious minds.  I'll keep breaking, fixing, and rewriting it on a daily basis.  So please keep that in mind if you decide to download the [source code.](https://github.com/Ardook/noor)
  
 #### Development environment:
 * Windows 10 64 bit 
@@ -84,6 +84,7 @@ Noor is an experimental CUDA/GPU Monte-Carlo pathtracer.  It started (Noor 1.0) 
 
 #### ScreenShots:
 [![metals](screenshots/50percent/metals.jpg){:height="128px" width="512px"}](screenshots/100percent/metal.jpg)
+* rough metals *
 [![smooth plastic](screenshots/50percent/screenshot-23-05-2018-10-05-35.jpg)](screenshots/100percent/screenshot-23-05-2018-10-05-35.jpg)
 [![rough plastic](screenshots/50percent/screenshot-23-05-2018-10-08-01.jpg)](screenshots/100percent/screenshot-23-05-2018-10-08-01.jpg)
 [![smooth gold](screenshots/50percent/screenshot-22-05-2018-13-28-56.jpg)](screenshots/100percent/screenshot-22-05-2018-13-28-56.jpg)
