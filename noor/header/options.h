@@ -173,14 +173,13 @@ Example Options:\n \
 const std::string keyboard_shortcuts = "\
 Keyboard shortcuts:\n \
  esc\t(exit)\n \
- 5	(switch between debug and path tracer)\n \
- 7	(switch distant lighting in path tracer mode)\n \
- 1	(render BVH in debug view)\n \
- 2	(render normals in debug view)\n \
- 3	(render geometry in debug view)\n \
- 4	(render wireframe in debug view)\n \
- [	(increase length of normals in debug view)\n \
- ]	(decrease length of normals in debug view)\n \
+ 1	(draw fps)\n \
+ 2	(enable/disable env light)\n \
+ 3	(enable/disable env debug view)\n \
+ 4	(enable/disable env debug view importance sample)\n \
+ 5	(switch to persp cam)\n \
+ 6	(switch to ortho cam)\n \
+ 7	(switch to env cam)\n \
 \nMouse Control:\n \
  -Left mouse button orbit/rotate. \n \
  -Right mouse button zoom in/out. \n \
