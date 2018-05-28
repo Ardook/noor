@@ -1,0 +1,8 @@
+# Build settings
+repository: ardook/ardook.github.io
+markdown: kramdown
+theme: jekyll-theme-slate
+encoding: UTF-8
+google_analytics: UA-119895630-1
+plugins:
+  - jekyll-feed

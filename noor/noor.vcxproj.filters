@@ -1,0 +1,324 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClInclude Include="cuda\bbox.cuh">
+      <Filter>cuda</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\bvh.cuh">
+      <Filter>cuda</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\intersection.cuh">
+      <Filter>cuda</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\path_tracer.cuh">
+      <Filter>cuda</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\path_tracer_data.cuh">
+      <Filter>cuda</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\ray.cuh">
+      <Filter>cuda</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\rng.cuh">
+      <Filter>cuda</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\spec.cuh">
+      <Filter>cuda</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\triangle.cuh">
+      <Filter>cuda</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\stack.cuh">
+      <Filter>cuda</Filter>
+    </ClInclude>
+    <ClInclude Include="header\bbox.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="header\glRenderer.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="header\model.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="header\options.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="header\pch.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="header\scene.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="header\spec.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="header\splitter.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="header\targetver.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="header\texture.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="header\timer.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="header\triangle.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\onb.cuh">
+      <Filter>cuda</Filter>
+    </ClInclude>
+    <ClInclude Include="header\glShaders.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="external\stb_image.h">
+      <Filter>external</Filter>
+    </ClInclude>
+    <ClInclude Include="external\tinyexr.h">
+      <Filter>external</Filter>
+    </ClInclude>
+    <ClInclude Include="header\stat.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="header\fbxLoader.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="header\assetLoader.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="header\objLoader.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="header\bvh.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="header\camera.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\camera.cuh">
+      <Filter>cuda</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\distribution2d.cuh">
+      <Filter>cuda</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\utils.cuh">
+      <Filter>cuda</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\light.cuh">
+      <Filter>cuda</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\framebuffer.cuh">
+      <Filter>cuda</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\texture.cuh">
+      <Filter>cuda</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\mesh.cuh">
+      <Filter>cuda</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\distribution1d.cuh">
+      <Filter>cuda</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\skydome.cuh">
+      <Filter>cuda</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\lookat.cuh">
+      <Filter>cuda</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\render.cuh">
+      <Filter>cuda</Filter>
+    </ClInclude>
+    <ClInclude Include="header\payload.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\fresnel.cuh">
+      <Filter>cuda</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\bsdf.cuh">
+      <Filter>cuda</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\distribution.cuh">
+      <Filter>cuda</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\material.cuh">
+      <Filter>cuda</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\math.cuh">
+      <Filter>cuda</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\bxdf.cuh">
+      <Filter>cuda</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\image.cuh">
+      <Filter>cuda</Filter>
+    </ClInclude>
+    <ClInclude Include="external\ArHosekSkyModel.h">
+      <Filter>external</Filter>
+    </ClInclude>
+    <ClInclude Include="external\ArHosekSkyModelData_CIEXYZ.h">
+      <Filter>external</Filter>
+    </ClInclude>
+    <ClInclude Include="external\ArHosekSkyModelData_RGB.h">
+      <Filter>external</Filter>
+    </ClInclude>
+    <ClInclude Include="external\ArHosekSkyModelData_Spectral.h">
+      <Filter>external</Filter>
+    </ClInclude>
+    <ClInclude Include="header\hosek.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\hosek.cuh">
+      <Filter>cuda</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\direct.cuh">
+      <Filter>cuda</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\scatter.cuh">
+      <Filter>cuda</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\shape.cuh">
+      <Filter>cuda</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\transform.cuh">
+      <Filter>cuda</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\shapeimp.cuh">
+      <Filter>cuda</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\lightimp.cuh">
+      <Filter>cuda</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\transformimp.cuh">
+      <Filter>cuda</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\materialimp.cuh">
+      <Filter>cuda</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\geometry.cuh">
+      <Filter>cuda</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\accumulate.cuh">
+      <Filter>cuda</Filter>
+    </ClInclude>
+    <ClInclude Include="external\stb_image_write.h">
+      <Filter>external</Filter>
+    </ClInclude>
+    <ClInclude Include="external\stb_image_resize.h">
+      <Filter>external</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="source\glRenderer.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="source\model.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="source\main.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="source\scene.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="source\splitter.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="source\texture.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="source\pch.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="source\fbxLoader.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="source\objLoader.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="source\bvh.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="external\ArHosekSkyModel.cpp">
+      <Filter>external</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="shader\cuda.fs">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="shader\cuda.vs">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="shader\geomvis.fs">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="shader\geomvis.vs">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="shader\normvis.fs">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="shader\normvis.gs">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="shader\normvis.vs">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="shader\bvhvis.fs">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="shader\bvhvis.vs">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="scene\MEL\uber.mel">
+      <Filter>scene\MEL</Filter>
+    </None>
+    <None Include="..\docs\index.md">
+      <Filter>pages</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="shader">
+      <UniqueIdentifier>{b8e6ae95-b32c-4d8c-a4e9-f68d675f1497}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source">
+      <UniqueIdentifier>{cebcbbd4-0636-4c87-b328-128923487eff}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="cuda">
+      <UniqueIdentifier>{4aa53bd5-1c70-4d14-be4c-74b57f161904}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="header">
+      <UniqueIdentifier>{f217977b-dc44-4813-8301-cf2c189cbe0e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="external">
+      <UniqueIdentifier>{998921a8-a6f0-49cc-b934-327bf5e86d41}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="scene">
+      <UniqueIdentifier>{1998ad50-20cc-44c5-af2d-196901d07457}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="scene\MEL">
+      <UniqueIdentifier>{f406f2a8-8a09-4a7a-bed3-4420a0886604}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="pages">
+      <UniqueIdentifier>{cf3f32d6-97f7-4fc7-ba87-41db23975507}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="cuda\path_tracer.cu">
+      <Filter>cuda</Filter>
+    </CudaCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="scene\MEL\copper.mel">
+      <Filter>scene\MEL</Filter>
+    </Text>
+    <Text Include="scene\MEL\gold.mel">
+      <Filter>scene\MEL</Filter>
+    </Text>
+    <Text Include="scene\MEL\light.mel">
+      <Filter>scene\MEL</Filter>
+    </Text>
+  </ItemGroup>
+</Project>

@@ -1,0 +1,343 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="cuda\accumulate.cuh" />
+    <ClInclude Include="cuda\bbox.cuh" />
+    <ClInclude Include="cuda\bvh.cuh" />
+    <ClInclude Include="cuda\bxdf.cuh" />
+    <ClInclude Include="cuda\camera.cuh" />
+    <ClInclude Include="cuda\direct.cuh" />
+    <ClInclude Include="cuda\distribution.cuh" />
+    <ClInclude Include="cuda\distribution1d.cuh" />
+    <ClInclude Include="cuda\distribution2d.cuh" />
+    <ClInclude Include="cuda\framebuffer.cuh" />
+    <ClInclude Include="cuda\fresnel.cuh" />
+    <ClInclude Include="cuda\geometry.cuh" />
+    <ClInclude Include="cuda\hosek.cuh" />
+    <ClInclude Include="cuda\image.cuh" />
+    <ClInclude Include="cuda\intersection.cuh" />
+    <ClInclude Include="cuda\light.cuh" />
+    <ClInclude Include="cuda\lightimp.cuh" />
+    <ClInclude Include="cuda\lookat.cuh" />
+    <ClInclude Include="cuda\materialimp.cuh" />
+    <ClInclude Include="cuda\material.cuh" />
+    <ClInclude Include="cuda\math.cuh" />
+    <ClInclude Include="cuda\mesh.cuh" />
+    <ClInclude Include="cuda\bsdf.cuh" />
+    <ClInclude Include="cuda\render.cuh" />
+    <ClInclude Include="cuda\scatter.cuh" />
+    <ClInclude Include="cuda\shape.cuh" />
+    <ClInclude Include="cuda\shapeimp.cuh" />
+    <ClInclude Include="cuda\skydome.cuh" />
+    <ClInclude Include="cuda\texture.cuh" />
+    <ClInclude Include="cuda\onb.cuh" />
+    <ClInclude Include="cuda\path_tracer.cuh" />
+    <ClInclude Include="cuda\path_tracer_data.cuh" />
+    <ClInclude Include="cuda\ray.cuh" />
+    <ClInclude Include="cuda\rng.cuh" />
+    <ClInclude Include="cuda\spec.cuh" />
+    <ClInclude Include="cuda\stack.cuh" />
+    <ClInclude Include="cuda\transform.cuh" />
+    <ClInclude Include="cuda\transformimp.cuh" />
+    <ClInclude Include="cuda\triangle.cuh" />
+    <ClInclude Include="cuda\utils.cuh" />
+    <ClInclude Include="external\ArHosekSkyModel.h" />
+    <ClInclude Include="external\ArHosekSkyModelData_CIEXYZ.h" />
+    <ClInclude Include="external\ArHosekSkyModelData_RGB.h" />
+    <ClInclude Include="external\ArHosekSkyModelData_Spectral.h" />
+    <ClInclude Include="external\stb_image.h" />
+    <ClInclude Include="external\stb_image_resize.h" />
+    <ClInclude Include="external\stb_image_write.h" />
+    <ClInclude Include="external\tinyexr.h" />
+    <ClInclude Include="header\assetLoader.h" />
+    <ClInclude Include="header\bbox.h" />
+    <ClInclude Include="header\bvh.h" />
+    <ClInclude Include="header\camera.h" />
+    <ClInclude Include="header\hosek.h" />
+    <ClInclude Include="header\payload.h" />
+    <ClInclude Include="header\fbxLoader.h" />
+    <ClInclude Include="header\glRenderer.h" />
+    <ClInclude Include="header\glShaders.h" />
+    <ClInclude Include="header\model.h" />
+    <ClInclude Include="header\objLoader.h" />
+    <ClInclude Include="header\options.h" />
+    <ClInclude Include="header\pch.h" />
+    <ClInclude Include="header\scene.h" />
+    <ClInclude Include="header\spec.h" />
+    <ClInclude Include="header\splitter.h" />
+    <ClInclude Include="header\stat.h" />
+    <ClInclude Include="header\targetver.h" />
+    <ClInclude Include="header\texture.h" />
+    <ClInclude Include="header\timer.h" />
+    <ClInclude Include="header\triangle.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="cuda\path_tracer.cu">
+      <AdditionalDeps Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </AdditionalDeps>
+    </CudaCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="external\ArHosekSkyModel.cpp" />
+    <ClCompile Include="source\bvh.cpp" />
+    <ClCompile Include="source\fbxLoader.cpp" />
+    <ClCompile Include="source\glRenderer.cpp" />
+    <ClCompile Include="source\main.cpp" />
+    <ClCompile Include="source\model.cpp" />
+    <ClCompile Include="source\objLoader.cpp" />
+    <ClCompile Include="source\pch.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">pch.h</PrecompiledHeaderFile>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="source\scene.cpp" />
+    <ClCompile Include="source\splitter.cpp" />
+    <ClCompile Include="source\texture.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\docs\index.md" />
+    <None Include="scene\MEL\uber.mel" />
+    <None Include="shader\bvhvis.fs" />
+    <None Include="shader\bvhvis.vs" />
+    <None Include="shader\cuda.fs" />
+    <None Include="shader\cuda.vs" />
+    <None Include="shader\geomvis.fs" />
+    <None Include="shader\geomvis.vs" />
+    <None Include="shader\normvis.fs" />
+    <None Include="shader\normvis.gs" />
+    <None Include="shader\normvis.vs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="scene\MEL\copper.mel" />
+    <Text Include="scene\MEL\gold.mel" />
+    <Text Include="scene\MEL\light.mel" />
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{6691DF4F-34BE-46C5-B8E1-6DCB858CEEC4}</ProjectGuid>
+    <RootNamespace>noor</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v140</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v140</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v140</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v140</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 9.1.props" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(SolutionDir)$(ProjectName)\PropertySheet.props" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(SolutionDir)$(ProjectName)\PropertySheet.props" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(SolutionDir)$(ProjectName)\PropertySheet.props" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(SolutionDir)$(ProjectName)\PropertySheet.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <RunCodeAnalysis>false</RunCodeAnalysis>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Console</SubSystem>
+      <AdditionalDependencies>cudart.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <PostBuildEvent>
+      <Command>echo copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"
+copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;WIN64;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>c:\dev\thirdparty\glfw\include;c:\dev\thirdparty\glew\include;c:\dev\thirdparty\glm;c:\dev\thirdparty\glm_obj\include;c:\dev\thirdparty\fbx\include;$(CudaToolkitIncludeDir);$(CudaSamplesInclude);%(AdditionalIncludeDirectories);$(SolutionDir)$(ProjectName)\header;$(SolutionDir)$(ProjectName)\cuda;$(SolutionDir)$(ProjectName)\external</AdditionalIncludeDirectories>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <MultiProcessorCompilation>false</MultiProcessorCompilation>
+      <ShowIncludes>false</ShowIncludes>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Console</SubSystem>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;glm_obj.lib;opengl32.lib;glew32.lib;cudart.lib;glfw3.lib;libfbxsdk-md.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\dev\thirdparty\glew\lib\$(configuration);C:\dev\thirdparty\glfw\lib\$(configuration);C:\dev\thirdparty\glm_obj\lib\$(configuration);C:\dev\thirdparty\fbx\lib\$(configuration);%(AdditionalLibraryDirectories);$(CudaToolkitLibDir)</AdditionalLibraryDirectories>
+    </Link>
+    <PostBuildEvent>
+      <Command>echo copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"
+copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"
+if not exist "$(OutDir)\shader" mkdir "$(OutDir)\shader"
+copy "shader\*.fs" "$(OutDir)\shader\"
+copy "shader\*.vs" "$(OutDir)\shader\"
+copy "shader\*.gs" "$(OutDir)\shader\"</Command>
+    </PostBuildEvent>
+    <CudaCompile>
+      <TargetMachinePlatform>64</TargetMachinePlatform>
+      <CodeGeneration>compute_61,sm_61</CodeGeneration>
+      <FastMath>false</FastMath>
+      <AdditionalOptions>-Wno-deprecated-gpu-targets %(AdditionalOptions)</AdditionalOptions>
+      <Include>$(CudaSamplesInclude)</Include>
+      <GenerateRelocatableDeviceCode>false</GenerateRelocatableDeviceCode>
+      <PtxAsOptionV>true</PtxAsOptionV>
+      <GPUDebugInfo>true</GPUDebugInfo>
+      <MaxRegCount>128</MaxRegCount>
+    </CudaCompile>
+    <CudaLink />
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <SubSystem>Console</SubSystem>
+      <AdditionalDependencies>cudart.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <PostBuildEvent>
+      <Command>echo copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"
+copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;WIN64;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>c:\dev\thirdparty\glfw\include;c:\dev\thirdparty\glew\include;c:\dev\thirdparty\glm;c:\dev\thirdparty\glm_obj\include;c:\dev\thirdparty\fbx\include;$(CudaToolkitIncludeDir);$(CudaSamplesInclude);%(AdditionalIncludeDirectories);$(SolutionDir)$(ProjectName)\header;$(SolutionDir)$(ProjectName)\cuda;$(SolutionDir)$(ProjectName)\external</AdditionalIncludeDirectories>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <OpenMPSupport>false</OpenMPSupport>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <SmallerTypeCheck>false</SmallerTypeCheck>
+      <ControlFlowGuard>false</ControlFlowGuard>
+      <EnablePREfast>false</EnablePREfast>
+      <ShowIncludes>false</ShowIncludes>
+      <EnableParallelCodeGeneration>true</EnableParallelCodeGeneration>
+      <WholeProgramOptimization>true</WholeProgramOptimization>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <Optimization>Full</Optimization>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
+      <MinimalRebuild>false</MinimalRebuild>
+      <StructMemberAlignment>16Bytes</StructMemberAlignment>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <SubSystem>Console</SubSystem>
+      <AdditionalDependencies>cudart.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;glm_obj.lib;opengl32.lib;glew32.lib;glfw3.lib;libfbxsdk-md.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\dev\thirdparty\glew\lib\$(configuration);C:\dev\thirdparty\glfw\lib\$(configuration);C:\dev\thirdparty\glm_obj\lib\$(configuration);C:\dev\thirdparty\fbx\lib\$(configuration);%(AdditionalLibraryDirectories);$(CudaToolkitLibDir)</AdditionalLibraryDirectories>
+    </Link>
+    <PostBuildEvent>
+      <Command>echo copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"
+copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"
+if not exist "$(OutDir)\shader" mkdir "$(OutDir)\shader"
+copy "shader\*.fs" "$(OutDir)\shader\"
+copy "shader\*.vs" "$(OutDir)\shader\"
+copy "shader\*.gs" "$(OutDir)\shader\"</Command>
+    </PostBuildEvent>
+    <CudaCompile>
+      <TargetMachinePlatform>64</TargetMachinePlatform>
+      <FastMath>true</FastMath>
+      <AdditionalOptions>-Wno-deprecated-gpu-targets %(AdditionalOptions)</AdditionalOptions>
+      <Include>$(CudaSamplesInclude)</Include>
+      <PtxAsOptionV>false</PtxAsOptionV>
+      <Runtime>InheritFromHost</Runtime>
+      <CodeGeneration>compute_61,sm_61</CodeGeneration>
+      <MaxRegCount>128</MaxRegCount>
+      <GPUDebugInfo>false</GPUDebugInfo>
+      <GenerateLineInfo>false</GenerateLineInfo>
+      <Warning>W3</Warning>
+      <UseHostDefines>true</UseHostDefines>
+      <Keep>true</Keep>
+      <AdditionalCompilerOptions>
+      </AdditionalCompilerOptions>
+      <NvccCompilation>compile</NvccCompilation>
+      <GenerateRelocatableDeviceCode>false</GenerateRelocatableDeviceCode>
+      <InterleaveSourceInPTX>false</InterleaveSourceInPTX>
+      <Optimization>O3</Optimization>
+    </CudaCompile>
+    <CudaLink>
+      <GPUDebugInfo>false</GPUDebugInfo>
+      <PerformDeviceLink>false</PerformDeviceLink>
+      <Optimization>O3</Optimization>
+    </CudaLink>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 9.1.targets" />
+  </ImportGroup>
+</Project>
