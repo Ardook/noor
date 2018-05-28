@@ -1,8 +1,8 @@
-##### Noor
-Noor is a CUDA/GPU Monte-Carlo path tracer that I've been working on for the past couple of years.  Although Noor is a powerful renderer it's still an experimental one that I wrote as a personal research tool (It is a work in progress).  I keep rewriting, redesigning, breaking, and fixing it on daily basis, so please keep that in mind if you decide to download the [source code](https://github.com/Ardook/Noor).    
-
-The PBRT book has been instrumental in the development of Noor.  The book has been my constant companion for the past two years.  Noor started as a completely independent system, as I made progress in its development I gravitated more towards the design of the PBRT system.  In fact, some components such as the BSDF/BXDF, 1D/2D distributions, and cameras are the CUDA ports of the PBRT ones and as such the credit should be given to them. 
-##### Development environment:
+#### Noor
+Noor is an experimental CUDA/GPU Monte-Carlo pathtracer.  It started (Noor 1.0) as part of a final class project (real-time Whitted raytracer) in 2009 and was recently 
+resurrected as a pathtracer to assist me (I am dyslexic) in learning and reinforcing the ideas and the topics covered in the PBRT book.  Although Noor, in its current state, is a powerful renderer, it's still an experimental one and it's a work in progress.  I keep breaking, fixing, and rewriting its code on a daily basis.  So please keep that in mind if you decide to download the [source code.](https://github.com/Ardook/noor)
+ 
+#### Development environment:
 * Windows 10 64 bit 
 * Visual Studio 2015 with Visual Assist 
 * Nvidia CUDA ToolKit 9.1 and Nsight for Visual Studio 
@@ -10,28 +10,28 @@ The PBRT book has been instrumental in the development of Noor.  The book has be
 * Autodesk Maya
 * Gimp 
 
-##### Acceleration Data Structures:
+#### Acceleration Data Structures:
 * BVH
 * SBVH (removed)
 
-##### Instancing:
+#### Instancing:
 * Multi-level BVH tree construction and traversal
 * Support for large scenes with complex instancing of geometry
 
-##### Primitives:
+#### Primitives:
 * Triangles
 * Implicit surfaces like quads, disks, spheres, and cylinders (mesh lights)
 
-##### Supported model/scene file formats:
+#### Supported model/scene file formats:
 * Alias Wavefront OBJ
 * Autodesk FBX
    * Custom materials, lights, and cameras using MEL scripts
 
-##### Supported image formats:
+#### Supported image formats:
 * JPG, jpg, TGA, BMP, PSD, GIF, HDR, PIC [(Sean Barrett)](https://github.com/nothings/stb). 
 * EXR [(Syoyo Fujita)](https://github.com/syoyo/tinyexr).
 
-##### Supported lights:
+#### Supported lights:
 * Environment lighting (HDR and physical sky)
 * Distant lights
 * Area lights
@@ -42,25 +42,26 @@ The PBRT book has been instrumental in the development of Noor.  The book has be
 * Physical sun/sky (Hosek) with importance sampling  
    * Cuda port of the Hosek & Wilkie implementation [(Hosek & Wilkie Sun & Sky Model)](http://cgg.mff.cuni.cz/projects/SkylightModelling/)
 
-##### Texture:
+#### Texture:
 * HDR and LDR
 * Mipmapping
 * Point, bi-linear, tri-linear, EWA (anisotropic) sampling
 * Realtime Cuda image resizer and mipmap generator
 
-##### Camera:
+#### Camera:
 * Perspective with depth of field
 * Orthographic
 * Environment (360 degrees)
 
-##### Work in Progress:
+#### Work in Progress:
+* Multi-GPU
 * Bidirectional path tracing
 * Volume path tracing
 * Subsurface scattering
 * Multi-threaded BVH build
 * Maya plugin
 
-##### Resources and Credits: 
+#### Resources and Credits: 
 * PBRT (super bible of ray tracing)
 * Mitsuba
 * Nvidia Optix: excellent resource on the GPU side of things
@@ -82,7 +83,7 @@ The PBRT book has been instrumental in the development of Noor.  The book has be
    * [source allegorithmic](https://source.allegorithmic.com/)
 * All the rest of the assets are created by me using Autodesk Maya
 
-##### ScreenShots:
+#### ScreenShots:
 [![metals](screenshots/50percent/metals.jpg){:height="128px" width="512px"}](screenshots/100percent/metal.jpg)
 [![smooth plastic](screenshots/50percent/screenshot-23-05-2018-10-05-35.jpg)](screenshots/100percent/screenshot-23-05-2018-10-05-35.jpg)
 [![rough plastic](screenshots/50percent/screenshot-23-05-2018-10-08-01.jpg)](screenshots/100percent/screenshot-23-05-2018-10-08-01.jpg)

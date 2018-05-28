@@ -130,15 +130,6 @@ void debug_skydome( uint& frame_number ) {
     static const dim3 block( THREAD_W, THREAD_H, 1 );
     static const dim3 grid( width / block.x, height / block.y, 1 );
     debug_skydome_kernel << < grid, block >> > ( _cuda_renderer->_framebuffer_manager->_buffer, frame_number, width, height );
-//#ifdef SHOW_MIPMAPS
-//	// we blit the current mipmap back into first level
-//	cudaMemcpy3DParms copyParams = { 0 };
-//	copyParams.dstArray = levelFirst;
-//	copyParams.srcArray = levelTo;
-//	copyParams.extent = make_cudaExtent( width, height, 1 );
-//	copyParams.kind = cudaMemcpyDeviceToDevice;
-//	checkCudaErrors( cudaMemcpy3D( &copyParams ) );
-//#endif
 }
 
 void cuda_path_tracer( unsigned int& frame_number ) {
