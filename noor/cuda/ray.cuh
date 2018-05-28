@@ -72,7 +72,6 @@ public:
         _dir_dx( dir_dx ),
         _dir_dy( dir_dy ) {
         update();
-        //scaleDifferentials( .25f );
     }
 
     __device__

@@ -134,6 +134,7 @@ void accumulate(
     }
 }
 
+/* Based on PBRT bump mapping */
 __forceinline__ __device__
 void bump( CudaIntersection& I ) {
     float du = .5f * ( fabsf( I._differential._dudx ) + fabsf( I._differential._dudy ) );
