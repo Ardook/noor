@@ -1,5 +1,5 @@
 #### Noor
-Noor is an experimental CUDA/GPU Monte-Carlo pathtracer.  It started (Noor 1.0) as part of a final class project (real-time Whitted raytracer) in 2009 and was recently resurrected as a pathtracer to assist me in learning and reinforcing the ideas and the topics covered in the PBRT book.  Noor is not yet ready to be  released but I've made the source code public for the curious minds.  I'll keep breaking, fixing, and rewriting it on a daily basis.  So please keep that in mind if you decide to download the [source code.](https://github.com/Ardook/noor)
+Noor is an experimental CUDA/GPU Monte-Carlo pathtracer.  It started (Noor 1.0) as part of a final class project (real-time Whitted raytracer) in 2009 and was recently resurrected as a pathtracer to assist me in learning and reinforcing the ideas and the topics covered in the PBRT book. 
  
 #### Development environment:
 * Windows 10 64 bit 
