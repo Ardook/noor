@@ -33,8 +33,8 @@ int main( int argc, char * argv[] ) {
     }
     try {
         loadScene( noor_spec );
-        initCudaConext();
         initGLContext();
+        initCudaConext();
         startRender();
     } catch ( const std::exception& e ) {
         printf( "%s", e.what() );

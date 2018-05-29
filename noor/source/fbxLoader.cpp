@@ -720,18 +720,6 @@ glm::vec3 FBXLoader::getMaterialSpecular( int mat_idx ) const {
     }
     return glm::vec3( 0.0f );
 }
-glm::vec3 FBXLoader::getMaterialReflection( int mat_idx ) const {
-    const FbxSurfacePhong* material = FbxCast<FbxSurfacePhong>( _fbx_scene->GetMaterial( mat_idx ) );
-    if ( material != nullptr ) {
-        const FbxDouble3 s = material->Reflection;
-        return glm::vec3(
-            static_cast<float>( s[0] )
-            , static_cast<float>( s[1] )
-            , static_cast<float>( s[2] )
-        );
-    }
-    return glm::vec3( 0.0f );
-}
 
 glm::vec3  FBXLoader::getMaterialEmittance( int mat_idx ) const {
     const FbxSurfaceLambert* material = FbxCast<FbxSurfaceLambert>( _fbx_scene->GetMaterial( mat_idx ) );
@@ -876,7 +864,25 @@ std::string FBXLoader::getMaterial_map_roughness( int mat_idx, glm::vec2& uvscal
     uvscale = glm::vec2( 1.0f );
     return std::string( "" );
 }
-
+std::string FBXLoader::getMaterial_map_metalness( int mat_idx, glm::vec2& uvscale ) const {
+    const FbxSurfaceMaterial* material = _fbx_scene->GetMaterial( mat_idx );
+    if ( material != nullptr ) {
+        FbxProperty p = material->FindProperty( FbxSurfaceMaterial::sReflection );
+        if ( p.IsValid() ) {
+            int n = p.GetSrcObjectCount<FbxFileTexture>();
+            if ( n > 0 ) {
+                FbxFileTexture* t = p.GetSrcObject<FbxFileTexture>( 0 );
+                if ( t != nullptr ) {
+                    uvscale.x = static_cast<float>( t->GetScaleU() );
+                    uvscale.y = static_cast<float>( t->GetScaleV() );
+                    return std::string( t->GetFileName() );
+                }
+            }
+        }
+    }
+    uvscale = glm::vec2( 1.0f );
+    return std::string( "" );
+}
 std::string FBXLoader::getMaterial_map_kd( int mat_idx, glm::vec2& uvscale ) const {
     FbxSurfaceMaterial* material = _fbx_scene->GetMaterial( mat_idx );
     if ( material != nullptr ) {

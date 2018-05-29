@@ -74,10 +74,6 @@ public:
         return glm::make_vec3( _m->materials[mat_idx].specular );
     }
 
-    glm::vec3 getMaterialReflection( int mat_idx ) const override {
-        return glm::vec3( 1.0f );
-    }
-
     glm::vec3 getMaterialEmittance( int mat_idx ) const override {
         return glm::make_vec3( _m->materials[mat_idx].emmissive );
     }
@@ -117,6 +113,9 @@ public:
     }
 
     std::string getMaterial_map_roughness( int mat_idx, glm::vec2& uvscale ) const override {
+        return "";
+    }
+    std::string getMaterial_map_metalness( int mat_idx, glm::vec2& uvscale ) const override {
         return "";
     }
 

@@ -371,7 +371,6 @@ void initGLBuffers() {
     glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, vbos[CUDA_VBO_ELEMENT] );
     glBufferData( GL_ELEMENT_ARRAY_BUFFER, sizeof( cuda_ea ), cuda_ea, GL_STATIC_DRAW );
     glBindVertexArray( 0 );
-    scene->initFramebuffer( &cudaTextureID );
 
     glUseProgram( render_cuda_program );
     cudaSamplerID = glGetUniformLocation( render_cuda_program, "sampler" );
@@ -399,7 +398,8 @@ void initGLShaders() {
 }
 
 void initCudaConext() {
-    scene->initCudaContext();
+    scene->initCudaContext( &cudaTextureID );
+    //scene->initFramebuffer( &cudaTextureID );
 }
 
 void initGLContext() {

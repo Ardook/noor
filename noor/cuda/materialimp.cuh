@@ -59,6 +59,11 @@ public:
         return m->_roughness_uvscale;
     }
     __device__
+        const float2& getMetalnessUVScale( const CudaIntersection& I ) const {
+        const CudaMaterial* m = &_materials[I._mat_idx];
+        return m->_metalness_uvscale;
+    }
+    __device__
         const float2& getDiffuseUVScale( const CudaIntersection& I ) const {
         const CudaMaterial* m = &_materials[I._mat_idx];
         return m->_diffuse_uvscale;
@@ -133,6 +138,12 @@ public:
         return make_float3( tex.evaluateGrad<float4>( I, uvscale ) );
     }
     __device__
+        float getMetalness( const CudaIntersection& I ) const {
+        const float2& uvscale = getMetalnessUVScale( I );
+        const CudaTexture& tex = getMetalnessTexture( I._mat_idx );
+        return tex.evaluate<float>( I, uvscale );
+    }
+    __device__
         float2 getRoughness( const CudaIntersection& I ) const {
         const float2& uvscale = getRoughnessUVScale( I );
         const CudaTexture& tex = getRoughnessTexture( I._mat_idx );
@@ -144,12 +155,6 @@ public:
         const CudaMaterial* m = &_materials[mat_idx];
         const CudaTexture& tex = getTransparencyTexture( mat_idx );
         return	tex.evaluate<float4>( uv, m->_transparency_uvscale ).x;
-    }
-    __device__
-        float3 getReflection( const CudaIntersection& I ) const {
-        const float2& uvscale = make_float2( 1.0f );
-        const CudaTexture& tex = getReflectionTexture( I._mat_idx );
-        return make_float3( tex.evaluateGrad<float4>( I, uvscale ) );
     }
     __device__
         float3 getTransmission( const CudaIntersection& I ) const {
@@ -193,14 +198,14 @@ private:
         return _texture_manager.getTexture( m->_specular_tex_idx );
     }
     __device__
-        const CudaTexture& getReflectionTexture( uint mat_idx ) const {
-        const CudaMaterial* m = &_materials[mat_idx];
-        return _texture_manager.getTexture( m->_reflection_tex_idx );
-    }
-    __device__
         const CudaTexture& getRoughnessTexture( uint mat_idx ) const {
         const CudaMaterial* m = &_materials[mat_idx];
         return _texture_manager.getTexture( m->_roughness_tex_idx );
+    }
+    __device__
+        const CudaTexture& getMetalnessTexture( uint mat_idx ) const {
+        const CudaMaterial* m = &_materials[mat_idx];
+        return _texture_manager.getTexture( m->_metalness_tex_idx );
     }
     __device__
         const CudaTexture& getTransparencyTexture( uint mat_idx ) const {

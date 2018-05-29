@@ -107,6 +107,8 @@ public:
     std::vector<CudaMaterial>  _materials;
     size_t _mat_size_bytes;
 
+    //std::unique_ptr<HosekSky> _hosek_sky;
+
     glm::vec3 getVertex( glm::uint32 t, glm::uint8 v ) const {
         glm::uint32 vi = _element_array[3 * t + v];
         return glm::vec3( _vertices[vi] );

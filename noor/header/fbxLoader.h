@@ -174,7 +174,6 @@ public:
 
     glm::vec3 getMaterialDiffuse( int mat_idx ) const override;
     glm::vec3 getMaterialSpecular( int mat_idx ) const override;
-    glm::vec3 getMaterialReflection( int mat_idx ) const;
     glm::vec3 getMaterialEmittance( int mat_idx ) const override;
     glm::vec3 getMaterialTransmission( int mat_idx ) const override;
     glm::vec3 getMaterialIor( int mat_idx ) const;
@@ -191,6 +190,7 @@ public:
     MaterialType getMaterialType( int mat_idx ) const override;
 
     std::string getMaterial_map_roughness( int mat_idx, glm::vec2& uvscale ) const override;
+    std::string getMaterial_map_metalness( int mat_idx, glm::vec2& uvscale ) const override;
     std::string getMaterial_map_kd( int mat_idx, glm::vec2& uvscale ) const override;
     std::string getMaterial_map_ks( int mat_idx, glm::vec2& uvscale ) const override;
     std::string getMaterial_map_ka( int mat_idx, glm::vec2& uvscale ) const override;

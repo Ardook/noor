@@ -69,7 +69,8 @@ public:
 
     __device__ 
         float RoughnessToAlpha( float roughness ) {
-        return fmaxf( roughness*roughness, 1e-3f );
+        //return fmaxf( roughness*roughness, 1e-3f );
+        return fmaxf( roughness, 1e-3f );
     }
     __device__
         float D( const float3 &wh ) const {

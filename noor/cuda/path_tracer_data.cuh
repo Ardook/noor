@@ -51,9 +51,9 @@ SOFTWARE.
 #include "accumulate.cuh"
 
 std::unique_ptr<CudaRenderManager> _cuda_renderer;
-void init_framebuffer( GLuint* textureID, uint w, uint h ) {
-    _cuda_renderer->init_framebuffer( textureID, w, h );
-}
+//void init_framebuffer( GLuint* textureID, uint w, uint h ) {
+//    _cuda_renderer->init_framebuffer( textureID, w, h );
+//}
 
 void update_cuda_spec( std::unique_ptr<CudaSpec>& spec ) {
     if ( spec->_outofsync ) {
@@ -65,8 +65,13 @@ void update_cuda_spec( std::unique_ptr<CudaSpec>& spec ) {
 
 void load_cuda_data( const std::unique_ptr<CudaPayload>& payload,
                      CudaHosekSky& hosek_sky, int gpuID,
-                     SkydomeType skydome_type ) {
-    _cuda_renderer = std::make_unique<CudaRenderManager>( payload, hosek_sky, gpuID, skydome_type );
+                     SkydomeType skydome_type,
+                     GLuint* cudaTextureID,
+                     int w, 
+                     int h
+
+) {
+    _cuda_renderer = std::make_unique<CudaRenderManager>( payload, hosek_sky, gpuID, skydome_type, cudaTextureID, w, h );
 }
 
 void update_cuda_camera( const glm::mat4& cameraToWorld,

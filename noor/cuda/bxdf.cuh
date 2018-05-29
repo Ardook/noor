@@ -155,8 +155,9 @@ public:
     // ScaledBxDF Public Methods
     __device__
         CudaScaledBxDF( const BXDF &bxdf, const float3 &scale ) :
-        CudaBxDF( BxDFType( bxdf->type ) ),
-        _bxdf( bxdf ), _scale( scale ) {}
+        CudaBxDF( BxDFType( bxdf.getType() ) ),
+        _bxdf( bxdf ), 
+        _scale( scale ) {}
     __device__
         float3 f( const float3 &wo, const float3 &wi ) const {
         return _scale*_bxdf.f( wo, wi );
@@ -170,7 +171,7 @@ public:
         return _bxdf.Pdf( wo, wi );
     }
 private:
-    const BXDF &_bxdf;
+    BXDF _bxdf;
     float3 _scale;
 };
 

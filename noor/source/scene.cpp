@@ -138,15 +138,15 @@ void Scene::updateCudaCamera() {
     _camera->updateCudaCamera();
 }
 
-void Scene::initCudaContext() const {
+void Scene::initCudaContext( GLuint* cudaTextureID) const {
     int gpuID = _spec._gpu;
     SkydomeType skydome_type = (SkydomeType) _spec._model_spec._skydome_type;
-    load_cuda_data( _cuda_payload, _hosek_sky->_cuda_hosek_sky, gpuID, skydome_type );
+    load_cuda_data( _cuda_payload, _hosek_sky->_cuda_hosek_sky, gpuID, skydome_type, cudaTextureID, _camera->_w, _camera->_h );
 }
 
-void Scene::initFramebuffer( GLuint* textureID ) const {
-    init_framebuffer( textureID, getWidthPixels(), getHeightPixels() );
-}
+//void Scene::initFramebuffer( GLuint* textureID ) const {
+//    init_framebuffer( textureID, getWidthPixels(), getHeightPixels() );
+//}
 
 void Scene::path_tracer() {
     cuda_path_tracer( _frameCount );

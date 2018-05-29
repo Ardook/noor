@@ -48,7 +48,7 @@ void ImageTexture::load( const std::string& filename ) {
             std::cerr << msg << std::endl;
             exit( EXIT_FAILURE );
         }
-        if ( _num_channels != 4 && _num_channels != 1 ) {
+        if ( _num_channels == 3){
             stbi_image_free( _data );
             if ( ( _data = stbi_loadf( filename.c_str(), &_width, &_height, &_num_channels, 4 ) ) == nullptr ) {
                 std::string msg = "File " + std::string( __FILE__ ) + " LINE " + std::to_string( __LINE__ ) + "\n";
@@ -58,8 +58,10 @@ void ImageTexture::load( const std::string& filename ) {
             }
             _num_channels = 4;
         }
-        _channel_desc = _num_channels == 4 ? _float4_channelDesc : _float_channelDesc;
-        assert( _num_channels == 1 || _num_channels == 4 );
+        _channel_desc = _num_channels == 4 ? 
+            _float4_channelDesc : 
+            ( _num_channels == 2 ? _float2_channelDesc : _float_channelDesc );
+        assert( _num_channels == 1 || _num_channels == 2 || _num_channels == 4 );
     }
     _size_bytes = _width * _height * _num_channels * sizeof( float );
 }

@@ -57,7 +57,7 @@ struct CudaRenderManager {
         _framebuffer_manager.reset();
         cudaDeviceReset();
     }
-    CudaRenderManager( const std::unique_ptr<CudaPayload>& payload, CudaHosekSky& hosek_sky, int gpuID, SkydomeType skydome_type ) :
+    CudaRenderManager( const std::unique_ptr<CudaPayload>& payload, CudaHosekSky& hosek_sky, int gpuID, SkydomeType skydome_type, GLuint* textureID, uint w, uint h ) :
         _gpuID( gpuID )
         , _skydome_type( skydome_type )
         , _host_hosek_sky( hosek_sky ) {
@@ -68,27 +68,23 @@ struct CudaRenderManager {
         _host_material_manager = myunique_ptr<CudaMaterialManager>( new CudaMaterialManager( payload.get() ) );
         _host_light_manager = myunique_ptr<CudaLightManager>( new CudaLightManager( payload.get() ) );
         _host_transform_manager = myunique_ptr<CudaTransformManager>( new CudaTransformManager( payload.get() ) );
+        _host_skydome_manager = myunique_ptr<CudaSkyDomeManager>( new CudaSkyDomeManager( _host_texture_manager->getEnvTexture(), _skydome_type ) );
+        _framebuffer_manager = myunique_ptr<CudaFrameBufferManager>( new CudaFrameBufferManager( textureID, w, h ) );
 
         NOOR::memcopy_symbol( &_mesh_manager, _host_mesh_manager.get() );
         NOOR::memcopy_symbol( &_material_manager, _host_material_manager.get() );
         NOOR::memcopy_symbol( &_texture_manager, _host_texture_manager.get() );
         NOOR::memcopy_symbol( &_light_manager, _host_light_manager.get() );
         NOOR::memcopy_symbol( &_transform_manager, _host_transform_manager.get() );
-
-        update_skydome();
+        NOOR::memcopy_symbol( &_skydome_manager, _host_skydome_manager.get() );
     }
 
-    void init_framebuffer( GLuint* textureID, uint w, uint h ) {
+    /*void init_framebuffer( GLuint* textureID, uint w, uint h ) {
         _framebuffer_manager = myunique_ptr<CudaFrameBufferManager>( new CudaFrameBufferManager( textureID, w, h ) );
-    }
+    }*/
 
     void update_skydome() {
-        if ( _host_skydome_manager == nullptr ) {
-            _host_skydome_manager = myunique_ptr<CudaSkyDomeManager>( new CudaSkyDomeManager( _host_texture_manager->getEnvTexture(), _skydome_type ) );
-            NOOR::memcopy_symbol( &_skydome_manager, _host_skydome_manager.get() );
-        } else {
-            if ( _skydome_type == PHYSICAL ) _host_skydome_manager->update();
-        }
+        if ( _skydome_type == PHYSICAL ) _host_skydome_manager->update();
     }
 
     void update_camera( const glm::mat4& cameraToWorld, const glm::mat4& rasterToCamera, int w, int h, float lens_radius, float focal_length, CameraType type ) {

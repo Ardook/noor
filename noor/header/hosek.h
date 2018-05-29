@@ -21,9 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-
 /* Cuda port of the Hosek & Wilkie Sun Sky Model. http://cgg.mff.cuni.cz/projects/SkylightModelling/ */
-
 #ifndef HOSEK_H
 #define HOSEK_H 
 class HosekSky {
@@ -38,7 +36,6 @@ class HosekSky {
     float3 _ground_albedo{ make_float3( 0.f ) };
     float3 _solar_dir;
 public:
-
     HosekSky( Scene& scene ) :
         _scene( scene )
         , _outofsync( true ) {

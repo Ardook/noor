@@ -102,8 +102,7 @@ public:
         } else {
             const float phi = NOOR::sphericalPhi( dir ) * NOOR_inv2PI;
             const float theta = NOOR::sphericalTheta( dir ) * NOOR_invPI;
-            return 1.75f*make_float3( _tex.evaluate( phi, theta ) );
-            //return make_float3( _tex.evaluate( phi, theta ) );
+            return make_float3( _tex.evaluate( phi, theta ) );
         }
     }
 

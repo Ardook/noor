@@ -44,7 +44,7 @@ SOFTWARE.
 #include <vector>
 
 // Kernel configuration 
-#define THREAD_W 8
+#define THREAD_W 16
 #define THREAD_H 8 
 #define THREAD_N THREAD_W * THREAD_H
 
@@ -88,7 +88,7 @@ constexpr float NOOR_PI_over_4 = NOOR_PI / 4.0f;
 constexpr float NOOR_3PI_over_2 = 3.f * NOOR_PI_over_2;
 
 constexpr int2 skydome_res{ 2048, 2048 };
-#define SKYDOME_COLOR make_float3(.15f)
+#define SKYDOME_COLOR make_float3(.05f)
 enum MaterialType {
     DIFFUSE = 1 << 0,
     ORENNAYAR = 1 << 1,
@@ -121,7 +121,11 @@ extern "C" {
     void load_cuda_data( const std::unique_ptr<CudaPayload>& payload,
                          CudaHosekSky& hosek_sky,
                          int gpuID,
-                         SkydomeType skydome_type );
+                         SkydomeType skydome_type,
+                         GLuint* cudaTextureID,
+                         int w, 
+                         int h
+                         );
 
     void update_cuda_camera( const glm::mat4& cameraToWorld,
                              const glm::mat4& rasterToCamera, int w, int h,
@@ -129,7 +133,7 @@ extern "C" {
                              CameraType camera_type );
     void update_cuda_sky();
     void update_cuda_spec( std::unique_ptr<CudaSpec>& spec );
-    void init_framebuffer( GLuint* textureID, uint w, uint h );
+    //void init_framebuffer( GLuint* textureID, uint w, uint h );
     void cuda_path_tracer( unsigned int& frameCount );
     void device_free_memory();
     float4 get_lookAt();

@@ -84,31 +84,31 @@ class CudaShadowCatcherBSDF {
 public:
     __device__
         float Pdf(
-        const CudaIntersection& I
-        , const float3 &wo
-        , const float3 &wi
-        , BxDFType flags
+        const CudaIntersection& I,
+        const float3 &wo,
+        const float3 &wi,
+        BxDFType flags
         ) const {
         return 1.f;
     }
     __device__
         float3 f(
-        const CudaIntersection& I
-        , const float3 &wo
-        , const float3 &wi
-        , BxDFType flags
+        const CudaIntersection& I,
+        const float3 &wo,
+        const float3 &wi,
+        BxDFType flags
         ) const {
         return _skydome_manager.evaluate( -1.f*wo, false ) / NOOR::absDot( wi, I._shading._n );
     }
     __device__
         float3 Sample_f(
-        const CudaIntersection& I
-        , const float3 &wo
-        , float3 &wi
-        , const float2 &u
-        , float &pdf
-        , BxDFType type
-        , BxDFType &sampledType
+        const CudaIntersection& I,
+        const float3 &wo,
+        float3 &wi,
+        const float2 &u,
+        float &pdf,
+        BxDFType type,
+        BxDFType &sampledType
         ) const {
         pdf = 1.f;
         const CudaONB onb( I._shading._n, I._shading._dpdu, I._shading._dpdv );
@@ -133,10 +133,10 @@ public:
     }
     __device__
         float Pdf(
-        const CudaIntersection& I
-        , const float3 &woWorld
-        , const float3 &wiWorld
-        , BxDFType flags
+        const CudaIntersection& I,
+        const float3 &woWorld,
+        const float3 &wiWorld,
+        BxDFType flags
         ) const {
         if ( !_bxdf.MatchesFlags( flags ) ) return 0.0f;
         const CudaONB onb( I._shading._n, I._shading._dpdu, I._shading._dpdv );
@@ -147,10 +147,10 @@ public:
     }
     __device__
         float3 f(
-        const CudaIntersection& I
-        , const float3 &woWorld
-        , const float3 &wiWorld
-        , BxDFType flags
+        const CudaIntersection& I,
+        const float3 &woWorld,
+        const float3 &wiWorld,
+        BxDFType flags
         ) const {
         if ( !_bxdf.MatchesFlags( flags ) ) return _constant_spec._black;
         const CudaONB onb( I._shading._n, I._shading._dpdu, I._shading._dpdv );
@@ -166,13 +166,13 @@ public:
     }
     __device__
         float3 Sample_f(
-        const CudaIntersection& I
-        , const float3 &woWorld
-        , float3 &wi
-        , const float2 &u
-        , float &pdf
-        , BxDFType type
-        , BxDFType &sampledType
+        const CudaIntersection& I,
+        const float3 &woWorld,
+        float3 &wi,
+        const float2 &u,
+        float &pdf,
+        BxDFType type,
+        BxDFType &sampledType
         ) const {
         if ( !_bxdf.MatchesFlags( type ) ) {
             pdf = 0;
@@ -203,18 +203,18 @@ class CudaBSDF<BXDF0, BXDF1> {
 public:
     __device__
         CudaBSDF( const BXDF0& bxdf0, const BXDF1& bxdf1 ) :
-        _bxdf0( bxdf0 )
-        , _bxdf1( bxdf1 ) {};
+        _bxdf0( bxdf0 ),
+        _bxdf1( bxdf1 ) {}
     __device__
         int NumComponents( BxDFType flags ) const {
         return ( _bxdf0.MatchesFlags( flags ) + _bxdf1.MatchesFlags( flags ) );
     }
     __device__
         float Pdf(
-        const CudaIntersection& I
-        , const float3 &woWorld
-        , const float3 &wiWorld
-        , BxDFType flags
+        const CudaIntersection& I,
+        const float3 &woWorld,
+        const float3 &wiWorld,
+        BxDFType flags
         ) const {
         const CudaONB onb( I._shading._n, I._shading._dpdu, I._shading._dpdv );
         const float3 wo = onb.toLocal( woWorld );
@@ -234,10 +234,10 @@ public:
     }
     __device__
         float3 f(
-        const CudaIntersection& I
-        , const float3 &woWorld
-        , const float3 &wiWorld
-        , BxDFType flags
+        const CudaIntersection& I,
+        const float3 &woWorld,
+        const float3 &wiWorld,
+        BxDFType flags
         ) const {
         const CudaONB onb( I._shading._n, I._shading._dpdu, I._shading._dpdv );
         const float3 wo = onb.toLocal( woWorld );
@@ -259,13 +259,13 @@ public:
     }
     __device__
         float3 Sample_f(
-        const CudaIntersection& I
-        , const float3 &woWorld
-        , float3 &wiWorld
-        , const float2 &u
-        , float &pdf
-        , BxDFType type
-        , BxDFType &sampledType
+        const CudaIntersection& I,
+        const float3 &woWorld,
+        float3 &wiWorld,
+        const float2 &u,
+        float &pdf,
+        BxDFType type,
+        BxDFType &sampledType
         ) const {
         const int matchingComps = NumComponents( type );
         if ( matchingComps == 0 ) {
@@ -387,10 +387,10 @@ public:
     }
     __device__
         float3 f(
-        const CudaIntersection& I
-        , const float3 &woWorld
-        , const float3 &wiWorld
-        , BxDFType flags
+        const CudaIntersection& I,
+        const float3 &woWorld,
+        const float3 &wiWorld,
+        BxDFType flags
         ) const {
         bool sampleSpecular = ( flags & BSDF_SPECULAR );
         bool sampleSubstrate = ( flags & _substrate.getType() );
@@ -422,10 +422,10 @@ public:
 
     __device__
         float Pdf(
-        const CudaIntersection& I
-        , const float3 &woWorld
-        , const float3 &wiWorld
-        , BxDFType flags
+        const CudaIntersection& I,
+        const float3 &woWorld,
+        const float3 &wiWorld,
+        BxDFType flags
         ) const {
         bool sampleSpecular = ( flags & BSDF_SPECULAR );
         bool sampleSubstrate = ( flags & _substrate.getType() & BSDF_ALL );
@@ -455,13 +455,13 @@ public:
     }
     __device__
         float3 Sample_f(
-        const CudaIntersection& I
-        , const float3 &woWorld
-        , float3 &wiWorld
-        , const float2 &u
-        , float &pdf
-        , BxDFType flags
-        , BxDFType &sampledType
+        const CudaIntersection& I,
+        const float3 &woWorld,
+        float3 &wiWorld,
+        const float2 &u,
+        float &pdf,
+        BxDFType flags,
+        BxDFType &sampledType
         ) const {
         bool sampleSpecular = ( flags & BSDF_SPECULAR );
         bool sampleSubstrate = ( flags & _substrate.getType() & BSDF_ALL );
@@ -529,13 +529,14 @@ using CudaOrenNayarBSDF = CudaBSDF<CudaOrenNayar>;
 //using CudaShadowCatcherBSDF = CudaBSDF<CudaShadowCatcher>;
 using CudaDiffuseBSDF = CudaBSDF<LambertionReflectionBxDF>;
 using CudaGlassBSDF = CudaBSDF<CudaFresnelSpecular>;
-using CudaMetalBSDF = CudaBSDF<ConductorReflectionBxDF>;
 using CudaSpecularReflectionBSDF = CudaBSDF<MirrorReflectionBxDF>;
 using CudaFresnelBlendBSDF = CudaBSDF<FresnelBlend>;
 using CudaRoughGlassBSDF = CudaBSDF<DielectricReflectionBxDF, DielectricTransmissionBxDF>;
 using CudaGlossyBSDF = CudaBSDF<LambertionReflectionBxDF, DielectricReflectionBxDF >;
 using CudaTranslucentBSDF = CudaBSDF<LambertionReflectionBxDF, LambertionTransmissionBxDF>;
 using CudaCoatingBSDF = CudaSmoothCoatingBSDF<ConductorReflectionBxDF>;
+//using CudaMetalBSDF = CudaBSDF<ConductorReflectionBxDF>;
+using CudaMetalBSDF = CudaBSDF<CudaScaledBxDF<ConductorReflectionBxDF>,CudaScaledBxDF<LambertionReflectionBxDF>>;
 
 __forceinline__ __device__
 CudaShadowCatcherBSDF factoryShadowCatcherBSDF( const CudaIntersection& I ) {
@@ -578,17 +579,20 @@ CudaMetalBSDF factoryMetalBSDF( const CudaIntersection& I ) {
         Titanium    0.541931    0.496791    0.449419
         Cobalt      0.662124    0.654864    0.633732
         Platinum    0.672411    0.637331    0.585456
-        n=0.280392f, 0.985053f, 1.177397f
-        k=3.913975f, 2.454599f, 2.134994f
         */
     const float3 S = _material_manager.getSpecular( I );
+    const float3 D = _material_manager.getDiffuse( I );
     const float3 etaI = make_float3( 1.0f );
     const float3 etaT = _material_manager.getIor( I );
     const float3 K = _material_manager.getK( I );
     const float2 Roughness = _material_manager.getRoughness( I );
     const CudaFresnelConductor fresnel( etaI, etaT, K );
     const CudaTrowbridgeReitzDistribution distribution( Roughness.x, Roughness.y );
-    return CudaMetalBSDF( ConductorReflectionBxDF( S, distribution, fresnel ) );
+    float mscale = _material_manager.getMetalness( I );
+    float dscale = fabsf( 1.f - mscale );
+    const CudaScaledBxDF<ConductorReflectionBxDF> mbxdf( ConductorReflectionBxDF( S, distribution, fresnel ), make_float3(mscale));
+    const CudaScaledBxDF<LambertionReflectionBxDF> dbxdf( LambertionReflectionBxDF( D ), make_float3(dscale) );
+    return CudaMetalBSDF( mbxdf, dbxdf );
 }
 
 __forceinline__ __device__

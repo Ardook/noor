@@ -72,12 +72,10 @@ vec3 tonemapUncharted2( vec3 color ) {
 
 void main() {
 	// output gamma corrected color
-	vec3 color = vec3( texture( sampler, UV ) );
-	// TODO: divide by color.w for filtering
-	// gl_FragColor = vec4(pow(color.rgb/color.w, gamma),1.0);
-	//gl_FragColor = vec4( pow( color, gamma ), 1.0 );
+    vec3 color = vec3( texture( sampler, UV ) );
+	//vec3 color = clamp(vec3( texture( sampler, UV )),0.f,60.f);
 	//gl_FragColor = vec4(tonemapFilmic(vec3(color)), 1.f);
 	gl_FragColor = vec4( tonemapReinhard( color ), 1.f );
-	//gl_FragColor = vec4( gammaCorrect( color ), 1.f );
 	//gl_FragColor = vec4( tonemapUncharted2(vec3(color)), 1.f);
+	//gl_FragColor = vec4( gammaCorrect( color ), 1.f );
 }

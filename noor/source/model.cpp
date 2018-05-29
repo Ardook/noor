@@ -187,7 +187,6 @@ void Model::loadMaterial() {
     for ( unsigned int mat_idx = 0; mat_idx < _num_materials; ++mat_idx ) {
         const float3 diffuse = V2F3( _loader->getMaterialDiffuse( mat_idx ) );
         const float3 specular = V2F3( _loader->getMaterialSpecular( mat_idx ) );
-        const float3 reflection = V2F3( _loader->getMaterialReflection( mat_idx ) );
         const float3 transmission = V2F3( _loader->getMaterialTransmission( mat_idx ) );
         const float3 emittance = V2F3( _loader->getMaterialEmittance( mat_idx ) );
 
@@ -203,8 +202,6 @@ void Model::loadMaterial() {
         mt._coat_ior = _loader->getMaterialCoatingIOR( mat_idx );
 
         mt._type = _loader->getMaterialType( mat_idx );
-        _textures.emplace_back( reflection );
-        mt._reflection_tex_idx = static_cast<int>( _textures.size() - 1 );
         _textures.emplace_back( transmission );
         mt._transmission_tex_idx = static_cast<int>( _textures.size() - 1 );
         _textures.emplace_back( ior );
@@ -239,6 +236,20 @@ void Model::loadMaterial() {
             float3 r = make_float3( roughness.x, roughness.y, 1.f );
             _textures.emplace_back( r );
             mt._roughness_tex_idx = static_cast<int>( _textures.size() - 1 );
+        }
+        // metalness
+        texfile = _loader->getMaterial_map_metalness( mat_idx, uvscale );
+        if ( !texfile.empty() ) {
+            if ( name2index.find( texfile ) == name2index.end() ) {
+                _textures.emplace_back( _texture_dir + texfile );
+                name2index[texfile] = static_cast<int>( _textures.size() - 1 );
+            }
+            mt._metalness_tex_idx = name2index[texfile];
+            mt._metalness_uvscale = V2F2( uvscale );
+        } else {
+            float metalness = 1.0f;
+            _textures.emplace_back( metalness );
+            mt._metalness_tex_idx = static_cast<int>( _textures.size() - 1 );
         }
         // specular
         texfile = _loader->getMaterial_map_ks( mat_idx, uvscale );

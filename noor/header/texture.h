@@ -92,6 +92,17 @@ public:
         _data[0] = c.x;
         _data[1] = c.y;
     }
+    ImageTexture( float c ) :
+        _width( 1 )
+        , _height( 1 )
+        , _num_channels( 1 )
+        , _size_bytes( sizeof( float ) )
+        , _filter_mode( cudaFilterModePoint )
+        , _address_mode( cudaAddressModeClamp )
+        , _channel_desc( _float_channelDesc ) {
+        _data = new float[_num_channels];
+        _data[0] = c;
+    }
     ImageTexture& operator=( const ImageTexture& tex ) = delete;
     ImageTexture(
         const std::string& filename

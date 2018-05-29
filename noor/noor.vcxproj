@@ -317,7 +317,7 @@ copy "shader\*.gs" "$(OutDir)\shader\"</Command>
       <PtxAsOptionV>false</PtxAsOptionV>
       <Runtime>InheritFromHost</Runtime>
       <CodeGeneration>compute_61,sm_61</CodeGeneration>
-      <MaxRegCount>128</MaxRegCount>
+      <MaxRegCount>62</MaxRegCount>
       <GPUDebugInfo>false</GPUDebugInfo>
       <GenerateLineInfo>false</GenerateLineInfo>
       <Warning>W3</Warning>

@@ -31,10 +31,10 @@ public:
     float2 _emittance_uvscale{ make_float2( 1 ) };
     float2 _bump_uvscale{ make_float2( 1 ) };
     float2 _roughness_uvscale{ make_float2( 1 ) };
+    float2 _metalness_uvscale{ make_float2( 1 ) };
 
     uint _diffuse_tex_idx{ 0 };
     uint _specular_tex_idx{ 0 };
-    uint _reflection_tex_idx{ 0 };
     uint _transmission_tex_idx{ 0 };
     uint _emittance_tex_idx{ 0 };
     uint _bump_tex_idx{ 0 };
@@ -42,6 +42,7 @@ public:
     uint _ior_tex_idx{ 0 };
     uint _k_tex_idx{ 0 };
     uint _roughness_tex_idx{ 0 };
+    uint _metalness_tex_idx{ 0 };
 
     float _bumpfactor{ 1.f };
     float _coat_weight{ 1.f };

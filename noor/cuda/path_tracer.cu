@@ -73,12 +73,12 @@ float4 pathtracer(
         } else { // no intersection 
             if ( _constant_spec.is_sky_light_enabled() ) {
                 if ( bounce == 0 || specular_bounce )
-                    L += beta*_skydome_manager.evaluate( normalize( ray.getDir() ) );
+                    L += beta*_skydome_manager.evaluate( normalize( ray.getDir() ), false );
             }
             break;
         }
     }
-    L = clamp( L, 0.f, 10.f );
+    //L = clamp( L, 0, 40.f );
     return make_float4( L, 1.f );
 }
 

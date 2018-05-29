@@ -133,7 +133,6 @@ public:
     virtual int getNumMaterialGroups() const { return static_cast<int>( _material_groups.size() ); }
 
     virtual glm::vec3 getMaterialDiffuse( int mat_idx ) const = 0;
-    virtual glm::vec3 getMaterialReflection( int mat_idx ) const = 0;
     virtual glm::vec3 getMaterialSpecular( int mat_idx ) const = 0;
     virtual glm::vec3 getMaterialTransmission( int mat_idx ) const = 0;
     virtual glm::vec3 getMaterialEmittance( int mat_idx ) const = 0;
@@ -151,6 +150,7 @@ public:
     virtual MaterialType getMaterialType( int mat_idx ) const = 0;
 
     virtual std::string getMaterial_map_roughness( int mat_idx, glm::vec2& uvscale ) const = 0;
+    virtual std::string getMaterial_map_metalness( int mat_idx, glm::vec2& uvscale ) const = 0;
     virtual std::string getMaterial_map_kd( int mat_idx, glm::vec2& uvscale ) const = 0;
     virtual std::string getMaterial_map_ks( int mat_idx, glm::vec2& uvscale ) const = 0;
     virtual std::string getMaterial_map_ka( int mat_idx, glm::vec2& uvscale ) const = 0;
