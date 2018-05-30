@@ -36,9 +36,9 @@ using myunique_ptr = std::unique_ptr< T, mydeleter<T> >;
 
 struct CudaRenderManager {
     int _gpuID;
-    SkydomeType _skydome_type;
-    CudaCamera _camera;
-    CudaHosekSky& _host_hosek_sky;
+    const CudaCamera& _host_camera;
+    const CudaHosekSky& _host_hosek;
+    const CudaSpec& _host_spec;
     myunique_ptr<CudaMeshManager> _host_mesh_manager;
     myunique_ptr<CudaMaterialManager> _host_material_manager;
     myunique_ptr<CudaTextureManager> _host_texture_manager;
@@ -57,19 +57,26 @@ struct CudaRenderManager {
         _framebuffer_manager.reset();
         cudaDeviceReset();
     }
-    CudaRenderManager( const std::unique_ptr<CudaPayload>& payload, CudaHosekSky& hosek_sky, int gpuID, SkydomeType skydome_type, GLuint* textureID, uint w, uint h ) :
-        _gpuID( gpuID )
-        , _skydome_type( skydome_type )
-        , _host_hosek_sky( hosek_sky ) {
-        cudaSetDevice( gpuID );
-        printf( "GPU %d selected\n", gpuID );
+    CudaRenderManager( const std::unique_ptr<CudaPayload>& payload,
+                       const CudaHosekSky& hosek,
+                       const CudaCamera& camera,
+                       const CudaSpec& spec,
+                       GLuint* textureID ) :
+        _host_hosek( hosek ),
+        _host_camera( camera ),
+        _host_spec( spec ) {
+        cudaSetDevice( _host_spec._gpuID );
+        printf( "GPU %d selected\n", _host_spec._gpuID );
         _host_texture_manager = myunique_ptr<CudaTextureManager>( new CudaTextureManager( payload.get() ) );
         _host_mesh_manager = myunique_ptr<CudaMeshManager>( new CudaMeshManager( payload.get() ) );
         _host_material_manager = myunique_ptr<CudaMaterialManager>( new CudaMaterialManager( payload.get() ) );
         _host_light_manager = myunique_ptr<CudaLightManager>( new CudaLightManager( payload.get() ) );
         _host_transform_manager = myunique_ptr<CudaTransformManager>( new CudaTransformManager( payload.get() ) );
-        _host_skydome_manager = myunique_ptr<CudaSkyDomeManager>( new CudaSkyDomeManager( _host_texture_manager->getEnvTexture(), _skydome_type ) );
-        _framebuffer_manager = myunique_ptr<CudaFrameBufferManager>( new CudaFrameBufferManager( textureID, w, h ) );
+        _host_skydome_manager = myunique_ptr<CudaSkyDomeManager>( new CudaSkyDomeManager( _host_texture_manager->getEnvTexture(), _host_spec._skydome_type ) );
+        _framebuffer_manager = myunique_ptr<CudaFrameBufferManager>( new CudaFrameBufferManager( textureID, _host_camera._w, _host_camera._h ) );
+        update_spec();
+        update_camera();
+        update_hoseksky();
 
         NOOR::memcopy_symbol( &_mesh_manager, _host_mesh_manager.get() );
         NOOR::memcopy_symbol( &_material_manager, _host_material_manager.get() );
@@ -79,23 +86,21 @@ struct CudaRenderManager {
         NOOR::memcopy_symbol( &_skydome_manager, _host_skydome_manager.get() );
     }
 
-    /*void init_framebuffer( GLuint* textureID, uint w, uint h ) {
-        _framebuffer_manager = myunique_ptr<CudaFrameBufferManager>( new CudaFrameBufferManager( textureID, w, h ) );
-    }*/
-
-    void update_skydome() {
-        if ( _skydome_type == PHYSICAL ) _host_skydome_manager->update();
+    void update_spec() {
+        NOOR::memcopy_symbol_async( &_constant_spec, &_host_spec );
     }
 
-    void update_camera( const glm::mat4& cameraToWorld, const glm::mat4& rasterToCamera, int w, int h, float lens_radius, float focal_length, CameraType type ) {
-        _camera.update( cameraToWorld, rasterToCamera, w, h, lens_radius, focal_length, type );
-        _camera._center = w * ( h >> 1 ) + ( w >> 1 );
-        NOOR::memcopy_symbol_async( &_constant_camera, &_camera );
+    void update_camera() {
+        NOOR::memcopy_symbol_async( &_constant_camera, &_host_camera );
     }
 
     void update_hoseksky() {
-        NOOR::memcopy_symbol_async( &_constant_hosek_sky, &_host_hosek_sky );
+        NOOR::memcopy_symbol_async( &_constant_hosek_sky, &_host_hosek );
         update_skydome();
+    }
+
+    void update_skydome() {
+        if ( _host_spec._skydome_type == PHYSICAL ) _host_skydome_manager->update();
     }
 };
 #endif /* CUDARENDERMANAGER_CUH */

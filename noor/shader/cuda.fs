@@ -75,7 +75,7 @@ void main() {
     vec3 color = vec3( texture( sampler, UV ) );
 	//vec3 color = clamp(vec3( texture( sampler, UV )),0.f,60.f);
 	//gl_FragColor = vec4(tonemapFilmic(vec3(color)), 1.f);
-	gl_FragColor = vec4( tonemapReinhard( color ), 1.f );
-	//gl_FragColor = vec4( tonemapUncharted2(vec3(color)), 1.f);
+	//gl_FragColor = vec4( tonemapReinhard( color ), 1.f );
+	gl_FragColor = vec4( tonemapUncharted2(vec3(color)), 1.f);
 	//gl_FragColor = vec4( gammaCorrect( color ), 1.f );
 }

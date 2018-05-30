@@ -125,8 +125,8 @@ void debug_skydome_kernel(
 }
 
 void debug_skydome( uint& frame_number ) {
-    static const int width = _cuda_renderer->_camera._w;
-    static const int height = _cuda_renderer->_camera._h;
+    static const int width = _cuda_renderer->_host_camera._w;
+    static const int height = _cuda_renderer->_host_camera._h;
     static const dim3 block( THREAD_W, THREAD_H, 1 );
     static const dim3 grid( width / block.x, height / block.y, 1 );
     debug_skydome_kernel << < grid, block >> > ( _cuda_renderer->_framebuffer_manager->_buffer, frame_number, width, height );
@@ -134,10 +134,10 @@ void debug_skydome( uint& frame_number ) {
 
 void cuda_path_tracer( unsigned int& frame_number ) {
     static const dim3 block( THREAD_W, THREAD_H, 1 );
-    static const dim3 grid( _cuda_renderer->_camera._w / block.x, _cuda_renderer->_camera._h / block.y, 1 );
+    static const dim3 grid( _cuda_renderer->_host_camera._w / block.x, _cuda_renderer->_host_camera._h / block.y, 1 );
     cudaFuncSetCacheConfig( path_tracer_kernel, cudaFuncCachePreferL1 );
-    const size_t shmsize = THREAD_N * _host_spec._bvh_height * sizeof( uint );
-    if ( _host_spec._debug_sky )
+    const size_t shmsize = THREAD_N * _cuda_renderer->_host_spec._bvh_height * sizeof( uint );
+    if ( _cuda_renderer->_host_spec._debug_sky )
         debug_skydome( frame_number );
     else
         path_tracer_kernel << <grid, block, shmsize >> > ( _cuda_renderer->_framebuffer_manager->_buffer, frame_number );

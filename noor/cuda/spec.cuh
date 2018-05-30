@@ -40,7 +40,6 @@ static constexpr short NOT_LIGHT_SKY_MASK = ~LIGHT_SKY_MASK;
 
 class CudaSpec {
 public:
-    bool _outofsync;
     float3 _white;
     float3 _black;
     float _reflection_bias;
@@ -51,8 +50,11 @@ public:
     unsigned short _bounces;
     unsigned short _rr;
     unsigned short _bvh_height;
+    unsigned short _gpuID;
+    SkydomeType _skydome_type;
     bool _debug_sky;
     bool _mis;
+    mutable bool _outofsync;
 #ifndef __CUDACC__
     __host__
         CudaSpec() :_lighting_type( 0 )
@@ -60,6 +62,11 @@ public:
         , _debug_sky( false )
         , _mis( false ) {}
 #endif
+    __host__
+        void setOutOfSync( bool flag )const {
+        _outofsync = flag;
+    }
+
     __host__ __device__
         void enable_area_light() {
         _lighting_type |= LIGHT_AREA_MASK;
@@ -180,9 +187,6 @@ public:
 };
 
 #ifdef __CUDACC__
-// host side static and dynamic settings for the path tracer
-static CudaSpec _host_spec;
-// changes/updates to _host_spec are copied over to constant memory _device_spec
 __constant__ CudaSpec	_constant_spec;
 #endif
 

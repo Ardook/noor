@@ -26,38 +26,11 @@ SOFTWARE.
 
 #ifndef CUDAHOSEKSKY_CUH
 #define CUDAHOSEKSKY_CUH 
-struct CudaArHosekSkyModelConfiguration {
-    float c0, c1, c2, c3, c4, c5, c6, c7, c8;
-    CudaArHosekSkyModelConfiguration() = default;
 
-    __device__
-        float& operator[]( int i ) {
-        float* start = &c0;
-        return *( start + i );
-    }
-    __device__
-        float operator[]( int i ) const {
-        const float* start = &c0;
-        return *( start + i );
-    }
-};
-
-struct CudaArHosekSkyModelConfigurationArray {
-    CudaArHosekSkyModelConfiguration config_0;
-    CudaArHosekSkyModelConfiguration config_1;
-    CudaArHosekSkyModelConfiguration config_2;
-    __device__
-        CudaArHosekSkyModelConfiguration& operator[]( int i ) {
-        return *( &config_0 + i );
-    }
-    __device__
-        const CudaArHosekSkyModelConfiguration& operator[]( int i ) const {
-        return *( &config_0 + i );
-    }
-};
+typedef float CudaArHosekSkyModelConfiguration[9];
 
 struct CudaArHosekSkyModelState {
-    CudaArHosekSkyModelConfigurationArray  _configs;
+    CudaArHosekSkyModelConfiguration _configs[3];
     NOOR::noor_float3            _radiances;
     float                        _turbidity;
     float                        _solar_radius;
@@ -112,7 +85,7 @@ public:
     __device__
         float3 querySkyModel( const float3& v ) const {
         if ( v.y < 0.f ) return _ground_albedo;
-        const float scale = .025f;
+        const float scale = .05f;
 
         const float theta = clamp( NOOR::sphericalTheta( v, RIGHT_HANDED ), 0.f, NOOR_PI_over_2 );
         const float gamma = acosf( clamp( dot( v, _solar_dir ), -1.f, 1.f ) );

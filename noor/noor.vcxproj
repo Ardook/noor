@@ -24,6 +24,7 @@
     <ClInclude Include="cuda\bvh.cuh" />
     <ClInclude Include="cuda\bxdf.cuh" />
     <ClInclude Include="cuda\camera.cuh" />
+    <ClInclude Include="cuda\cameraimp.cuh" />
     <ClInclude Include="cuda\direct.cuh" />
     <ClInclude Include="cuda\distribution.cuh" />
     <ClInclude Include="cuda\distribution1d.cuh" />

@@ -32,14 +32,13 @@ Scene::~Scene() {
     device_free_memory();
 }
 Scene::Scene( const Spec& spec ) :
-    _spec( spec ),
-    _frameCount( 1 )
-{
+    _host_spec( spec ),
+    _frameCount( 1 ) {
     load();
 }
 
-glm::uint32 Scene::getWidthPixels()const { return _spec._camera_spec._w; }
-glm::uint32 Scene::getHeightPixels()const { return _spec._camera_spec._h; }
+glm::uint32 Scene::getWidthPixels()const { return _host_spec._camera_spec._w; }
+glm::uint32 Scene::getHeightPixels()const { return _host_spec._camera_spec._h; }
 void Scene::reset( int w, int h ) { _camera->reset( w, h ); }
 void Scene::mouse( int button, int action ) { _camera->mouse( button, action ); }
 void Scene::motion( int x, int y ) { _camera->motion( x, y ); }
@@ -49,55 +48,53 @@ const glm::mat4& Scene::getProjectionMatrix() const { return _camera->getProject
 void Scene::load() {
     _cuda_payload = std::make_unique<CudaPayload>();
     Stat stat;
-    _model = std::make_unique<Model>( _spec, stat );
+    _model = std::make_unique<Model>( _host_spec, stat );
     _model->loadCudaPayload( _cuda_payload );
     _scene_bbox = _model->getSceneBBox();
     _scene_radius = _scene_bbox.radius();
     _scene_bias = 0.0001f * _scene_radius;
-    _cuda_spec = std::make_unique<CudaSpec>();
-    _cuda_spec->_bvh_height = stat._height;
-    _cuda_spec->_bounces = _spec._camera_spec._bounces;
-    _cuda_spec->_rr = _spec._camera_spec._rr;
-    _cuda_spec->_white = make_float3( 1.0f, 1.0f, 1.0f );
-    _cuda_spec->_black = make_float3( 0.0f, 0.0f, 0.0f );
-    _cuda_spec->_reflection_bias = _scene_bias;
-    _cuda_spec->_shadow_bias = 0.0001f;
-    _cuda_spec->_world_radius = _scene_radius;
-    _cuda_spec->_bvh_root_node = _cuda_payload->_bvh_root_node;
-    _spec._camera_spec._eye = _model->_eye;
-    _spec._camera_spec._up = _model->_up;
-    _spec._camera_spec._lookAt = _model->_lookAt;
-    _spec._camera_spec._fov = _model->_fov;
+    _spec = std::make_unique<CudaSpec>();
+    _spec->_bvh_height = stat._height;
+    _spec->_bounces = _host_spec._camera_spec._bounces;
+    _spec->_rr = _host_spec._camera_spec._rr;
+    _spec->_white = make_float3( 1.0f, 1.0f, 1.0f );
+    _spec->_black = make_float3( 0.0f, 0.0f, 0.0f );
+    _spec->_reflection_bias = _scene_bias;
+    _spec->_shadow_bias = 0.0001f;
+    _spec->_world_radius = _scene_radius;
+    _spec->_bvh_root_node = _cuda_payload->_bvh_root_node;
+    _spec->_gpuID = _host_spec._gpu;
+    _spec->_skydome_type = (SkydomeType) _host_spec._model_spec._skydome_type;
     _camera = std::make_unique<Camera>(
         *this
-        , _spec._camera_spec._eye
-        , _spec._camera_spec._lookAt
-        , _spec._camera_spec._up
-        , _spec._camera_spec._fov
+        , _model->_eye
+        , _model->_lookAt
+        , _model->_up
+        , _model->_fov
         , _model->_orthozoom
-        , _spec._camera_spec._lens_radius
-        , _spec._camera_spec._focal_length
-        , _spec._camera_spec._w
-        , _spec._camera_spec._h
+        , _host_spec._camera_spec._lens_radius
+        , _host_spec._camera_spec._focal_length
+        , _host_spec._camera_spec._w
+        , _host_spec._camera_spec._h
         );
-    _hosek_sky = std::make_unique<HosekSky>( *this );
+    _hosek = std::make_unique<HosekSky>( *this );
     if ( _cuda_payload->_num_lights < 2 )
-        _cuda_spec->enable_sky_light();
+        _spec->enable_sky_light();
     else
-        _cuda_spec->disable_sky_light();
+        _spec->disable_sky_light();
     std::cout << stat << std::endl;
 }
 
 void Scene::updateSky( float theta, float phi ) const {
-    _hosek_sky->update( theta, phi );
+    _hosek->update( theta, phi );
 }
 
 void Scene::enableDebugSky() const {
-    _cuda_spec->enable_debug_sky();
+    _spec->enable_debug_sky();
 }
 
 void Scene::disableDebugSky() const {
-    _cuda_spec->disable_debug_sky();
+    _spec->disable_debug_sky();
 }
 
 void Scene::setCameraType( CameraType type ) const {
@@ -105,48 +102,49 @@ void Scene::setCameraType( CameraType type ) const {
 }
 
 void Scene::enableSky() const {
-    _cuda_spec->enable_sky_light();
+    _spec->enable_sky_light();
 }
 
 void Scene::disableSky() const {
-    _cuda_spec->disable_sky_light();
+    _spec->disable_sky_light();
 }
 
 void Scene::enableMIS() const {
-    _cuda_spec->enable_mis();
+    _spec->enable_mis();
 }
 
 void Scene::disableMIS() const {
-    _cuda_spec->disable_mis();
+    _spec->disable_mis();
 }
 bool Scene::isSkydomeEnabled() const {
-    return _cuda_spec->is_sky_light_enabled();
+    return _spec->is_sky_light_enabled();
 }
 
 void Scene::updateCudaSpec() {
-    if ( _cuda_spec->_outofsync ) {
-        update_cuda_spec( _cuda_spec );
+    if ( _spec->_outofsync ) {
+        update_cuda_spec();
+        _spec->_outofsync = false;
         resetCudaRenderBuffer();
     }
 }
 
-void Scene::updateCudaSky() const {
-    _hosek_sky->updateCudaSky();
+void Scene::updateCudaSky() {
+    if ( _hosek->_outofsync ) {
+        _hosek->updateCudaHosek();
+        resetCudaRenderBuffer();
+    }
 }
 
 void Scene::updateCudaCamera() {
-    _camera->updateCudaCamera();
+    if ( _camera->_outofsync ) {
+        _camera->updateCudaCamera();
+        resetCudaRenderBuffer();
+    }
 }
 
-void Scene::initCudaContext( GLuint* cudaTextureID) const {
-    int gpuID = _spec._gpu;
-    SkydomeType skydome_type = (SkydomeType) _spec._model_spec._skydome_type;
-    load_cuda_data( _cuda_payload, _hosek_sky->_cuda_hosek_sky, gpuID, skydome_type, cudaTextureID, _camera->_w, _camera->_h );
+void Scene::initCudaContext( GLuint* cudaTextureID ) const {
+    load_cuda_data( _cuda_payload, _hosek->_cuda_hosek_sky, _camera->_cuda_camera, *_spec.get(), cudaTextureID );
 }
-
-//void Scene::initFramebuffer( GLuint* textureID ) const {
-//    init_framebuffer( textureID, getWidthPixels(), getHeightPixels() );
-//}
 
 void Scene::path_tracer() {
     cuda_path_tracer( _frameCount );

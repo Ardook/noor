@@ -306,14 +306,14 @@ HINT #1:   if you want to model the sky of an earth-like planet that orbits
 #pragma warning( disable: 4244 )
 #ifndef _ARHOSEK_SKYMODEL_H_
 #define _ARHOSEK_SKYMODEL_H_
-struct ArHosekSkyModelConfiguration {
-	float c0, c1, c2, c3, c4, c5, c6, c7, c8;
-	float& operator[]( int i ) {
-		float* start = &c0;
-		return *( start + i );
-	}
-};
-//typedef float ArHosekSkyModelConfiguration[9];
+//struct ArHosekSkyModelConfiguration {
+//	float c0, c1, c2, c3, c4, c5, c6, c7, c8;
+//	float& operator[]( int i ) {
+//		float* start = &c0;
+//		return *( start + i );
+//	}
+//};
+typedef float ArHosekSkyModelConfiguration[9];
 
 //   Spectral version of the model
 

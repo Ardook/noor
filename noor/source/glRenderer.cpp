@@ -47,7 +47,7 @@ namespace {
         SUN_UP = GLFW_KEY_UP,
         SUN_DOWN = GLFW_KEY_DOWN,
         SCREEN_SHOT_FLIP = GLFW_KEY_F1,
-        SCREEN_SHOT_NO_FLIP= GLFW_KEY_F2,
+        SCREEN_SHOT_NO_FLIP = GLFW_KEY_F2,
         QUIT = GLFW_KEY_ESCAPE
     };
 
@@ -139,13 +139,6 @@ void displayFps( unsigned int frame_count ) {
     }
     if ( keymap[DISPLAY_FPS] && frame_count > 0 && fps >= 0.0 ) {
         int l = sprintf_s( fps_text, "fps: %7.2f", fps );
-        /*std::string msg;
-        if ( scene->_camera->_type == PERSP )
-            msg += " Perspective ";
-        else if ( scene->_camera->_type == ORTHO )
-            msg += " Orthographic ";
-        else
-            msg += " Environment ";*/
     }
     if ( !keymap[DISPLAY_FPS] ) {
         fps_text[0] = '\0';
@@ -153,10 +146,10 @@ void displayFps( unsigned int frame_count ) {
     glfwSetWindowTitle( window, fps_text );
 }
 
-void screenshot(bool flip = true) {
+void screenshot( bool flip = true ) {
     const std::string root_dir( "C:\\Users\\ardavan\\Desktop\\noor\\docs\\screenshots\\" );
-    const std::string dir_50( root_dir+"50percent\\" );
-    const std::string dir_100( root_dir+"100percent\\" );
+    const std::string dir_50( root_dir + "50percent\\" );
+    const std::string dir_100( root_dir + "100percent\\" );
 
     std::stringstream filename;
     time_t rawtime = std::time( nullptr );
@@ -181,10 +174,10 @@ void screenshot(bool flip = true) {
         data
     );
     stbi_flip_vertically_on_write( flip );
-    stbi_write_jpg( file_100.c_str(), w, h, channels, data, 100);
+    stbi_write_jpg( file_100.c_str(), w, h, channels, data, 100 );
     GLubyte* resized_data = new GLubyte[channels * w*h / 4];
     stbir_resize_uint8( data, w, h, 0, resized_data, w / 2, h / 2, 0, channels );
-    stbi_write_jpg( file_50.c_str(), w/2, h/2, channels, resized_data, 100);
+    stbi_write_jpg( file_50.c_str(), w / 2, h / 2, channels, resized_data, 100 );
     delete[] data;
     delete[] resized_data;
 }
@@ -210,10 +203,10 @@ void keyboard( GLFWwindow* window, int key, int scancode, int action, int mode )
                 glfwSetWindowShouldClose( window, GLFW_TRUE );
                 return;
             case SCREEN_SHOT_FLIP:
-                screenshot(true);
+                screenshot( true );
                 break;
             case SCREEN_SHOT_NO_FLIP:
-                screenshot(false);
+                screenshot( false );
                 break;
             case CUDA_SKY_LIGHT:
                 if ( keymap[CUDA_SKY_LIGHT] )
@@ -281,8 +274,8 @@ void motion( GLFWwindow* window, double x, double y ) {
 }
 
 void renderCuda() {
-    scene->updateCudaCamera();
     scene->updateCudaSpec();
+    scene->updateCudaCamera();
     scene->updateCudaSky();
     scene->path_tracer();
     glDrawElements(
@@ -399,7 +392,6 @@ void initGLShaders() {
 
 void initCudaConext() {
     scene->initCudaContext( &cudaTextureID );
-    //scene->initFramebuffer( &cudaTextureID );
 }
 
 void initGLContext() {

@@ -30,6 +30,7 @@ struct Screen {
 };
 class Camera {
     friend class Scene;
+    friend class CudaRenderManager;
     Scene& _scene;
     bool _outofsync{ true };
     // screen boundaries
@@ -100,6 +101,7 @@ class Camera {
     glm::mat4 _rasterToCamera;
 
     CameraType _type;
+    CudaCamera _cuda_camera;
 public:
     Camera() = default;
     Camera(
@@ -131,8 +133,11 @@ public:
         _rotation( 1.f ),
         _cameraToWorld( 1.f ),
         _rasterToCamera( 1.f ),
-        _type( PERSP ) {
+        _type( PERSP )
+    {
         reset( w, h );
+        _cuda_camera.update( _cameraToWorld, _rasterToCamera, _w, _h, 
+                             _lens_radius, _focal_length, _type );
     }
 
     void reset( int w, int h ) {
@@ -162,128 +167,13 @@ public:
         _outofsync = true;
     }
 
-    glm::mat4 orthographic( float n, float f ) {
-        return glm::scale( glm::vec3( 1.f, 1.f, 1.f / ( f - n ) ) ) *
-            glm::translate( glm::vec3( 0, 0, -n ) );
-    }
-
-    glm::mat4 perspective( float fov, float n, float f ) {
-        float cot = 1.0f / std::tanf( fov / 2.f );
-        // Scale canonical perspective view to specified field of view
-        glm::mat4 persp{
-            cot, 0, 0, 0
-            , 0, cot, 0, 0
-            , 0, 0, ( f + n ) / ( n - f ), -1
-            , 0, 0, -2 * f*n / ( f - n ), 0 };
-        return persp;
-    }
-
-    void updateScreenToRaster() {
-        _screenToRaster =
-            glm::scale( glm::vec3( _w, _h, 1.0f ) ) *
-            glm::scale( glm::vec3(
-            1.0f / ( _screen._max.x - _screen._min.x ),
-            1.0f / ( _screen._max.y - _screen._min.y ),
-            1.0f ) ) *
-            glm::translate( glm::vec3( -_screen._min.x, -_screen._min.y, 0.0f ) );
-        _rasterToCamera = glm::inverse( _cameraToScreen ) *
-            glm::inverse( _screenToRaster );
-        _outofsync = true;
-    }
-
-    void updatePerspProjection() {
-        _cameraToScreen = perspective( _fov, 0.01f, 1000.f );
-        updateScreenToRaster();
-        _outofsync = true;
-    }
-
-    void updateOrthoProjection() {
-        _cameraToScreen = orthographic( 0.f, 1.f );
-        _screen._min *= _orthozoom;
-        _screen._max *= _orthozoom;
-        updateScreenToRaster();
-        _outofsync = true;
-    }
-
-    void updateProjection() {
-        if ( _aspect > 1.f ) {
-            _screen._min.x = -_aspect;
-            _screen._max.x = _aspect;
-            _screen._min.y = -1.f;
-            _screen._max.y = 1.f;
-        } else {
-            _screen._min.x = -1.f;
-            _screen._max.x = 1.f;
-            _screen._min.y = -1.f / _aspect;
-            _screen._max.y = 1.f / _aspect;
-        }
-        if ( _type == PERSP ) {
-            updatePerspProjection();
-        } else if ( _type == ORTHO ) {
-            updateOrthoProjection();
-        }
-        _outofsync = true;
-    }
-
-    void updateView() {
-        _scale = glm::length( _eye - _lookAt );
-        const glm::mat4 R = _rotation * glm::toMat4( _q );
-        _cameraToWorld = glm::translate( _lookAt ) * R * glm::translate( glm::vec3( 0, 0, _scale ) );
-        _view = glm::translate( glm::vec3( 0, 0, -_scale ) ) * glm::transpose( R ) * glm::translate( -_lookAt );
-        _eye = getEye();
-        _outofsync = true;
-    }
-
     void updateCudaCamera() {
         if ( _outofsync ) {
-            update_cuda_camera( _cameraToWorld, _rasterToCamera, _w, _h, _lens_radius, _focal_length, _type );
-            _scene.resetCudaRenderBuffer();
+            _cuda_camera.update( _cameraToWorld, _rasterToCamera, _w, _h, 
+                                 _lens_radius, _focal_length, _type );
+            update_cuda_camera();
             _outofsync = false;
         }
-    }
-
-    glm::vec3 shoemake( float x, float y ) {
-        glm::vec3 p;
-        const float d = std::sqrt( x*x + y*y );
-        if ( d <= _r ) {   /* Inside sphere */
-            p = glm::vec3( x, y, sqrt( _r2 - d*d ) );
-        } else {        /* On hyperbola */
-            p = ( _r / d )*glm::vec3( x, y, 0.0f );
-        }
-        return glm::normalize( p );
-    }
-
-    glm::vec3 holroyd( float x, float y ) {
-        glm::vec3 p;
-        const float d = std::sqrt( x*x + y*y );
-        if ( d <= _rsq2 ) {    /* Inside sphere */
-            p = glm::vec3( x, y, sqrt( _r2 - d*d ) );
-        } else {            /* On hyperbola */
-            p = glm::normalize( glm::vec3( x, y, _r2 / ( 2.0f*d ) ) );
-        }
-        return glm::normalize( p );
-    }
-
-    glm::vec3 onSphere( const glm::ivec2& xy ) {
-        const float x = xy.x - _w / 2.0f;
-        const float y = -xy.y + _h / 2.0f;
-        return holroyd( x, y );
-    }
-
-    const glm::vec3 getEye() const {
-        return _cameraToWorld[3];
-    }
-
-    const glm::vec3 getRight() const {
-        return _cameraToWorld[0];
-    }
-
-    const glm::vec3 getUp() const {
-        return _cameraToWorld[1];
-    }
-
-    const glm::vec3 getForward() const {
-        return _cameraToWorld[2];
     }
 
     void mouse( int button, int action ) {
@@ -366,6 +256,122 @@ public:
         return _cameraToScreen;
     }
 
+private:
+    glm::mat4 orthographic( float n, float f ) {
+        return glm::scale( glm::vec3( 1.f, 1.f, 1.f / ( f - n ) ) ) *
+            glm::translate( glm::vec3( 0, 0, -n ) );
+    }
+
+    glm::mat4 perspective( float fov, float n, float f ) {
+        float cot = 1.0f / std::tanf( fov / 2.f );
+        // Scale canonical perspective view to specified field of view
+        glm::mat4 persp{
+            cot, 0, 0, 0
+            , 0, cot, 0, 0
+            , 0, 0, ( f + n ) / ( n - f ), -1
+            , 0, 0, -2 * f*n / ( f - n ), 0 };
+        return persp;
+    }
+
+    void updateScreenToRaster() {
+        _screenToRaster =
+            glm::scale( glm::vec3( _w, _h, 1.0f ) ) *
+            glm::scale( glm::vec3(
+            1.0f / ( _screen._max.x - _screen._min.x ),
+            1.0f / ( _screen._max.y - _screen._min.y ),
+            1.0f ) ) *
+            glm::translate( glm::vec3( -_screen._min.x, -_screen._min.y, 0.0f ) );
+        _rasterToCamera = glm::inverse( _cameraToScreen ) *
+            glm::inverse( _screenToRaster );
+        _outofsync = true;
+    }
+
+    void updatePerspProjection() {
+        _cameraToScreen = perspective( _fov, 0.01f, 1000.f );
+        updateScreenToRaster();
+        _outofsync = true;
+    }
+
+    void updateOrthoProjection() {
+        _cameraToScreen = orthographic( 0.f, 1.f );
+        _screen._min *= _orthozoom;
+        _screen._max *= _orthozoom;
+        updateScreenToRaster();
+        _outofsync = true;
+    }
+
+    void updateProjection() {
+        if ( _aspect > 1.f ) {
+            _screen._min.x = -_aspect;
+            _screen._max.x = _aspect;
+            _screen._min.y = -1.f;
+            _screen._max.y = 1.f;
+        } else {
+            _screen._min.x = -1.f;
+            _screen._max.x = 1.f;
+            _screen._min.y = -1.f / _aspect;
+            _screen._max.y = 1.f / _aspect;
+        }
+        if ( _type == PERSP ) {
+            updatePerspProjection();
+        } else if ( _type == ORTHO ) {
+            updateOrthoProjection();
+        }
+        _outofsync = true;
+    }
+
+    void updateView() {
+        _scale = glm::length( _eye - _lookAt );
+        const glm::mat4 R = _rotation * glm::toMat4( _q );
+        _cameraToWorld = glm::translate( _lookAt ) * R * glm::translate( glm::vec3( 0, 0, _scale ) );
+        _view = glm::translate( glm::vec3( 0, 0, -_scale ) ) * glm::transpose( R ) * glm::translate( -_lookAt );
+        _eye = getEye();
+        _outofsync = true;
+    }
+
+    glm::vec3 shoemake( float x, float y ) {
+        glm::vec3 p;
+        const float d = std::sqrt( x*x + y*y );
+        if ( d <= _r ) {   /* Inside sphere */
+            p = glm::vec3( x, y, sqrt( _r2 - d*d ) );
+        } else {        /* On hyperbola */
+            p = ( _r / d )*glm::vec3( x, y, 0.0f );
+        }
+        return glm::normalize( p );
+    }
+
+    glm::vec3 holroyd( float x, float y ) {
+        glm::vec3 p;
+        const float d = std::sqrt( x*x + y*y );
+        if ( d <= _rsq2 ) {    /* Inside sphere */
+            p = glm::vec3( x, y, sqrt( _r2 - d*d ) );
+        } else {            /* On hyperbola */
+            p = glm::normalize( glm::vec3( x, y, _r2 / ( 2.0f*d ) ) );
+        }
+        return glm::normalize( p );
+    }
+
+    glm::vec3 onSphere( const glm::ivec2& xy ) {
+        const float x = xy.x - _w / 2.0f;
+        const float y = -xy.y + _h / 2.0f;
+        return holroyd( x, y );
+    }
+
+    const glm::vec3 getEye() const {
+        return _cameraToWorld[3];
+    }
+
+    const glm::vec3 getRight() const {
+        return _cameraToWorld[0];
+    }
+
+    const glm::vec3 getUp() const {
+        return _cameraToWorld[1];
+    }
+
+    const glm::vec3 getForward() const {
+        return _cameraToWorld[2];
+    }
 };
 
 #endif /* NOOR_CAMERA_H */

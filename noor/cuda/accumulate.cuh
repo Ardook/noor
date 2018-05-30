@@ -168,9 +168,9 @@ void accumulate(
     bool MIS
 ) {
   
-    if ( MIS )
+   /* if ( MIS )
         accumulateMIS( I, rng, wi, beta, L );
-    else
+    else*/
         accumulate( I, rng, wi, beta, L );
 }
 

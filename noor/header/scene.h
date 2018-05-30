@@ -34,15 +34,15 @@ class Scene {
 public:
     std::unique_ptr<Model> _model;
     std::unique_ptr<Camera> _camera;
-    std::unique_ptr<HosekSky> _hosek_sky;
+    std::unique_ptr<HosekSky> _hosek;
+    std::unique_ptr<CudaSpec> _spec;
     std::unique_ptr<CudaPayload> _cuda_payload;
-    std::unique_ptr<CudaSpec> _cuda_spec;
     BBox _scene_bbox;
     float _scene_radius;
     float _scene_bias;
     unsigned int _frameCount;
     void load();
-    Spec _spec;
+    Spec _host_spec;
     ~Scene();
     Scene( const Spec& spec );
     const glm::mat4& getViewMatrix() const;
@@ -60,11 +60,10 @@ public:
 
     const BBox& getSceneBBox() const { return _scene_bbox; }
     float getSceneRadius() const { return _scene_radius; }
-    //void initFramebuffer( GLuint* textureID ) const;
     void setCameraType( CameraType type ) const;
     void updateSky( float theta, float phi ) const;
     void updateCudaSpec();
-    void updateCudaSky() const;
+    void updateCudaSky();
     void updateCudaCamera();
     void enableDebugSky() const;
     void disableDebugSky() const;

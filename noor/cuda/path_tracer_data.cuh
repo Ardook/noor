@@ -43,7 +43,7 @@ SOFTWARE.
 #include "bvh.cuh"
 #include "lookat.cuh"
 #include "framebuffer.cuh"
-#include "camera.cuh"
+#include "cameraimp.cuh"
 #include "render.cuh"
 #include "bsdf.cuh"
 #include "direct.cuh"
@@ -51,39 +51,27 @@ SOFTWARE.
 #include "accumulate.cuh"
 
 std::unique_ptr<CudaRenderManager> _cuda_renderer;
-//void init_framebuffer( GLuint* textureID, uint w, uint h ) {
-//    _cuda_renderer->init_framebuffer( textureID, w, h );
-//}
 
-void update_cuda_spec( std::unique_ptr<CudaSpec>& spec ) {
-    if ( spec->_outofsync ) {
-        _host_spec = *spec;
-        NOOR::memcopy_symbol_async( &_constant_spec, &_host_spec );
-        spec->_outofsync = false;
-    }
-}
-
-void load_cuda_data( const std::unique_ptr<CudaPayload>& payload,
-                     CudaHosekSky& hosek_sky, int gpuID,
-                     SkydomeType skydome_type,
-                     GLuint* cudaTextureID,
-                     int w, 
-                     int h
-
+void load_cuda_data( const std::unique_ptr<CudaPayload>& payload, 
+                     const CudaHosekSky& hosek,
+                     const CudaCamera& camera,
+                     const CudaSpec& spec,
+                     GLuint* textureID
 ) {
-    _cuda_renderer = std::make_unique<CudaRenderManager>( payload, hosek_sky, gpuID, skydome_type, cudaTextureID, w, h );
+    _cuda_renderer = std::make_unique<CudaRenderManager>( payload, hosek, 
+                                                          camera, spec, 
+                                                          textureID );
 }
 
-void update_cuda_camera( const glm::mat4& cameraToWorld,
-                         const glm::mat4& rasterToCamera, int w, int h,
-                         float lens_radius,
-                         float focal_length,
-                         CameraType camera_type ) {
-    _cuda_renderer->update_camera( cameraToWorld, rasterToCamera, w, h,
-                                   lens_radius, focal_length, camera_type );
+void update_cuda_spec() {
+    _cuda_renderer->update_spec();
 }
 
-void update_cuda_sky() {
+void update_cuda_camera() {
+    _cuda_renderer->update_camera();
+}
+
+void update_cuda_hosek() {
     _cuda_renderer->update_hoseksky();
 }
 

@@ -117,23 +117,18 @@ enum CameraType { PERSP = 0, ORTHO = 1, ENV = 2 };
 class CudaPayload;
 class CudaSpec;
 class CudaHosekSky;
+class CudaCamera;
 extern "C" {
     void load_cuda_data( const std::unique_ptr<CudaPayload>& payload,
-                         CudaHosekSky& hosek_sky,
-                         int gpuID,
-                         SkydomeType skydome_type,
-                         GLuint* cudaTextureID,
-                         int w, 
-                         int h
+                         const CudaHosekSky& hosek,
+                         const CudaCamera& camera,
+                         const CudaSpec& spec,
+                         GLuint* textureID
                          );
 
-    void update_cuda_camera( const glm::mat4& cameraToWorld,
-                             const glm::mat4& rasterToCamera, int w, int h,
-                             float lens_radius, float focal_length,
-                             CameraType camera_type );
-    void update_cuda_sky();
-    void update_cuda_spec( std::unique_ptr<CudaSpec>& spec );
-    //void init_framebuffer( GLuint* textureID, uint w, uint h );
+    void update_cuda_camera();
+    void update_cuda_hosek();
+    void update_cuda_spec();
     void cuda_path_tracer( unsigned int& frameCount );
     void device_free_memory();
     float4 get_lookAt();
@@ -148,6 +143,7 @@ extern "C" {
 #include "hosek.cuh"
 #include "material.cuh"
 #include "transform.cuh"
+#include "camera.cuh"
 #include "texture.h"
 #include "payload.h"
 #endif /* PATH_TRACER_CUH */
