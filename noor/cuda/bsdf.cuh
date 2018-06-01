@@ -54,6 +54,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef CUDABSDF_CUH
 #define CUDABSDF_CUH
 #include "bxdf.cuh"
+
 __forceinline__ __device__
 float Pdf(
     CudaBxDF* bxdf,
@@ -91,6 +92,7 @@ float Pdf(
             return 0.f;
     }
 }
+
 __forceinline__ __device__
 float3 f(
     CudaBxDF* bxdf,
@@ -128,6 +130,7 @@ float3 f(
             return _constant_spec._black;
     }
 }
+
 __forceinline__ __device__
 float3 Sample_f(
     CudaBxDF* bxdf,
