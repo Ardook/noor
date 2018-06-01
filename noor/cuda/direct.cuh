@@ -25,8 +25,8 @@ SOFTWARE.
 #define DIRECT_CUH
 
 __forceinline__ __device__
-bool occluded( const CudaIntersection& I, const CudaVisibility& v ) {
-    return ( intersectP( I.spawnShadowRay( v ), I ) );
+bool occluded( const CudaIntersection& I, const CudaVisibility& v, int* light_idx = nullptr ) {
+    return ( intersectP( I.spawnShadowRay( v ), I, light_idx ) );
 }
 
 template<typename BSDF>
@@ -124,9 +124,9 @@ float3 sampleBSDF( const BSDF& bsdf,
     const CudaRay shadow_ray = I.spawnShadowRay( wi, 2.f*_constant_spec._world_radius );
     if ( _light_manager.intersect( shadow_ray, light_idx ) ) {
         const CudaVisibility vis( I._p, shadow_ray.pointAtParameter( shadow_ray.getTmax() ) );
-        if ( !occluded( I, vis ) ) {
+        if ( !occluded( I, vis, &light_idx ) ) {
             Ld += _light_manager.Le( wi, light_idx ) * f * scatter_weight / scatter_pdf;
-        }
+        } 
     } else if ( _constant_spec.is_sky_light_enabled() ) {
         Ld += _skydome_manager.evaluate( wi ) * f * scatter_weight / scatter_pdf;
     }

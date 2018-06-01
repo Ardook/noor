@@ -30,7 +30,6 @@ struct mydeleter {
         t->free();
     }
 };
-
 template<class T>
 using myunique_ptr = std::unique_ptr< T, mydeleter<T> >;
 
@@ -45,6 +44,7 @@ struct CudaRenderManager {
     myunique_ptr<CudaLightManager> _host_light_manager;
     myunique_ptr<CudaTransformManager> _host_transform_manager;
     myunique_ptr<CudaSkyDomeManager> _host_skydome_manager;
+    myunique_ptr<CudaBxDFManager> _host_bxdf_manager;
     myunique_ptr<CudaFrameBufferManager> _framebuffer_manager;
 
     ~CudaRenderManager() {
@@ -54,6 +54,7 @@ struct CudaRenderManager {
         _host_material_manager.reset();
         _host_skydome_manager.reset();
         _host_texture_manager.reset();
+        _host_bxdf_manager.reset();
         _framebuffer_manager.reset();
         cudaDeviceReset();
     }
@@ -72,6 +73,7 @@ struct CudaRenderManager {
         _host_material_manager = myunique_ptr<CudaMaterialManager>( new CudaMaterialManager( payload.get() ) );
         _host_light_manager = myunique_ptr<CudaLightManager>( new CudaLightManager( payload.get() ) );
         _host_transform_manager = myunique_ptr<CudaTransformManager>( new CudaTransformManager( payload.get() ) );
+        _host_bxdf_manager = myunique_ptr<CudaBxDFManager>( new CudaBxDFManager(1) );
         _host_skydome_manager = myunique_ptr<CudaSkyDomeManager>( new CudaSkyDomeManager( _host_texture_manager->getEnvTexture(), _host_spec._skydome_type ) );
         _framebuffer_manager = myunique_ptr<CudaFrameBufferManager>( new CudaFrameBufferManager( textureID, _host_camera._w, _host_camera._h ) );
         update_spec();
@@ -84,6 +86,7 @@ struct CudaRenderManager {
         NOOR::memcopy_symbol( &_light_manager, _host_light_manager.get() );
         NOOR::memcopy_symbol( &_transform_manager, _host_transform_manager.get() );
         NOOR::memcopy_symbol( &_skydome_manager, _host_skydome_manager.get() );
+        NOOR::memcopy_symbol( &_constant_bxdf_manager, _host_bxdf_manager.get() );
     }
 
     void update_spec() {

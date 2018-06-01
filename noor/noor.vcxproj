@@ -315,10 +315,10 @@ copy "shader\*.gs" "$(OutDir)\shader\"</Command>
       <FastMath>true</FastMath>
       <AdditionalOptions>-Wno-deprecated-gpu-targets %(AdditionalOptions)</AdditionalOptions>
       <Include>$(CudaSamplesInclude)</Include>
-      <PtxAsOptionV>false</PtxAsOptionV>
+      <PtxAsOptionV>true</PtxAsOptionV>
       <Runtime>InheritFromHost</Runtime>
       <CodeGeneration>compute_61,sm_61</CodeGeneration>
-      <MaxRegCount>62</MaxRegCount>
+      <MaxRegCount>127</MaxRegCount>
       <GPUDebugInfo>false</GPUDebugInfo>
       <GenerateLineInfo>false</GenerateLineInfo>
       <Warning>W3</Warning>

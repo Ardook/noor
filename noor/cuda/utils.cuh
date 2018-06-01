@@ -37,6 +37,22 @@ namespace NOOR {
         }
     }
 
+    __forceinline__ __device__
+        float SchlickWeight( float cosTheta ) {
+        float m = clamp( 1.f - cosTheta, 0.f, 1.f );
+        return ( m * m ) * ( m * m ) * m;
+    }
+
+    __forceinline__ __device__
+        float3 sheen( const float3 &wo, const float3 &wi ) {
+        float3 wh = wi + wo;
+        if ( wh.x == 0 && wh.y == 0 && wh.z == 0 ) return make_float3( 0.f );
+        wh = normalize( wh );
+        float cosThetaD = dot( wi, wh );
+        const float3 R = make_float3( 1.f );
+        return R * SchlickWeight( cosThetaD );
+    }
+
     template<typename T>
     __device__ __host__ __forceinline__
         T saturate( const T& f ) {

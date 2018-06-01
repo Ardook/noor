@@ -169,7 +169,7 @@ public:
             v._from + _constant_spec._reflection_bias * _n :
             v._from - _constant_spec._reflection_bias * _n;
         float dist = length( p - v._to );
-        dist -= dist*_constant_spec._shadow_bias;
+        dist -= dist * _constant_spec._shadow_bias;
         return CudaRay( p, v._wi, dist );
     }
 

@@ -100,37 +100,34 @@ float3 fresnelConductor( float cosThetaI, const float3& etaI, const float3& etaT
 
     return 0.5f * ( Rp + Rs );
 }
-
-class CudaFresnelConductor {
+enum FresnelType {
+    DIELECTRIC = 0,
+    CONDUCTOR,
+    NOOP
+};
+class CudaFresnel{
 public:
     float3 _etaI;
     float3 _etaT;
     float3 _k;
+    FresnelType _type{ DIELECTRIC };
     __device__
-        CudaFresnelConductor( const float3 &etaI, const float3 &etaT, const float3 &k )
-        : _etaI( etaI ), _etaT( etaT ), _k( k ) {}
+        CudaFresnel( const float3 &etaI, const float3 &etaT, const float3 &k )
+        : _etaI( etaI ), _etaT( etaT ), _k( k ), _type(CONDUCTOR) {}
     __device__
-        float3 evaluate( float cosThetaI ) const {
-        return fresnelConductor( cosThetaI, _etaI, _etaT, _k );
-    }
-
-};
-
-class CudaFresnelDielectric {
-public:
-    float _etaI;
-    float _etaT;
+        CudaFresnel( const float3& etaI, const float3& etaT ) : 
+        _etaI( etaI ), _etaT( etaT ), _type(DIELECTRIC)  {}
     __device__
-        CudaFresnelDielectric( const float3& etaI, const float3& etaT ) : _etaI( etaI.x ), _etaT( etaT.x ) {}
+        CudaFresnel() : _type(NOOP)  {}
     __device__
         float3 evaluate( float cosThetaI ) const {
-        return make_float3( fresnelDielectric( cosThetaI, _etaI, _etaT ) );
+        if ( _type == CONDUCTOR )
+            return fresnelConductor( cosThetaI, _etaI, _etaT, _k );
+        else if ( _type == DIELECTRIC )
+            return make_float3( fresnelDielectric( cosThetaI, _etaI.x, _etaT.x ) );
+        else
+            return make_float3(1.f);
     }
 };
 
-class CudaFresnelNoOp {
-public:
-    __device__
-        float3 evaluate( float ) const { return make_float3( 1.0f ); }
-};
 #endif /* CUDAFRESNEL_CUH */

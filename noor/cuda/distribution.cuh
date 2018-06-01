@@ -67,10 +67,14 @@ public:
         _alphax( RoughnessToAlpha( alphax ) )
         , _alphay( RoughnessToAlpha( alphay ) ) {}
 
+    __device__
+        CudaTrowbridgeReitzDistribution( const float2 alpha ) :
+        _alphax( RoughnessToAlpha( alpha.x ) )
+        , _alphay( RoughnessToAlpha( alpha.y ) ) {}
+
     __device__ 
         float RoughnessToAlpha( float roughness ) {
-        //return fmaxf( roughness*roughness, 1e-3f );
-        return fmaxf( roughness, 1e-3f );
+        return fmaxf( roughness*roughness, 1e-3f );
     }
     __device__
         float D( const float3 &wh ) const {

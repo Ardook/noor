@@ -83,10 +83,8 @@ void sampleSphere(
     // Compute surface normal and sampled point on sphere
     float3 n = NOOR::sphericalDirection( sinAlpha, cosAlpha, phi, -u, -v, -w );
     p = sphere._center + sphere._radius * n;
-    //p = sphere._center + ( sphere._radius + _constant_spec._reflection_bias ) * n;
-
     p *= sphere._radius / length( p - sphere._center );
-    //p += _constant_spec._reflection_bias * n;
+    p += _constant_spec._reflection_bias * n;
     // uniform cone PDF
     pdf = NOOR::uniformConePdf( cosThetaMax );
 }

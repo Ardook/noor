@@ -32,51 +32,10 @@ void accumulateMIS(
     , float3& beta
     , float3& L
 ) {
-    if ( I._material_type & DIFFUSE ) {
-        const CudaDiffuseBSDF bsdf = factoryDiffuseBSDF( I );
-        L += beta * directMIS( bsdf, I, rng );
-        beta *= scatter( bsdf, I, rng, wi );
-    } else if ( I._material_type & ORENNAYAR ) {
-        const CudaOrenNayarBSDF bsdf = factoryOrenNayarBSDF( I );
-        L += beta * directMIS( bsdf, I, rng );
-        beta *= scatter( bsdf, I, rng, wi );
-    } else if ( I._material_type & TRANSLUCENT ) {
-        const CudaTranslucentBSDF bsdf = factoryTranslucentBSDF( I );
-        L += beta * directMIS( bsdf, I, rng );
-        beta *= scatter( bsdf, I, rng, wi );
-    } else if ( I._material_type & GLASS ) {
-        const CudaGlassBSDF bsdf = factoryGlassBSDF( I );
-        L += beta * directMIS( bsdf, I, rng );
-        beta *= scatter( bsdf, I, rng, wi );
-    } else if ( I._material_type & GLOSSY ) {
-        const CudaGlossyBSDF bsdf = factoryGlossyBSDF( I );
-        L += beta * directMIS( bsdf, I, rng );
-        beta *= scatter( bsdf, I, rng, wi );
-    } else if ( I._material_type & METAL ) {
-        const CudaMetalBSDF bsdf = factoryMetalBSDF( I );
-        L += beta * directMIS( bsdf, I, rng );
-        beta *= scatter( bsdf, I, rng, wi );
-    } else if ( I._material_type & ROUGHGLASS ) {
-        const CudaRoughGlassBSDF bsdf = factoryRoughGlassBSDF( I );
-        L += beta * directMIS( bsdf, I, rng );
-        beta *= scatter( bsdf, I, rng, wi );
-    } else if ( I._material_type & MIRROR ) {
-        const CudaSpecularReflectionBSDF bsdf = factoryMirrorBSDF( I );
-        L += beta * directMIS( bsdf, I, rng );
-        beta *= scatter( bsdf, I, rng, wi );
-    } else if ( I._material_type & SUBSTRATE ) {
-        const CudaFresnelBlendBSDF bsdf = factoryFresnelBlendBSDF( I );
-        L += beta * directMIS( bsdf, I, rng );
-        beta *= scatter( bsdf, I, rng, wi );
-    } else if ( I._material_type & SMOOTHCOATING ) {
-        const CudaCoatingBSDF bsdf = factorySmoothCoatingBSDF( I );
-        L += beta * directMIS( bsdf, I, rng );
-        beta *= scatter( bsdf, I, rng, wi );
-    } else if ( I._material_type == SHADOW ) {
-        const CudaShadowCatcherBSDF bsdf = factoryShadowCatcherBSDF( I );
-        L += beta * directMIS( bsdf, I, rng );
-        beta *= scatter( bsdf, I, rng, wi );
-    }
+    CudaBSDF bsdf;
+    factoryBSDF( I, bsdf );
+    L += beta * directMIS( bsdf, I, rng );
+    beta *= scatter( bsdf, I, rng, wi );
 }
 
 __forceinline__ __device__
@@ -87,51 +46,10 @@ void accumulate(
     , float3& beta
     , float3& L
 ) {
-    if ( I._material_type & DIFFUSE ) {
-        const CudaDiffuseBSDF bsdf = factoryDiffuseBSDF( I );
-        L += beta * direct( bsdf, I, rng );
-        beta *= scatter( bsdf, I, rng, wi );
-    } else if ( I._material_type & ORENNAYAR ) {
-        const CudaOrenNayarBSDF bsdf = factoryOrenNayarBSDF( I );
-        L += beta * direct( bsdf, I, rng );
-        beta *= scatter( bsdf, I, rng, wi );
-    } else if ( I._material_type & TRANSLUCENT ) {
-        const CudaTranslucentBSDF bsdf = factoryTranslucentBSDF( I );
-        L += beta * direct( bsdf, I, rng );
-        beta *= scatter( bsdf, I, rng, wi );
-    } else if ( I._material_type & GLASS ) {
-        const CudaGlassBSDF bsdf = factoryGlassBSDF( I );
-        L += beta * direct( bsdf, I, rng );
-        beta *= scatter( bsdf, I, rng, wi );
-    } else if ( I._material_type & GLOSSY ) {
-        const CudaGlossyBSDF bsdf = factoryGlossyBSDF( I );
-        L += beta * direct( bsdf, I, rng );
-        beta *= scatter( bsdf, I, rng, wi );
-    } else if ( I._material_type & METAL ) {
-        const CudaMetalBSDF bsdf = factoryMetalBSDF( I );
-        L += beta * direct( bsdf, I, rng );
-        beta *= scatter( bsdf, I, rng, wi );
-    } else if ( I._material_type & ROUGHGLASS ) {
-        const CudaRoughGlassBSDF bsdf = factoryRoughGlassBSDF( I );
-        L += beta * direct( bsdf, I, rng );
-        beta *= scatter( bsdf, I, rng, wi );
-    } else if ( I._material_type & MIRROR ) {
-        const CudaSpecularReflectionBSDF bsdf = factoryMirrorBSDF( I );
-        L += beta * direct( bsdf, I, rng );
-        beta *= scatter( bsdf, I, rng, wi );
-    } else if ( I._material_type & SUBSTRATE ) {
-        const CudaFresnelBlendBSDF bsdf = factoryFresnelBlendBSDF( I );
-        L += beta * direct( bsdf, I, rng );
-        beta *= scatter( bsdf, I, rng, wi );
-    } else if ( I._material_type & SMOOTHCOATING ) {
-        const CudaCoatingBSDF bsdf = factorySmoothCoatingBSDF( I );
-        L += beta * direct( bsdf, I, rng );
-        beta *= scatter( bsdf, I, rng, wi );
-    } else if ( I._material_type == SHADOW ) {
-        const CudaShadowCatcherBSDF bsdf = factoryShadowCatcherBSDF( I );
-        L += beta * direct( bsdf, I, rng );
-        beta *= scatter( bsdf, I, rng, wi );
-    }
+    CudaBSDF bsdf;
+    factoryBSDF( I, bsdf );
+    L += beta * direct( bsdf, I, rng );
+    beta *= scatter( bsdf, I, rng, wi );
 }
 
 /* Based on PBRT bump mapping */
@@ -167,10 +85,9 @@ void accumulate(
     float3& L,
     bool MIS
 ) {
-  
-   /* if ( MIS )
+    if ( MIS )
         accumulateMIS( I, rng, wi, beta, L );
-    else*/
+    else
         accumulate( I, rng, wi, beta, L );
 }
 

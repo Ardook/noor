@@ -52,7 +52,7 @@ void Scene::load() {
     _model->loadCudaPayload( _cuda_payload );
     _scene_bbox = _model->getSceneBBox();
     _scene_radius = _scene_bbox.radius();
-    _scene_bias = 0.0001f * _scene_radius;
+    _scene_bias = 0.00001f * _scene_radius;
     _spec = std::make_unique<CudaSpec>();
     _spec->_bvh_height = stat._height;
     _spec->_bounces = _host_spec._camera_spec._bounces;
@@ -60,7 +60,7 @@ void Scene::load() {
     _spec->_white = make_float3( 1.0f, 1.0f, 1.0f );
     _spec->_black = make_float3( 0.0f, 0.0f, 0.0f );
     _spec->_reflection_bias = _scene_bias;
-    _spec->_shadow_bias = 0.0001f;
+    _spec->_shadow_bias = 0.00001f * _scene_radius;
     _spec->_world_radius = _scene_radius;
     _spec->_bvh_root_node = _cuda_payload->_bvh_root_node;
     _spec->_gpuID = _host_spec._gpu;

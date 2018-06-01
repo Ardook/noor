@@ -29,9 +29,7 @@ template<class T>
 class CudaStack {
     T* _s;
     int _top;
-    //int _sentinel;
 public:
-    //__device__ CudaStack( T* s ) : _s( s ), _top( -1 ), _sentinel( -1 ) {};
     __device__ CudaStack( T* s ) : _s( s ), _top( -1 ) {};
     __device__ bool isEmpty() { return _top == -1; }
     __device__ int top_index() { return _top; }

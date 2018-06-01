@@ -44,7 +44,7 @@ SOFTWARE.
 #include <vector>
 
 // Kernel configuration 
-#define THREAD_W 16
+#define THREAD_W 8
 #define THREAD_H 8 
 #define THREAD_N THREAD_W * THREAD_H
 
@@ -63,7 +63,6 @@ SOFTWARE.
 #define LIGHT_NODE_MASK		0x08000000
 #define LIGHT_MASK			0x07FFFFFF
 
-#define SHADOW_BIAS 0.00001f
 #define F2V4( v ) glm::vec4( v.x, v.y, v.z, v.w )
 #define F2V3( v ) glm::vec3( v.x, v.y, v.z )
 #define V2F4( v ) make_float4( v.x, v.y, v.z, v.w )
@@ -87,7 +86,7 @@ constexpr float NOOR_PI_over_2 = NOOR_PI / 2.0f;
 constexpr float NOOR_PI_over_4 = NOOR_PI / 4.0f;
 constexpr float NOOR_3PI_over_2 = 3.f * NOOR_PI_over_2;
 
-constexpr int2 skydome_res{ 2048, 2048 };
+constexpr int2 skydome_res{ 1024, 1024 };
 #define SKYDOME_COLOR make_float3(.05f)
 enum MaterialType {
     DIFFUSE = 1 << 0,
