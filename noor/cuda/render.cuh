@@ -45,7 +45,7 @@ struct CudaRenderManager {
     myunique_ptr<CudaTransformManager> _host_transform_manager;
     myunique_ptr<CudaSkyDomeManager> _host_skydome_manager;
     myunique_ptr<CudaBxDFManager> _host_bxdf_manager;
-    myunique_ptr<CudaFrameBufferManager> _framebuffer_manager;
+    myunique_ptr<CudaFrameBufferManager> _host_framebuffer_manager;
 
     ~CudaRenderManager() {
         _host_transform_manager.reset();
@@ -55,17 +55,19 @@ struct CudaRenderManager {
         _host_skydome_manager.reset();
         _host_texture_manager.reset();
         _host_bxdf_manager.reset();
-        _framebuffer_manager.reset();
+        _host_framebuffer_manager.reset();
         cudaDeviceReset();
     }
     CudaRenderManager( const std::unique_ptr<CudaPayload>& payload,
                        const CudaHosekSky& hosek,
                        const CudaCamera& camera,
                        const CudaSpec& spec,
-                       GLuint* textureID ) :
+                       GLuint* textureID
+                       ) :
         _host_hosek( hosek ),
         _host_camera( camera ),
-        _host_spec( spec ) {
+        _host_spec( spec )
+    {
         cudaSetDevice( _host_spec._gpuID );
         printf( "GPU %d selected\n", _host_spec._gpuID );
         _host_texture_manager = myunique_ptr<CudaTextureManager>( new CudaTextureManager( payload.get() ) );
@@ -75,7 +77,7 @@ struct CudaRenderManager {
         _host_transform_manager = myunique_ptr<CudaTransformManager>( new CudaTransformManager( payload.get() ) );
         _host_bxdf_manager = myunique_ptr<CudaBxDFManager>( new CudaBxDFManager(1) );
         _host_skydome_manager = myunique_ptr<CudaSkyDomeManager>( new CudaSkyDomeManager( _host_texture_manager->getEnvTexture(), _host_spec._skydome_type ) );
-        _framebuffer_manager = myunique_ptr<CudaFrameBufferManager>( new CudaFrameBufferManager( textureID, _host_camera._w, _host_camera._h ) );
+        _host_framebuffer_manager = myunique_ptr<CudaFrameBufferManager>( new CudaFrameBufferManager( textureID, _host_camera._w, _host_camera._h ) );
         update_spec();
         update_camera();
         update_hoseksky();
@@ -86,7 +88,8 @@ struct CudaRenderManager {
         NOOR::memcopy_symbol( &_light_manager, _host_light_manager.get() );
         NOOR::memcopy_symbol( &_transform_manager, _host_transform_manager.get() );
         NOOR::memcopy_symbol( &_skydome_manager, _host_skydome_manager.get() );
-        NOOR::memcopy_symbol( &_constant_bxdf_manager, _host_bxdf_manager.get() );
+        NOOR::memcopy_symbol( &_bxdf_manager, _host_bxdf_manager.get() );
+        NOOR::memcopy_symbol( &_framebuffer_manager, _host_framebuffer_manager.get() );
     }
 
     void update_spec() {

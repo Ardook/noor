@@ -187,6 +187,10 @@ public:
         return ( ( _material_type & BUMP ) != 0 );
     }
     __device__
+        bool isEmitter() const {
+        return ( ( _material_type & NOOR_EMITTER ) != 0 );
+    }
+    __device__
         bool isShadowCatcher() const {
         return ( ( _material_type & SHADOW ) != 0 );
     }

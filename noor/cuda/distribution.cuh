@@ -55,12 +55,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define CUDADISTRIBUTION_CUH
 /* based on PBRTTrowbridge Distribution */
 
-class CudaTrowbridgeReitzDistribution {
+class CudaTrowbridgeReitz {
     // TrowbridgeReitzDistribution Private Data
     float _alphax, _alphay;
 public:
+        CudaTrowbridgeReitz() = default;
     __device__
-        CudaTrowbridgeReitzDistribution(
+        CudaTrowbridgeReitz(
         float alphax
         , float alphay
         ) :
@@ -68,7 +69,7 @@ public:
         , _alphay( RoughnessToAlpha( alphay ) ) {}
 
     __device__
-        CudaTrowbridgeReitzDistribution( const float2 alpha ) :
+        CudaTrowbridgeReitz( const float2 alpha ) :
         _alphax( RoughnessToAlpha( alpha.x ) )
         , _alphay( RoughnessToAlpha( alpha.y ) ) {}
 

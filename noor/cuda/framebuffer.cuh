@@ -33,12 +33,17 @@ public:
     // Cuda to OpenGL mapping resource
     cudaGraphicsResource* _glResource;
     size_t _size_bytes;
-
+    float4 _black;
     CudaFrameBufferManager() = default;
-    CudaFrameBufferManager( GLuint* textureID, uint w, uint h ) :
-        _w( w )
-        , _h( h )
-        , _size_bytes( w * h * sizeof( float4 ) ) {
+    CudaFrameBufferManager( 
+                            GLuint* textureID, 
+                            uint w, 
+                            uint h ) :
+        _w( w ),
+        _h( h ),
+        _size_bytes( w * h * sizeof( float4 ) ),
+        _black( make_float4( 0.0f, 0.0f, 0.0f, 1.0f ) )
+    {
         glGenTextures( 1, textureID );
         glBindTexture( GL_TEXTURE_2D, *textureID );
         glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
@@ -46,10 +51,19 @@ public:
         glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
         glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
         glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA32F, _w, _h, 0, GL_RGBA, GL_FLOAT, nullptr );
-        checkNoorErrors( cudaGraphicsGLRegisterImage( &_glResource, *textureID, GL_TEXTURE_2D, cudaGraphicsMapFlagsWriteDiscard ) );
+        checkNoorErrors( cudaGraphicsGLRegisterImage( &_glResource, *textureID, 
+                         GL_TEXTURE_2D, cudaGraphicsMapFlagsWriteDiscard ) );
         checkNoorErrors( cudaMalloc( (void **) &_buffer, _size_bytes ) );
     }
-
+    __device__
+        float4 get( int index, uint frame_number )const {
+        return frame_number > 1 ? _buffer[index] : make_float4( 0.0f, 0.0f, 0.0f, 1.0f );
+    }
+    __device__
+        void set( const float4& new_color, int index, uint frame_number ){
+        const float4 old_color = get( index, frame_number );
+        _buffer[index] = lerp( old_color, new_color, 1.0f / static_cast<float>( frame_number ) );
+    }
     void update() {
         checkNoorErrors( cudaGraphicsMapResources( 1, &_glResource, nullptr ) );
         checkNoorErrors( cudaGraphicsSubResourceGetMappedArray( &_buffer_array, _glResource, 0, 0 ) );
@@ -61,4 +75,6 @@ public:
         cudaFree( _buffer );
     }
 };
+__constant__
+CudaFrameBufferManager _framebuffer_manager;
 #endif /* CUDAFRAMEBUFFER_CUH */

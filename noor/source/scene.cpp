@@ -142,8 +142,9 @@ void Scene::updateCudaCamera() {
     }
 }
 
-void Scene::initCudaContext( GLuint* cudaTextureID ) const {
-    load_cuda_data( _cuda_payload, _hosek->_cuda_hosek_sky, _camera->_cuda_camera, *_spec.get(), cudaTextureID );
+void Scene::initCudaContext( GLuint* cudaTextureID ){
+    load_cuda_data( _cuda_payload, _hosek->_cuda_hosek_sky, _camera->_cuda_camera, 
+                    *_spec.get(), cudaTextureID );
 }
 
 void Scene::path_tracer() {

@@ -73,6 +73,6 @@ public:
     void enableMIS() const;
     void disableMIS() const;
     bool isSkydomeEnabled() const;
-    void initCudaContext( GLuint* cudaTextureID) const;
+    void initCudaContext( GLuint* cudaTextureID);
 };
 #endif /* SCENE_H */

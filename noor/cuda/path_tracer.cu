@@ -52,13 +52,11 @@ float4 pathtracer(
             if ( bounce == 0 ) {
                 lookAt = make_float4( I._p, 1.f );
             }
-            if ( I._material_type & EMITTER ) {
-                if ( bounce == 0 || specular_bounce ) {
-                    L += beta * ( I._material_type & MESHLIGHT ?
-                                  _light_manager.Le( ray.getDir(), I._ins_idx ) :
-                                  _material_manager.getEmmitance( I )
-                                  );
-                }
+            if ( I.isEmitter() && ( bounce == 0 || specular_bounce ) ) {
+                L += beta * ( I._material_type & MESHLIGHT ?
+                              _light_manager.Le( ray.getDir(), I._ins_idx ) :
+                              _material_manager.getEmmitance( I )
+                              );
                 break;
             }
             if ( ray.isDifferential() && I.isBumped() ) {
@@ -71,9 +69,9 @@ float4 pathtracer(
             specular_bounce = I.isSpecularBounce();
             ray = I.spawnRay( ray, wi );
         } else { // no intersection 
-            if ( _constant_spec.is_sky_light_enabled() ) {
-                if ( bounce == 0 || specular_bounce )
-                    L += beta*_skydome_manager.evaluate( normalize( ray.getDir() ), false );
+            if ( _constant_spec.is_sky_light_enabled() && 
+                ( bounce == 0 || specular_bounce ) ) {
+                L += beta*_skydome_manager.evaluate( normalize( ray.getDir() ), false );
             }
             break;
         }
@@ -83,10 +81,7 @@ float4 pathtracer(
 }
 
 __global__
-void path_tracer_kernel(
-    float4* framebuffer
-    , uint frame_number
-) {
+void path_tracer_kernel( uint frame_number ) {
     const int x = blockIdx.x * blockDim.x + threadIdx.x;
     const int y = blockIdx.y * blockDim.y + threadIdx.y;
     int id = y * _constant_camera._w + x;
@@ -95,55 +90,53 @@ void path_tracer_kernel(
     int tid = threadIdx.y * blockDim.x + threadIdx.x;
     float4 lookAt = make_float4( 0.f );
     const float4 new_color = pathtracer( ray, rng, lookAt, tid );
-    const float4 old_color = frame_number > 1 ? framebuffer[id] : make_float4( 0.0f, 0.0f, 0.0f, 1.0f );
-    framebuffer[id] = lerp( old_color, new_color, 1.0f / static_cast<float>( frame_number ) );
+    _framebuffer_manager.set( new_color, id, frame_number );
     if ( id == _constant_camera._center ) {
         _device_lookAt = lookAt;
     }
 }
 
-__global__
-void debug_skydome_kernel(
-    float4* framebuffer
-    , uint frame_number
-    , int width
-    , int height
-) {
-    int x = blockIdx.x * blockDim.x + threadIdx.x;
-    int y = blockIdx.y * blockDim.y + threadIdx.y;
-    const int id = y * _constant_camera._w + x;
-    float2 u = make_float2( x / (float) ( _constant_camera._w ), y / (float) ( _constant_camera._h ) );
-    framebuffer[id] = _skydome_manager.evaluate( u );
-    if ( _constant_spec.is_mis_enabled() ) {
-        CudaRNG rng( id, frame_number + clock64() );
-        u = _skydome_manager.importance_sample_uv( make_float2( rng(), rng() ) );
-        u.x *= _constant_camera._w;
-        u.y *= _constant_camera._h;
-        const int newid = int( u.y ) * ( _constant_camera._w ) + int( u.x );
-        framebuffer[newid] = make_float4( 1.f, 0, 0, 1 );
-    }
-}
+//__global__
+//void debug_skydome_kernel(
+//    uint frame_number
+//    , int width
+//    , int height
+//) {
+//    int x = blockIdx.x * blockDim.x + threadIdx.x;
+//    int y = blockIdx.y * blockDim.y + threadIdx.y;
+//    const int id = y * _constant_camera._w + x;
+//    float2 u = make_float2( x / (float) ( _constant_camera._w ), y / (float) ( _constant_camera._h ) );
+//    framebuffer[id] = _skydome_manager.evaluate( u );
+//    if ( _constant_spec.is_mis_enabled() ) {
+//        CudaRNG rng( id, frame_number + clock64() );
+//        u = _skydome_manager.importance_sample_uv( make_float2( rng(), rng() ) );
+//        u.x *= _constant_camera._w;
+//        u.y *= _constant_camera._h;
+//        const int newid = int( u.y ) * ( _constant_camera._w ) + int( u.x );
+//        framebuffer[newid] = make_float4( 1.f, 0, 0, 1 );
+//    }
+//}
 
-void debug_skydome( uint& frame_number ) {
-    static const int width = _cuda_renderer->_host_camera._w;
-    static const int height = _cuda_renderer->_host_camera._h;
-    static const dim3 block( THREAD_W, THREAD_H, 1 );
-    static const dim3 grid( width / block.x, height / block.y, 1 );
-    debug_skydome_kernel << < grid, block >> > ( _cuda_renderer->_framebuffer_manager->_buffer, frame_number, width, height );
-}
+//void debug_skydome( uint& frame_number ) {
+//    static const int width = _cuda_renderer->_host_camera._w;
+//    static const int height = _cuda_renderer->_host_camera._h;
+//    static const dim3 block( THREAD_W, THREAD_H, 1 );
+//    static const dim3 grid( width / block.x, height / block.y, 1 );
+//    debug_skydome_kernel << < grid, block >> > ( frame_number, width, height );
+//}
 
 void cuda_path_tracer( unsigned int& frame_number ) {
     static const dim3 block( THREAD_W, THREAD_H, 1 );
     static const dim3 grid( _cuda_renderer->_host_camera._w / block.x, _cuda_renderer->_host_camera._h / block.y, 1 );
     cudaFuncSetCacheConfig( path_tracer_kernel, cudaFuncCachePreferL1 );
     const size_t shmsize = THREAD_N * _cuda_renderer->_host_spec._bvh_height * sizeof( uint );
-    if ( _cuda_renderer->_host_spec._debug_sky )
+    /*if ( _cuda_renderer->_host_spec._debug_sky )
         debug_skydome( frame_number );
-    else
-        path_tracer_kernel << <grid, block, shmsize >> > ( _cuda_renderer->_framebuffer_manager->_buffer, frame_number );
+    else*/
+    path_tracer_kernel << <grid, block, shmsize >> > ( frame_number );
     checkNoorErrors( cudaPeekAtLastError() );
     checkNoorErrors( cudaDeviceSynchronize() );
-    _cuda_renderer->_framebuffer_manager->update();
+    _cuda_renderer->_host_framebuffer_manager->update();
     ++frame_number;
 }
 

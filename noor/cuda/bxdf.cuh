@@ -117,7 +117,6 @@ static bool Refract( const float3 &wi, const float3 &n, float eta, float3 &wt ) 
 }
 
 #include "distribution.cuh"
-
 // BSDF Declarations
 enum BxDFType {
     BSDF_REFLECTION = 1 << 0,
@@ -125,23 +124,39 @@ enum BxDFType {
     BSDF_DIFFUSE = 1 << 2,
     BSDF_GLOSSY = 1 << 3,
     BSDF_SPECULAR = 1 << 4,
-    BSDF_ALL = BSDF_DIFFUSE | BSDF_GLOSSY |
-    BSDF_SPECULAR | BSDF_REFLECTION | BSDF_TRANSMISSION
+    BSDF_CONDUCTOR = 1 << 5,
+    BSDF_DIELECTRIC = 1 << 6,
+    BSDF_NOOP = 1 << 7,
+    BSDF_ALL = BSDF_DIFFUSE | BSDF_GLOSSY | BSDF_SPECULAR |
+    BSDF_REFLECTION | BSDF_TRANSMISSION |
+    BSDF_CONDUCTOR | BSDF_DIELECTRIC | BSDF_NOOP
 };
+
 enum BxDFIndex {
+    //reflections
     LambertReflection = 0,
+    SpecularReflectionNoOp,
+    SpecularReflectionDielectric,
+    MicrofacetReflectionDielectric,
+    MicrofacetReflectionConductor,
+
+    // transmissions
     LambertTransmission,
-    SpecularReflection,
     SpecularTransmission,
-    MicrofacetReflection,
     MicrofacetTransmission,
+
+    // multi-lobe
     FresnelBlend,
-    FresnelSpecular
+    FresnelSpecular,
+    NUM_BXDFS
 };
+
 class CudaBxDF {
 public:
     BxDFType _type;
     BxDFIndex _index;
+    CudaTrowbridgeReitz _distribution;
+    bool _distribution_is_set{ false };
 public:
     __device__
         CudaBxDF( BxDFType type, BxDFIndex index ) :_type( type ), _index( index ) {}
@@ -153,9 +168,23 @@ public:
         bool isSpecular() const {
         return ( _type & BSDF_SPECULAR );
     }
+    /*__device__
+        bool isMictosurface() const {
+        return (
+            _index == MicrofacetReflectionDielectric ||
+            _index == MicrofacetReflectionConductor ||
+            _index == MicrofacetTransmission );
+    }*/
     __device__
-        bool notSpecular() const {
-        return !isSpecular();
+        bool isConductor() const {
+        return ( _type & BSDF_CONDUCTOR );
+    }
+    __device__
+        void factoryDistribution( const CudaIntersection& I ) {
+        if ( !_distribution_is_set ) {
+            _distribution = CudaTrowbridgeReitz( _material_manager.getRoughness( I ) );
+            _distribution_is_set = true;
+        }
     }
     __device__
         float3 R( const CudaIntersection& I )const {
@@ -186,27 +215,23 @@ public:
         CudaFresnel factoryFresnel( const CudaIntersection& I ) const {
         const float3 etaI = make_float3( 1.f );
         const float3 etaT = ior( I );
-        if ( I._material_type == METAL )
+        if ( _type & BSDF_CONDUCTOR )
             return CudaFresnel( etaI, etaT, k( I ) );
-        else if ( I._material_type == MIRROR ) {
-            return CudaFresnel();
-        } else {
+        else if ( _type & BSDF_DIELECTRIC ) {
             return CudaFresnel( etaI, etaT );
+        } else {
+            return CudaFresnel();
         }
     }
-    __device__
-        CudaTrowbridgeReitzDistribution factoryDistribution( const CudaIntersection& I ) const {
-        const float2 r = _material_manager.getRoughness( I );
-        return CudaTrowbridgeReitzDistribution( r );
-    }
+
 };
 
 class CudaLambertianReflection : public CudaBxDF {
 public:
-    // LambertianReflection Public Methods
     __device__
         CudaLambertianReflection() :
-        CudaBxDF( BxDFType( BSDF_REFLECTION | BSDF_DIFFUSE ), LambertReflection ) {}
+        CudaBxDF( BxDFType( BSDF_REFLECTION | BSDF_DIFFUSE | BSDF_DIELECTRIC ),
+                  LambertReflection ) {}
     __device__
         float3 f( const CudaIntersection& I,
                   const float3 &wo,
@@ -239,10 +264,10 @@ public:
 
 class CudaLambertianTransmission : public CudaBxDF {
 public:
-    // LambertianTransmission Public Methods
     __device__
         CudaLambertianTransmission() :
-        CudaBxDF( BxDFType( BSDF_TRANSMISSION | BSDF_DIFFUSE ), LambertTransmission ) {}
+        CudaBxDF( BxDFType( BSDF_TRANSMISSION | BSDF_DIFFUSE | BSDF_DIELECTRIC ),
+                  LambertTransmission ) {}
     __device__
         float3 f( const CudaIntersection& I,
                   const float3 &wo,
@@ -278,7 +303,8 @@ class CudaFresnelSpecular : public CudaBxDF {
 public:
     __device__
         CudaFresnelSpecular() :
-        CudaBxDF( BxDFType( BSDF_REFLECTION | BSDF_TRANSMISSION | BSDF_SPECULAR ), FresnelSpecular ) {}
+        CudaBxDF( BxDFType( BSDF_REFLECTION | BSDF_TRANSMISSION |
+                  BSDF_SPECULAR | BSDF_DIELECTRIC ), FresnelSpecular ) {}
 
     __device__
         float3 f( const CudaIntersection& I,
@@ -333,8 +359,12 @@ public:
 class CudaSpecularReflection : public CudaBxDF {
 public:
     __device__
-        CudaSpecularReflection() :
-        CudaBxDF( BxDFType( BSDF_REFLECTION | BSDF_SPECULAR ), SpecularReflection ) {}
+        CudaSpecularReflection( BxDFType type = BSDF_NOOP ) :
+        CudaBxDF( BxDFType( type | BSDF_REFLECTION | BSDF_SPECULAR ),
+                  type == BSDF_NOOP ?
+                  SpecularReflectionNoOp :
+                  SpecularReflectionDielectric
+        ) {}
     __device__
         float3 f( const CudaIntersection& I,
                   const float3 &wo,
@@ -368,10 +398,10 @@ public:
 
 class CudaSpecularTransmission : public CudaBxDF {
 public:
-    // SpecularTransmission Public Methods
     __device__
         CudaSpecularTransmission() :
-        CudaBxDF( BxDFType( BSDF_TRANSMISSION | BSDF_SPECULAR ), SpecularTransmission ) {}
+        CudaBxDF( BxDFType( BSDF_TRANSMISSION | BSDF_SPECULAR |
+                  BSDF_DIELECTRIC ), SpecularTransmission ) {}
     __device__
         float3 f( const CudaIntersection& I,
                   const float3 &wo,
@@ -413,10 +443,10 @@ public:
 
 class CudaFresnelBlend : public CudaBxDF {
 public:
-    // FresnelBlend Public Methods
     __device__
         CudaFresnelBlend() :
-        CudaBxDF( BxDFType( BSDF_REFLECTION | BSDF_GLOSSY ), FresnelBlend ) {}
+        CudaBxDF( BxDFType( BSDF_REFLECTION | BSDF_GLOSSY | BSDF_DIELECTRIC ),
+                  FresnelBlend ) {}
     __device__
         float3 SchlickFresnel( const CudaIntersection& I, float cosTheta ) const {
         return S( I ) + NOOR::pow5f( 1.f - cosTheta ) * ( make_float3( 1.f ) - S( I ) );
@@ -432,9 +462,8 @@ public:
         float3 wh = wi + wo;
         if ( wh.x == 0 && wh.y == 0 && wh.z == 0 ) return make_float3( 0 );
         wh = NOOR::normalize( wh );
-        const CudaTrowbridgeReitzDistribution  distribution = factoryDistribution( I );
         const float3 specular =
-            distribution.D( wh ) /
+            _distribution.D( wh ) /
             ( 4.f * NOOR::absDot( wi, wh ) * fmaxf( AbsCosTheta( wi ), AbsCosTheta( wo ) ) ) *
             SchlickFresnel( I, dot( wi, wh ) );
         return diffuse + specular;
@@ -459,8 +488,7 @@ public:
         } else {
             lu.x = fminf( 2.f * ( lu.x - .5f ), NOOR_ONE_MINUS_EPSILON );
             // Sample microfacet orientation $\wh$ and reflected direction $\wi$
-            const CudaTrowbridgeReitzDistribution  distribution = factoryDistribution( I );
-            const float3 wh = distribution.Sample_wh( wo, lu );
+            const float3 wh = _distribution.Sample_wh( wo, lu );
             wi = Reflect( wo, wh );
             if ( !SameHemisphere( wo, wi ) ) return make_float3( 0.f );
         }
@@ -472,8 +500,7 @@ public:
                    const float3 &wo, const float3 &wi ) const {
         if ( !SameHemisphere( wo, wi ) ) return 0.f;
         float3 wh = NOOR::normalize( wo + wi );
-        const CudaTrowbridgeReitzDistribution  distribution = factoryDistribution( I );
-        float pdf_wh = distribution.Pdf( wo, wh );
+        float pdf_wh = _distribution.Pdf( wo, wh );
         return .5f * ( AbsCosTheta( wi ) * NOOR_invPI + pdf_wh / ( 4.f * dot( wo, wh ) ) );
     }
 };
@@ -481,10 +508,13 @@ public:
 
 class CudaMicrofacetReflection : public CudaBxDF {
 public:
-    // MicrofacetReflection Public Methods
     __device__
-        CudaMicrofacetReflection()
-        : CudaBxDF( BxDFType( BSDF_REFLECTION | BSDF_GLOSSY ), MicrofacetReflection ) {}
+        CudaMicrofacetReflection( BxDFType type = BSDF_DIELECTRIC )
+        : CudaBxDF( BxDFType( type | BSDF_REFLECTION | BSDF_GLOSSY ),
+                    type == BSDF_DIELECTRIC ?
+                    MicrofacetReflectionDielectric :
+                    MicrofacetReflectionConductor
+        ) {}
 
     __device__
         float3 f( const CudaIntersection& I,
@@ -498,9 +528,7 @@ public:
         wh = NOOR::normalize( wh );
         const CudaFresnel fresnel = factoryFresnel( I );
         const float3 F = fresnel.evaluate( dot( wo, wh ) );
-        const CudaTrowbridgeReitzDistribution  distribution = factoryDistribution( I );
-        return NOOR::sheen( wo, wi ) + R( I ) * distribution.D( wh ) *
-            distribution.G( wo, wi ) * F /
+        return R( I ) * _distribution.D( wh ) * _distribution.G( wo, wi ) * F /
             ( 4.0f * cosThetaI * cosThetaO );
     }
 
@@ -516,8 +544,7 @@ public:
         sampledType = _type;
         // Sample microfacet orientation $\wh$ and reflected direction $\wi$
         if ( wo.z == 0.0f ) return _constant_spec._black;
-        const CudaTrowbridgeReitzDistribution  distribution = factoryDistribution( I );
-        const float3 wh = distribution.Sample_wh( wo, u );
+        const float3 wh = _distribution.Sample_wh( wo, u );
         wi = Reflect( wo, wh );
         if ( !SameHemisphere( wo, wi ) ) {
             pdf = 0.0f;
@@ -525,7 +552,7 @@ public:
         }
 
         // Compute PDF of _wi_ for microfacet reflection
-        pdf = distribution.Pdf( wo, wh ) / ( 4.0f * dot( wo, wh ) );
+        pdf = _distribution.Pdf( wo, wh ) / ( 4.0f * dot( wo, wh ) );
         return f( I, wo, wi );
     }
     __device__
@@ -535,17 +562,16 @@ public:
             return 0.0f;
         }
         const float3 wh = NOOR::normalize( wo + wi );
-        const CudaTrowbridgeReitzDistribution  distribution = factoryDistribution( I );
-        return distribution.Pdf( wo, wh ) / ( 4.0f * dot( wo, wh ) );
+        return _distribution.Pdf( wo, wh ) / ( 4.0f * dot( wo, wh ) );
     }
 };
 
 class CudaMicrofacetTransmission : public CudaBxDF {
 public:
-    // MicrofacetReflection Public Methods
     __device__
         CudaMicrofacetTransmission() :
-        CudaBxDF( BxDFType( BSDF_TRANSMISSION | BSDF_GLOSSY ), MicrofacetTransmission ) {}
+        CudaBxDF( BxDFType( BSDF_TRANSMISSION | BSDF_GLOSSY | BSDF_DIELECTRIC ),
+                  MicrofacetTransmission ) {}
 
     __device__
         float3 f( const CudaIntersection& I,
@@ -568,9 +594,8 @@ public:
 
         const float sqrtDenom = dot( wo, wh ) + eta * dot( wi, wh );
         const float factor = 1.f / eta;
-        const CudaTrowbridgeReitzDistribution  distribution = factoryDistribution( I );
-        const float3 result = NOOR::sheen( wo, wi ) + ( make_float3( 1.f ) - F ) * T( I ) *
-            fabsf( distribution.D( wh ) * distribution.G( wo, wi ) * eta * eta *
+        const float3 result = ( make_float3( 1.f ) - F ) * T( I ) *
+            fabsf( _distribution.D( wh ) * _distribution.G( wo, wi ) * eta * eta *
                    NOOR::absDot( wi, wh ) * NOOR::absDot( wo, wh ) * factor * factor /
                    ( cosThetaI * cosThetaO * sqrtDenom * sqrtDenom ) );
         return result;
@@ -586,8 +611,7 @@ public:
         ) const {
         sampledType = _type;
         if ( wo.z == 0 ) return _constant_spec._black;
-        const CudaTrowbridgeReitzDistribution  distribution = factoryDistribution( I );
-        float3 wh = distribution.Sample_wh( wo, u );
+        const float3 wh = _distribution.Sample_wh( wo, u );
         const CudaFresnel fresnel = factoryFresnel( I );
         const float eta = CosTheta( wo ) > 0 ? ( fresnel._etaI / fresnel._etaT ).x :
             ( fresnel._etaT / fresnel._etaI ).x;
@@ -610,40 +634,56 @@ public:
         const float dwh_dwi =
             fabsf( ( eta * eta * dot( wi, wh ) ) / ( sqrtDenom * sqrtDenom ) );
         const float2 r = roughness( I );
-        const CudaTrowbridgeReitzDistribution  distribution = factoryDistribution( I );
-        return distribution.Pdf( wo, wh ) * dwh_dwi;
+        return _distribution.Pdf( wo, wh ) * dwh_dwi;
     }
 };
 
-#define NUM_BXDFS 8
 
 __global__
 void setup_bxdfs( CudaBxDF** bxdfs,
-                  CudaLambertianReflection* bxdf0,
-                  CudaLambertianTransmission* bxdf1,
-                  CudaSpecularReflection* bxdf2,
-                  CudaSpecularTransmission* bxdf3,
-                  CudaMicrofacetReflection* bxdf4,
-                  CudaMicrofacetTransmission* bxdf5,
-                  CudaFresnelBlend* bxdf6,
-                  CudaFresnelSpecular* bxdf7
+                  // reflections
+                  CudaLambertianReflection* _lambertReflection,
+                  CudaSpecularReflection* _specularReflectionNoOp,
+                  CudaSpecularReflection* _specularReflectionDielectric,
+                  CudaMicrofacetReflection* _microfacetReflectionDielectric,
+                  CudaMicrofacetReflection* _microfacetReflectionConductor,
+                  // transmissions
+                  CudaLambertianTransmission* _lambertTransmission,
+                  CudaSpecularTransmission* _specularTransmission,
+                  CudaMicrofacetTransmission* _microfacetTransmission,
+                  // multi-lobes
+                  CudaFresnelBlend* _fresnelBlend,
+                  CudaFresnelSpecular* _fresnelSpecular
 ) {
-    *bxdf0 = CudaLambertianReflection();
-    *bxdf1 = CudaLambertianTransmission();
-    *bxdf2 = CudaSpecularReflection();
-    *bxdf3 = CudaSpecularTransmission();
-    *bxdf4 = CudaMicrofacetReflection();
-    *bxdf5 = CudaMicrofacetTransmission();
-    *bxdf6 = CudaFresnelBlend();
-    *bxdf7 = CudaFresnelSpecular();
-    bxdfs[LambertReflection] = bxdf0;
-    bxdfs[LambertTransmission] = bxdf1;
-    bxdfs[SpecularReflection] = bxdf2;
-    bxdfs[SpecularTransmission] = bxdf3;
-    bxdfs[MicrofacetReflection] = bxdf4;
-    bxdfs[MicrofacetTransmission] = bxdf5;
-    bxdfs[FresnelBlend] = bxdf6;
-    bxdfs[FresnelSpecular] = bxdf7;
+    _lambertReflection = new CudaLambertianReflection();
+    bxdfs[LambertReflection] = _lambertReflection;
+
+    _specularReflectionNoOp = new CudaSpecularReflection( BSDF_NOOP );
+    bxdfs[SpecularReflectionNoOp] = _specularReflectionNoOp;
+
+    _specularReflectionDielectric = new CudaSpecularReflection( BSDF_DIELECTRIC );
+    bxdfs[SpecularReflectionDielectric] = _specularReflectionDielectric;
+
+    _microfacetReflectionDielectric = new CudaMicrofacetReflection( BSDF_DIELECTRIC );
+    bxdfs[MicrofacetReflectionDielectric] = _microfacetReflectionDielectric;
+
+    _microfacetReflectionConductor = new CudaMicrofacetReflection( BSDF_CONDUCTOR );
+    bxdfs[MicrofacetReflectionConductor] = _microfacetReflectionConductor;
+
+    _lambertTransmission = new CudaLambertianTransmission();
+    bxdfs[LambertTransmission] = _lambertTransmission;
+
+    _specularTransmission = new CudaSpecularTransmission();
+    bxdfs[SpecularTransmission] = _specularTransmission;
+
+    _microfacetTransmission = new CudaMicrofacetTransmission();
+    bxdfs[MicrofacetTransmission] = _microfacetTransmission;
+
+    _fresnelBlend = new CudaFresnelBlend();
+    bxdfs[FresnelBlend] = _fresnelBlend;
+
+    _fresnelSpecular = new CudaFresnelSpecular();
+    bxdfs[FresnelSpecular] = _fresnelSpecular;
 }
 __global__
 void free_bxdfs( CudaBxDF** bxdfs ) {
@@ -655,56 +695,52 @@ void free_bxdfs( CudaBxDF** bxdfs ) {
 class CudaBxDFManager {
 public:
     CudaBxDF** _bxdfs;
-    CudaLambertianReflection* _bxdf0;
-    CudaLambertianTransmission* _bxdf1;
-    CudaSpecularReflection* _bxdf2;
-    CudaSpecularTransmission* _bxdf3;
-    CudaMicrofacetReflection* _bxdf4;
-    CudaMicrofacetTransmission* _bxdf5;
-    CudaFresnelBlend* _bxdf6;
-    CudaFresnelSpecular* _bxdf7;
+
+    // reflections
+    CudaLambertianReflection* _lambertReflection;
+    CudaSpecularReflection* _specularReflectionNoOp;
+    CudaSpecularReflection* _specularReflectionDielectric;
+    CudaMicrofacetReflection* _microfacetReflectionDielectric;
+    CudaMicrofacetReflection* _microfacetReflectionConductor;
+    // transmissions
+    CudaLambertianTransmission* _lambertTransmission;
+    CudaSpecularTransmission* _specularTransmission;
+    CudaMicrofacetTransmission* _microfacetTransmission;
+    // multi-lobes
+    CudaFresnelBlend* _fresnelBlend;
+    CudaFresnelSpecular* _fresnelSpecular;
 
     CudaBxDFManager() = default;
 
     __host__
         CudaBxDFManager( int i ) {
         NOOR::malloc( (void**) &_bxdfs, NUM_BXDFS * sizeof( CudaBxDF* ) );
-        NOOR::malloc( (void**) &_bxdf0, sizeof( CudaLambertianReflection ) );
-        NOOR::malloc( (void**) &_bxdf1, sizeof( CudaLambertianTransmission ) );
-        NOOR::malloc( (void**) &_bxdf2, sizeof( CudaSpecularReflection ) );
-        NOOR::malloc( (void**) &_bxdf3, sizeof( CudaSpecularTransmission ) );
-        NOOR::malloc( (void**) &_bxdf4, sizeof( CudaMicrofacetReflection ) );
-        NOOR::malloc( (void**) &_bxdf5, sizeof( CudaMicrofacetTransmission ) );
-        NOOR::malloc( (void**) &_bxdf6, sizeof( CudaFresnelBlend ) );
-        NOOR::malloc( (void**) &_bxdf7, sizeof( CudaFresnelSpecular ) );
         setup_bxdfs << < 1, 1 >> > ( _bxdfs,
-                                     _bxdf0,
-                                     _bxdf1,
-                                     _bxdf2,
-                                     _bxdf3,
-                                     _bxdf4,
-                                     _bxdf5,
-                                     _bxdf6,
-                                     _bxdf7
+                                     // reflections
+                                     _lambertReflection,
+                                     _specularReflectionNoOp,
+                                     _specularReflectionDielectric,
+                                     _microfacetReflectionDielectric,
+                                     _microfacetReflectionConductor,
+                                     // transmissions
+                                     _lambertTransmission,
+                                     _specularTransmission,
+                                     _microfacetTransmission,
+                                     // multi-lobes
+                                     _fresnelBlend,
+                                     _fresnelSpecular
                                      );
     }
+
     __host__
         void free() {
-        //free_bxdfs << < 1, 1 >> > ( _bxdfs );
-        cudaFree( _bxdf0 );
-        cudaFree( _bxdf1 );
-        cudaFree( _bxdf2 );
-        cudaFree( _bxdf3 );
-        cudaFree( _bxdf4 );
-        cudaFree( _bxdf5 );
-        cudaFree( _bxdf6 );
-        cudaFree( _bxdf7 );
+        free_bxdfs << < 1, 1 >> > ( _bxdfs );
         cudaFree( _bxdfs );
     }
 };
 
 __constant__
-CudaBxDFManager _constant_bxdf_manager;
+CudaBxDFManager _bxdf_manager;
 #endif /* CUDABXDF_CUH */
 
 //class CudaShadowCatcher: public CudaBxDF {

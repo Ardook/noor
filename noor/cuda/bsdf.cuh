@@ -55,25 +55,34 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define CUDABSDF_CUH
 #include "bxdf.cuh"
 __forceinline__ __device__
-float myPdf(
-    const CudaBxDF* bxdf,
+float Pdf(
+    CudaBxDF* bxdf,
     const CudaIntersection& I,
     const float3 &woWorld,
     const float3 &wiWorld
 ) {
     switch ( bxdf->_index ) {
+        // reflections
         case LambertReflection:
             return ( (CudaLambertianReflection*) bxdf )->Pdf( I, woWorld, wiWorld );
+        case SpecularReflectionNoOp:
+        case SpecularReflectionDielectric:
+            return ( (CudaSpecularReflection*) bxdf )->Pdf( I, woWorld, wiWorld );
+        case MicrofacetReflectionDielectric:
+        case MicrofacetReflectionConductor:
+            bxdf->factoryDistribution(I);
+            return ( (CudaMicrofacetReflection*) bxdf )->Pdf( I, woWorld, wiWorld );
+
+        // transmissions
         case LambertTransmission:
             return ( (CudaLambertianTransmission*) bxdf )->Pdf( I, woWorld, wiWorld );
-        case SpecularReflection:
-            return ( (CudaSpecularReflection*) bxdf )->Pdf( I, woWorld, wiWorld );
         case SpecularTransmission:
             return ( (CudaSpecularTransmission*) bxdf )->Pdf( I, woWorld, wiWorld );
-        case MicrofacetReflection:
-            return ( (CudaMicrofacetReflection*) bxdf )->Pdf( I, woWorld, wiWorld );
         case MicrofacetTransmission:
+            bxdf->factoryDistribution(I);
             return ( (CudaMicrofacetTransmission*) bxdf )->Pdf( I, woWorld, wiWorld );
+
+        // multi-lobes
         case FresnelBlend:
             return ( (CudaFresnelBlend*) bxdf )->Pdf( I, woWorld, wiWorld );
         case FresnelSpecular:
@@ -83,25 +92,34 @@ float myPdf(
     }
 }
 __forceinline__ __device__
-float3 myf(
-    const CudaBxDF* bxdf,
+float3 f(
+    CudaBxDF* bxdf,
     const CudaIntersection& I,
     const float3 &woWorld,
     const float3 &wiWorld
 ) {
     switch ( bxdf->_index ) {
+        // reflections
         case LambertReflection:
             return ( (CudaLambertianReflection*) bxdf )->f( I, woWorld, wiWorld );
+        case SpecularReflectionNoOp:
+        case SpecularReflectionDielectric:
+            return ( (CudaSpecularReflection*) bxdf )->f( I, woWorld, wiWorld );
+        case MicrofacetReflectionDielectric:
+        case MicrofacetReflectionConductor:
+            bxdf->factoryDistribution(I);
+            return ( (CudaMicrofacetReflection*) bxdf )->f( I, woWorld, wiWorld );
+
+        // transmissions
         case LambertTransmission:
             return ( (CudaLambertianTransmission*) bxdf )->f( I, woWorld, wiWorld );
-        case SpecularReflection:
-            return ( (CudaSpecularReflection*) bxdf )->f( I, woWorld, wiWorld );
         case SpecularTransmission:
             return ( (CudaSpecularTransmission*) bxdf )->f( I, woWorld, wiWorld );
-        case MicrofacetReflection:
-            return ( (CudaMicrofacetReflection*) bxdf )->f( I, woWorld, wiWorld );
         case MicrofacetTransmission:
+            bxdf->factoryDistribution(I);
             return ( (CudaMicrofacetTransmission*) bxdf )->f( I, woWorld, wiWorld );
+
+        // multi-lobes
         case FresnelBlend:
             return ( (CudaFresnelBlend*) bxdf )->f( I, woWorld, wiWorld );
         case FresnelSpecular:
@@ -111,8 +129,8 @@ float3 myf(
     }
 }
 __forceinline__ __device__
-float3 mySample_f(
-    const CudaBxDF* bxdf,
+float3 Sample_f(
+    CudaBxDF* bxdf,
     const CudaIntersection& I,
     const float3 &woWorld,
     float3 &wiWorld,
@@ -121,18 +139,27 @@ float3 mySample_f(
     BxDFType &sampledType
 ) {
     switch ( bxdf->_index ) {
+        // reflections
         case LambertReflection:
             return ( (CudaLambertianReflection*) bxdf )->Sample_f( I, woWorld, wiWorld, u, pdf, sampledType );
+        case SpecularReflectionNoOp:
+        case SpecularReflectionDielectric:
+            return ( (CudaSpecularReflection*) bxdf )->Sample_f( I, woWorld, wiWorld, u, pdf, sampledType );
+        case MicrofacetReflectionDielectric:
+        case MicrofacetReflectionConductor:
+            bxdf->factoryDistribution(I);
+            return ( (CudaMicrofacetReflection*) bxdf )->Sample_f( I, woWorld, wiWorld, u, pdf, sampledType );
+
+        // transmissions
         case LambertTransmission:
             return ( (CudaLambertianTransmission*) bxdf )->Sample_f( I, woWorld, wiWorld, u, pdf, sampledType );
-        case SpecularReflection:
-            return ( (CudaSpecularReflection*) bxdf )->Sample_f( I, woWorld, wiWorld, u, pdf, sampledType );
         case SpecularTransmission:
             return ( (CudaSpecularTransmission*) bxdf )->Sample_f( I, woWorld, wiWorld, u, pdf, sampledType );
-        case MicrofacetReflection:
-            return ( (CudaMicrofacetReflection*) bxdf )->Sample_f( I, woWorld, wiWorld, u, pdf, sampledType );
         case MicrofacetTransmission:
+            bxdf->factoryDistribution(I);
             return ( (CudaMicrofacetTransmission*) bxdf )->Sample_f( I, woWorld, wiWorld, u, pdf, sampledType );
+
+        // multi-lobes
         case FresnelBlend:
             return ( (CudaFresnelBlend*) bxdf )->Sample_f( I, woWorld, wiWorld, u, pdf, sampledType );
         case FresnelSpecular:
@@ -141,6 +168,7 @@ float3 mySample_f(
             return _constant_spec._black;
     }
 }
+
 class CudaBSDF {
 public:
     CudaBxDF* _bxdfs[8];
@@ -149,6 +177,7 @@ public:
 
     __device__
         CudaBSDF():_nbxdfs(0) {}
+    
     __device__
     void Add( CudaBxDF *b ) {
         _bxdfs[_nbxdfs++] = b;
@@ -178,8 +207,7 @@ public:
         for ( int i = 0; i < _nbxdfs; ++i )
             if ( _bxdfs[i]->MatchesFlags( flags ) ) {
                 ++matchingComps;
-                //pdf += _bxdfs[i]->Pdf( I, wo, wi );
-                pdf += myPdf(_bxdfs[i], I, wo, wi );
+                pdf += ::Pdf(_bxdfs[i], I, wo, wi );
             }
         return matchingComps > 0 ? pdf / matchingComps : 0.f;
     }
@@ -199,8 +227,7 @@ public:
             if ( _bxdfs[i]->MatchesFlags( flags ) &&
                 ( ( reflect && ( _bxdfs[i]->_type & BSDF_REFLECTION ) ) ||
                  ( !reflect && ( _bxdfs[i]->_type & BSDF_TRANSMISSION ) ) ) )
-                f += myf(_bxdfs[i], I, wo, wi );
-                //f += _bxdfs[i]->f( I, wo, wi );
+                f += ::f(_bxdfs[i], I, wo, wi );
         return f;
     }
     __device__
@@ -221,7 +248,7 @@ public:
         }
         const int comp = min( (int) floorf( u.x * matchingComps ), matchingComps-1 );
         const float2 uRemapped = make_float2(fminf( u.x * matchingComps - comp, NOOR_ONE_MINUS_EPSILON ), u.y );
-        const CudaBxDF *bxdf = nullptr;
+        CudaBxDF *bxdf = nullptr;
         int count = comp;
         for ( int i = 0; i < _nbxdfs; ++i ) {
             if ( _bxdfs[i]->MatchesFlags( type ) && count-- == 0 ) {
@@ -238,8 +265,7 @@ public:
         pdf = 0;
         sampledType = bxdf->_type;
         float3 wi;
-        //float3 f = bxdf->Sample_f( I, wo, wi, uRemapped, pdf, sampledType );
-        float3 f = mySample_f(bxdf, I, wo, wi, uRemapped, pdf, sampledType );
+        float3 f = ::Sample_f(bxdf, I, wo, wi, uRemapped, pdf, sampledType );
         if ( pdf == 0 ) {
             sampledType = BxDFType( 0 );
             return _constant_spec._black;
@@ -250,8 +276,7 @@ public:
         if ( !( bxdf->_type & BSDF_SPECULAR ) && matchingComps > 1 )
             for ( int i = 0; i < _nbxdfs; ++i )
                 if ( _bxdfs[i] != bxdf && _bxdfs[i]->MatchesFlags( type ) )
-                    //pdf += _bxdfs[i]->Pdf( I, wo, wi );
-                    pdf += myPdf(_bxdfs[i],I, wo, wi );
+                    pdf += ::Pdf(_bxdfs[i],I, wo, wi );
         if ( matchingComps > 1 ) pdf /= matchingComps;
 
         // Compute value of BSDF for sampled direction
@@ -262,8 +287,7 @@ public:
                 if ( _bxdfs[i]->MatchesFlags( type ) &&
                     ( ( reflect && ( _bxdfs[i]->_type & BSDF_REFLECTION ) ) ||
                      ( !reflect && ( _bxdfs[i]->_type & BSDF_TRANSMISSION ) ) ) )
-                    f += myf(_bxdfs[i], I, wo, wi );
-                    //f += _bxdfs[i]->f(I, wo, wi );
+                    f += ::f(_bxdfs[i], I, wo, wi );
         }
         return f;
     }
@@ -271,39 +295,39 @@ public:
 
 __forceinline__ __device__
 void factoryDiffuseBSDF( const CudaIntersection& I, CudaBSDF& bsdf ) {
-    bsdf.Add( _constant_bxdf_manager._bxdfs[LambertReflection] );
+    bsdf.Add( _bxdf_manager._bxdfs[LambertReflection] );
 }
 __forceinline__ __device__
 void factoryMirrorBSDF( const CudaIntersection& I, CudaBSDF& bsdf ) {
-    bsdf.Add( _constant_bxdf_manager._bxdfs[SpecularReflection] );
+    bsdf.Add( _bxdf_manager._bxdfs[SpecularReflectionNoOp] );
 }
 __forceinline__ __device__
 void factoryMetalBSDF( const CudaIntersection& I, CudaBSDF& bsdf ) {
-    bsdf.Add( _constant_bxdf_manager._bxdfs[MicrofacetReflection] );
+    bsdf.Add( _bxdf_manager._bxdfs[MicrofacetReflectionConductor] );
 }
 __forceinline__ __device__
 void factoryRoughGlassBSDF( const CudaIntersection& I, CudaBSDF& bsdf ) {
-    bsdf.Add( _constant_bxdf_manager._bxdfs[MicrofacetReflection] );
-    bsdf.Add( _constant_bxdf_manager._bxdfs[MicrofacetTransmission] );
+    bsdf.Add( _bxdf_manager._bxdfs[MicrofacetReflectionDielectric] );
+    bsdf.Add( _bxdf_manager._bxdfs[MicrofacetTransmission] );
 }
 __forceinline__ __device__
 void factoryGlossyBSDF( const CudaIntersection& I, CudaBSDF& bsdf ) {
-    bsdf.Add( _constant_bxdf_manager._bxdfs[LambertReflection] );
-    bsdf.Add( _constant_bxdf_manager._bxdfs[MicrofacetReflection] );
+    bsdf.Add( _bxdf_manager._bxdfs[LambertReflection] );
+    bsdf.Add( _bxdf_manager._bxdfs[MicrofacetReflectionDielectric] );
 }
 __forceinline__ __device__
 void factorySubstrateBSDF( const CudaIntersection& I, CudaBSDF& bsdf ) {
-    bsdf.Add( _constant_bxdf_manager._bxdfs[FresnelBlend] );
+    bsdf.Add( _bxdf_manager._bxdfs[FresnelBlend] );
 }
 __forceinline__ __device__
 void factoryGlassBSDF( const CudaIntersection& I, CudaBSDF& bsdf ) {
-    bsdf.Add( _constant_bxdf_manager._bxdfs[FresnelSpecular] );
+    bsdf.Add( _bxdf_manager._bxdfs[FresnelSpecular] );
 }
 
 __forceinline__ __device__
 void factoryTranslucentBSDF( const CudaIntersection& I, CudaBSDF& bsdf ) {
-    bsdf.Add( _constant_bxdf_manager._bxdfs[LambertReflection] );
-    bsdf.Add( _constant_bxdf_manager._bxdfs[LambertTransmission] );
+    bsdf.Add( _bxdf_manager._bxdfs[LambertReflection] );
+    bsdf.Add( _bxdf_manager._bxdfs[LambertTransmission] );
 }
 
 __forceinline__ __device__
