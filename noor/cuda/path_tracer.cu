@@ -63,7 +63,9 @@ float4 pathtracer(
                 bump( I );
             }
             accumulate( I, rng, wi, beta, L );
-            if ( !I.isTransparentBounce() && ( dot( wi, I._n ) < 0 ) ) break;
+            //if ( !I.isTransparentBounce() && ( dot( wi, I._n ) < 0 ) ) {
+            //    break;
+            //}
             // Russian Roulette 
             if ( rr_end( rng, bounce, beta ) ) break;
             specular_bounce = I.isSpecularBounce();
@@ -123,12 +125,14 @@ void debug_skydome( uint frame_number ) {
     static const dim3 block( THREAD_W, THREAD_H, 1 );
     static const dim3 grid( width / block.x, height / block.y, 1 );
     debug_skydome_kernel << < grid, block >> > ( frame_number, width, height );
+    checkNoorErrors( cudaPeekAtLastError() );
+    checkNoorErrors( cudaDeviceSynchronize() );
 }
 
 void cuda_path_tracer( unsigned int& frame_number ) {
     static const dim3 block( THREAD_W, THREAD_H, 1 );
     static const dim3 grid( _cuda_renderer->_host_camera._w / block.x, _cuda_renderer->_host_camera._h / block.y, 1 );
-    cudaFuncSetCacheConfig( path_tracer_kernel, cudaFuncCachePreferL1 );
+    checkNoorErrors( cudaFuncSetCacheConfig( path_tracer_kernel, cudaFuncCachePreferL1 ) );
     const size_t shmsize = THREAD_N * _cuda_renderer->_host_spec._bvh_height * sizeof( uint );
     if ( _cuda_renderer->_host_spec._debug_sky )
         debug_skydome( frame_number );

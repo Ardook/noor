@@ -32,12 +32,12 @@ public:
     __host__
         CudaMaterialManager( const CudaPayload* payload ) {
         _num_materials = (int) payload->_materials.size();
-        NOOR::malloc( (void**) &_materials, payload->_mat_size_bytes );
-        NOOR::memcopy( _materials, (void*) &payload->_materials[0], payload->_mat_size_bytes );
+        checkNoorErrors(NOOR::malloc(  &_materials, payload->_mat_size_bytes ));
+        checkNoorErrors(NOOR::memcopy( _materials, (void*) &payload->_materials[0], payload->_mat_size_bytes ));
     }
     __host__
         void free() {
-        cudaFree( _materials );
+        checkNoorErrors(cudaFree( _materials ));
     }
     __device__
         const CudaMaterial* getMaterial( uint mat_idx ) const {

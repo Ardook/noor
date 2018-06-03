@@ -97,7 +97,6 @@ public:
         CudaRay generateRay( int x, int y, const CudaRNG& rng ) const {
         const float raster_x = (float) x + rng() - 0.5f;
         const float raster_y = (float) y + rng() - 0.5f;
-
         const float3 pCamera = _rasterToCamera.transformPoint( make_float3( raster_x, raster_y, 0.0f ) );
         float3 origin = make_float3( 0.f );
         float3 dir = normalize( pCamera );
@@ -139,7 +138,6 @@ public:
                      dir_dy );
 
         ray.transform( _cameraToWorld );
-        ray.scaleDifferentials( .25f );
         return ray;
     }
 };
@@ -152,7 +150,6 @@ public:
         CudaRay generateRay( int x, int y, const CudaRNG& rng ) const {
         const float raster_x = (float) x + rng() - 0.5f;
         const float raster_y = (float) y + rng() - 0.5f;
-
         const float3 origin = _rasterToCamera.transformPoint( make_float3( raster_x, raster_y, 0.f ) );
         const float3 dir = make_float3( 0.f, 0.f, -1.f );
         const float3 origin_dx = origin + _dxCamera;

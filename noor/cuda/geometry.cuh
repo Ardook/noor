@@ -25,23 +25,6 @@ SOFTWARE.
 #define CUDAGEOMETRY_CUH
 
 __forceinline__ __device__
-bool solveQuadratic( const float &a, const float &b, const float &c, float &x0, float &x1 ) {
-    float discr = b * b - 4 * a * c;
-    if ( discr < 0 ) return false;
-    else if ( discr == 0 ) x0 = x1 = -0.5 * b / a;
-    else {
-        float q = ( b > 0 ) ?
-            -0.5 * ( b + sqrt( discr ) ) :
-            -0.5 * ( b - sqrt( discr ) );
-        x0 = q / a;
-        x1 = c / q;
-    }
-    if ( x0 > x1 ) NOOR::swap( x0, x1 );
-
-    return true;
-}
-
-__forceinline__ __device__
 void sampleQuad(
     const CudaShape& quad,
     const CudaIntersection& I,
@@ -131,23 +114,31 @@ bool intersectQuad(
 }
 
 __forceinline__ __device__
-bool intersectSphere(
-    const CudaShape& sphere,
-    const CudaRay& ray
-) {
-    float t_hit;
-    const float3 m = ray.getOrigin() - sphere._center;
-    const float b = dot( m, ray.getDir() );
-    const float c = dot( m, m ) - sphere._radius2;
-    if ( c > 0.0f && b > 0.0f ) return false;
-    const float discr = b*b - c;
-    // A negative discriminant corresponds to ray missing sphere
-    if ( discr < 0.0f ) return false;
-    // Ray now found to intersect sphere, compute smallest t value of intersection
-    t_hit = -b - sqrtf( discr );
-    if ( t_hit > ray.getTmax() ) return false;
-    // If t is negative, ray started inside sphere so clamp t to zero
-    ray.setTmax( t_hit );
+bool intersectSphere( const CudaShape& sphere,
+                   const CudaRay& ray ) {
+    const float3 o = ray.getOrigin() - sphere._center;
+    const float3& d = ray.getDir();
+
+    float A = NOOR::length2( d );
+    float B = 2 * dot( o, d );
+    float C = NOOR::length2( o ) - sphere._radius2;
+
+    float nearT, farT;
+    if ( !NOOR::solveQuadratic( A, B, C, nearT, farT ) )
+        return false;
+
+    const float mint = 0.f;
+    const float maxt = ray.getTmax();
+    if ( !( nearT <= maxt && farT >= mint ) ) /* NaN-aware conditionals */
+        return false;
+
+    if ( nearT < mint ) {
+        if ( farT > maxt )
+            return false;
+        ray.setTmax( farT );
+    } else {
+        ray.setTmax( nearT );
+    }
     return true;
 }
 

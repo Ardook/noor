@@ -178,22 +178,22 @@ public:
         _width( clamp( NOOR::nearestPow2( tex.width() ), 32, 1024 ) ),
         _height( clamp( NOOR::nearestPow2( tex.height() ), 32, 1024 ) ),
         _size_bytes( ( _height * ( _width + 2 ) + 1 ) * sizeof( float ) ) {
-        NOOR::malloc( (void**) &_func, _size_bytes );
-        NOOR::memset( (void*) _func, 0, _size_bytes );
+        checkNoorErrors(NOOR::malloc(  &_func, _size_bytes ));
+        checkNoorErrors( cudaMemset( (void*) _func, 0, _size_bytes ) );
 
-        NOOR::malloc( (void**) &_cdf, _size_bytes );
-        NOOR::memset( (void*) _cdf, 0, _size_bytes );
+        checkNoorErrors(NOOR::malloc(  &_cdf, _size_bytes ));
+        checkNoorErrors(cudaMemset( (void*) _cdf, 0, _size_bytes ));
         update( tex );
-        NOOR::create_1d_texobj( &_func_texobj, _func, _size_bytes, NOOR::_float_channelDesc );
-        NOOR::create_1d_texobj( &_cdf_texobj, _cdf, _size_bytes, NOOR::_float_channelDesc );
+        checkNoorErrors(NOOR::create_1d_texobj( &_func_texobj, _func, _size_bytes, NOOR::_float_channelDesc ));
+        checkNoorErrors(NOOR::create_1d_texobj( &_cdf_texobj, _cdf, _size_bytes, NOOR::_float_channelDesc ));
     }
 
     __host__
         void free() {
-        cudaDestroyTextureObject( _func_texobj );
-        cudaDestroyTextureObject( _cdf_texobj );
-        cudaFree( _func );
-        cudaFree( _cdf );
+        checkNoorErrors( cudaDestroyTextureObject( _func_texobj ));
+        checkNoorErrors( cudaDestroyTextureObject( _cdf_texobj ));
+        checkNoorErrors(cudaFree( _func ));
+        checkNoorErrors(cudaFree( _cdf ));
     }
 
     __host__

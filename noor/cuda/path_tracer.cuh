@@ -44,8 +44,8 @@ SOFTWARE.
 #include <vector>
 
 // Kernel configuration 
-#define THREAD_W 8
-#define THREAD_H 8 
+#define THREAD_W 16
+#define THREAD_H 16 
 #define THREAD_N THREAD_W * THREAD_H
 
 // BVH masks
@@ -68,9 +68,6 @@ SOFTWARE.
 #define V2F4( v ) make_float4( v.x, v.y, v.z, v.w )
 #define V2F3( v ) make_float3( v.x, v.y, v.z )
 #define V2F2( v ) make_float2( v.x, v.y )
-
-// This will output the proper CUDA error strings in the event that a CUDA host call returns an error
-#define checkNoorErrors(val)           NOOR::checkError ( (val), #val, __FILE__, __LINE__ )
 
 constexpr float NOOR_EPSILON = std::numeric_limits<float>::epsilon();
 constexpr float NOOR_ONE_MINUS_EPSILON = 1.0f - NOOR_EPSILON;
@@ -133,7 +130,17 @@ extern "C" {
     void device_free_memory();
     float4 get_lookAt();
 }
-
+// This will output the proper CUDA error strings in the event that a CUDA host call returns an error
+#define checkNoorErrors(val) checkError ( (val), #val, __FILE__, __LINE__ )
+template< typename T >
+static void checkError( T result, char const *const func, const char *const file, int const line ) {
+    if ( result != cudaSuccess ) {
+        fprintf( stderr, "CUDA error at: %s:%d \nErrorCode: %d (%s) \nFunction: \"%s\" \n",
+                 file, line, static_cast<unsigned int>( result ), _cudaGetErrorEnum( result ), func );
+        // Make sure we call CUDA Device Reset before exiting
+        exit( EXIT_FAILURE );
+    }
+}
 // hybrid cuda and host headers
 #include "math.cuh"
 #include "utils.cuh"

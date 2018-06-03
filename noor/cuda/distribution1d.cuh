@@ -79,10 +79,10 @@ class CudaDistribution1D {
         } else {
             for ( int i = 1; i <= _n; ++i ) cdf[i] /= _funcInt;
         }
-        NOOR::memcopy( _func, (void*) func, _n * sizeof( float ) );
-        NOOR::memcopy( _cdf, (void*) &cdf[0], ( _n + 1 ) * sizeof( float ) );
-        NOOR::create_1d_texobj( &_func_texobj, _func, _n * sizeof( float ), NOOR::_float_channelDesc );
-        NOOR::create_1d_texobj( &_cdf_texobj, _cdf, ( _n + 1 ) * sizeof( float ), NOOR::_float_channelDesc );
+        checkNoorErrors( NOOR::memcopy( _func, (void*) func, _n * sizeof( float ) ) );
+        checkNoorErrors( NOOR::memcopy( _cdf, (void*) &cdf[0], ( _n + 1 ) * sizeof( float ) ) );
+        checkNoorErrors( NOOR::create_1d_texobj( &_func_texobj, _func, _n * sizeof( float ), NOOR::_float_channelDesc ) );
+        checkNoorErrors( NOOR::create_1d_texobj( &_cdf_texobj, _cdf, ( _n + 1 ) * sizeof( float ), NOOR::_float_channelDesc ) );
     }
 public:
     // Distribution2D Public Methods
@@ -90,16 +90,16 @@ public:
     __host__
         CudaDistribution1D( const float* func, int n ) :
         _n( n ) {
-        NOOR::malloc( (void**) &_func, _n * sizeof( float ) );
-        NOOR::malloc( (void**) &_cdf, ( _n + 1 ) * sizeof( float ) );
+        checkNoorErrors( NOOR::malloc( &_func, _n * sizeof( float ) ) );
+        checkNoorErrors( NOOR::malloc( &_cdf, ( _n + 1 ) * sizeof( float ) ) );
         process( func );
     }
     __host__
         void free() {
-        cudaDestroyTextureObject( _func_texobj );
-        cudaDestroyTextureObject( _cdf_texobj );
-        cudaFree( _func );
-        cudaFree( _cdf );
+        checkNoorErrors( cudaDestroyTextureObject( _func_texobj ) );
+        checkNoorErrors( cudaDestroyTextureObject( _cdf_texobj ) );
+        checkNoorErrors( cudaFree( _func ) );
+        checkNoorErrors( cudaFree( _cdf ) );
     }
     __device__
         float getCdf( int i ) const {

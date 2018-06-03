@@ -26,17 +26,6 @@ SOFTWARE.
 #define UTILS_CUH
 
 namespace NOOR {
-    template< typename T >
-    __forceinline__
-        void checkError( T result, char const *const func, const char *const file, int const line ) {
-        if ( result ) {
-            fprintf( stderr, "CUDA error at %s:%d code=%d(%s) \"%s\" \n",
-                     file, line, static_cast<unsigned int>( result ), _cudaGetErrorEnum( result ), func );
-            // Make sure we call CUDA Device Reset before exiting
-            exit( EXIT_FAILURE );
-        }
-    }
-
     __forceinline__ __device__
         float SchlickWeight( float cosTheta ) {
         float m = clamp( 1.f - cosTheta, 0.f, 1.f );
@@ -53,6 +42,52 @@ namespace NOOR {
         return R * SchlickWeight( cosThetaD );
     }
 
+    __device__ __host__ __forceinline__
+        void swap( float& a, float& b ) {
+        float c( a ); a = b; b = c;
+    }
+
+
+    __forceinline__ __device__
+        bool solveQuadratic( float a, float b, float c, float &x0, float &x1 ) {
+        /* Linear case */
+        if ( a == 0 ) {
+            if ( b != 0 ) {
+                x0 = x1 = -c / b;
+                return true;
+            }
+            return false;
+        }
+
+        float discrim = b*b - 4.0f*a*c;
+
+        if ( discrim < 0 )
+            return false;
+
+        float temp, sqrtDiscrim = sqrtf( discrim );
+
+        /* Numerically stable version of (-b (+/-) sqrtDiscrim) / (2 * a)
+        *
+        * Based on the observation that one solution is always
+        * accurate while the other is not. Finds the solution of
+        * greater magnitude which does not suffer from loss of
+        * precision and then uses the identity x1 * x2 = c / a
+        */
+        if ( b < 0 )
+            temp = -0.5f * ( b - sqrtDiscrim );
+        else
+            temp = -0.5f * ( b + sqrtDiscrim );
+
+        x0 = temp / a;
+        x1 = c / temp;
+
+        /* Return the results so that x0 < x1 */
+        if ( x0 > x1 )
+            NOOR::swap( x0, x1 );
+
+        return true;
+    }
+
     template<typename T>
     __device__ __host__ __forceinline__
         T saturate( const T& f ) {
@@ -61,11 +96,6 @@ namespace NOOR {
 
     __device__ __host__ __forceinline__
         float Lerp( float t, float v1, float v2 ) { return ( 1.f - t ) * v1 + t * v2; }
-
-    __device__ __host__ __forceinline__
-        void swap( float& a, float& b ) {
-        float c( a ); a = b; b = c;
-    }
 
     __device__ __host__ __forceinline__
         int sign( float val ) {
@@ -525,7 +555,114 @@ namespace NOOR {
         float absDot( const float3 &v1, const float3 &v2 ) {
         return fabsf( dot( v1, v2 ) );
     }
+
+    template<class C>
+    __forceinline__
+        cudaError_t malloc_array( cudaArray_t* cuArray, C* channelDesc, size_t w, size_t h = 0 ) {
+        return cudaMallocArray( cuArray, channelDesc, w, h );
+    }
+
+    __forceinline__
+        cudaError_t memcopy_array( cudaArray_t cuArray, const void *data, size_t size, cudaMemcpyKind kind = cudaMemcpyHostToDevice ) {
+        return cudaMemcpyToArray( cuArray, 0, 0, data, size, kind );
+    }
+
+    template<class T>
+    __forceinline__
+        cudaError_t memcopy_symbol( T* d_tex_obj, const T* s_tex_obj, cudaMemcpyKind kind = cudaMemcpyHostToDevice ) {
+        return cudaMemcpyToSymbol( *d_tex_obj, (void*) s_tex_obj, sizeof( T ), 0, kind );
+    }
+
+    template<class T>
+    __forceinline__
+        cudaError_t memcopy_symbol_async( T* d_tex_obj, const T* s_tex_obj, cudaMemcpyKind kind = cudaMemcpyHostToDevice ) {
+        return cudaMemcpyToSymbolAsync( *d_tex_obj, (void*) s_tex_obj, sizeof( T ), 0, kind );
+    }
+
+    template<class T>
+    __forceinline__
+        cudaError_t malloc( T** devPtr, size_t size ) {
+        return cudaMalloc( (void**) devPtr, size );
+    }
+
+    template<class T>
+    __forceinline__
+        cudaError_t malloc_managed( T **devPtr, size_t size ) {
+        return cudaMallocManaged( (void**) devPtr, size );
+    }
+
+    __forceinline__
+        cudaError_t memcopy( void *device, const void *host, size_t size, cudaMemcpyKind kind = cudaMemcpyHostToDevice ) {
+        return cudaMemcpy( device, host, size, kind );
+    }
+
+    __forceinline__
+        cudaError_t memcopy_async( void *device, const void *host, size_t size, cudaMemcpyKind kind = cudaMemcpyHostToDevice ) {
+        return cudaMemcpyAsync( device, host, size, kind );
+    }
+
+    __forceinline__
+        cudaError_t create_1d_texobj(
+        cudaTextureObject_t* tex_object
+        , void* buffer
+        , size_t bytes
+        , cudaChannelFormatDesc channel
+        ) {
+        cudaResourceDesc resDesc;
+        memset( &resDesc, 0, sizeof( cudaResourceDesc ) );
+        resDesc.resType = cudaResourceTypeLinear;
+        resDesc.res.linear.devPtr = buffer;
+        resDesc.res.linear.desc = channel;
+        resDesc.res.linear.sizeInBytes = bytes;
+        cudaTextureDesc texDesc;
+        memset( &texDesc, 0, sizeof( cudaTextureDesc ) );
+        texDesc.addressMode[0] = cudaAddressModeWrap;
+        texDesc.addressMode[1] = cudaAddressModeWrap;
+        texDesc.filterMode = cudaFilterModePoint;
+        texDesc.readMode = cudaReadModeElementType;
+        texDesc.normalizedCoords = false;
+        return cudaCreateTextureObject( tex_object, &resDesc, &texDesc, nullptr );
+    }
+
+    __forceinline__
+        cudaError_t create_2d_texobj(
+        cudaTextureObject_t* tex_object
+        , cudaArray* cuda_array
+        , cudaTextureFilterMode filter_mode
+        , cudaTextureAddressMode address_mode = cudaAddressModeWrap
+        , bool normalized = true
+        ) {
+        cudaResourceDesc resDesc;
+        memset( &resDesc, 0, sizeof( cudaResourceDesc ) );
+        resDesc.resType = cudaResourceTypeArray;
+        resDesc.res.array.array = cuda_array;
+        cudaTextureDesc texDesc;
+        memset( &texDesc, 0, sizeof( cudaTextureDesc ) );
+        texDesc.addressMode[0] = address_mode;
+        texDesc.addressMode[1] = address_mode;
+        texDesc.filterMode = filter_mode;
+        texDesc.readMode = cudaReadModeElementType;
+        texDesc.normalizedCoords = normalized;
+        return cudaCreateTextureObject( tex_object, &resDesc, &texDesc, nullptr );
+    }
+
+    __forceinline__
+        cudaError_t create_surfaceobj(
+        cudaSurfaceObject_t* surface_obj
+        , cudaArray* cuda_array
+        ) {
+        cudaResourceDesc resDesc;
+        memset( &resDesc, 0, sizeof( cudaResourceDesc ) );
+        resDesc.resType = cudaResourceTypeArray;
+        resDesc.res.array.array = cuda_array;
+        return cudaCreateSurfaceObject( surface_obj, &resDesc );
+    }
 #ifdef __CUDACC__
+    template<typename T>
+    __forceinline__ __device__
+        T print( T v ) {
+        return v;
+    }
     __forceinline__ __device__
         static void print( const char* s, const float3& v ) {
         const int x = blockIdx.x * blockDim.x + threadIdx.x;
@@ -547,123 +684,12 @@ namespace NOOR {
         if ( x == 511 && y == 511 )
             printf( "%s: %f %f\n", s, v.x, v.y );
     }
-    template<class C>
-    static
-        void malloc_array( cudaArray_t* cuArray, C* channelDesc, size_t w, size_t h = 0 ) {
-        checkNoorErrors( cudaMallocArray( cuArray, channelDesc, w, h ) );
-    }
-
-    static
-        void memcopy_array( cudaArray_t cuArray, const void *data, size_t size, cudaMemcpyKind kind = cudaMemcpyHostToDevice ) {
-        checkNoorErrors( cudaMemcpyToArray( cuArray, 0, 0, data, size, kind ) );
-    }
-
-    template<class T>
-    static
-        void memcopy_symbol( T* d_tex_obj, const T* s_tex_obj, cudaMemcpyKind kind = cudaMemcpyHostToDevice ) {
-        checkNoorErrors( cudaMemcpyToSymbol( *d_tex_obj, (void*) s_tex_obj, sizeof( T ), 0, kind ) );
-    }
-
-    template<class T>
-    static
-        void memcopy_symbol_async( T* d_tex_obj, const T* s_tex_obj, cudaMemcpyKind kind = cudaMemcpyHostToDevice ) {
-        checkNoorErrors( cudaMemcpyToSymbolAsync( *d_tex_obj, (void*) s_tex_obj, sizeof( T ), 0, kind ) );
-    }
-
-    static
-        void malloc( void **devPtr, size_t size ) {
-        checkNoorErrors( cudaMalloc( devPtr, size ) );
-    }
-
-    static
-        void malloc_managed( void **devPtr, size_t size ) {
-        checkNoorErrors( cudaMallocManaged( devPtr, size ) );
-    }
-
-    static
-        void free( void *devPtr ) {
-        checkNoorErrors( cudaFree( devPtr ) );
-    }
-
-    static
-        void memcopy( void *device, const void *host, size_t size, cudaMemcpyKind kind = cudaMemcpyHostToDevice ) {
-        checkNoorErrors( cudaMemcpy( (char *) device, host, size, kind ) );
-    }
-
-    static
-        void memcopy_async( void *device, const void *host, size_t size, cudaMemcpyKind kind = cudaMemcpyHostToDevice ) {
-        checkNoorErrors( cudaMemcpyAsync( (char *) device, host, size, kind ) );
-    }
-
-    template<class T>
-    static
-        void memset( void *device, T value, size_t size ) {
-        checkNoorErrors( cudaMemset( (void *) device, value, size ) );
-    }
-
-    static
-        void create_1d_texobj(
-        cudaTextureObject_t* tex_object
-        , void* buffer
-        , size_t bytes
-        , cudaChannelFormatDesc channel
-        ) {
-        cudaResourceDesc resDesc;
-        memset( &resDesc, 0, sizeof( resDesc ) );
-        resDesc.resType = cudaResourceTypeLinear;
-        resDesc.res.linear.devPtr = buffer;
-        resDesc.res.linear.desc = channel;
-        resDesc.res.linear.sizeInBytes = bytes;
-        cudaTextureDesc texDesc;
-        memset( &texDesc, 0, sizeof( texDesc ) );
-        texDesc.addressMode[0] = cudaAddressModeWrap;
-        texDesc.addressMode[1] = cudaAddressModeWrap;
-        texDesc.filterMode = cudaFilterModePoint;
-        texDesc.readMode = cudaReadModeElementType;
-        texDesc.normalizedCoords = false;
-        checkNoorErrors( cudaCreateTextureObject( tex_object, &resDesc, &texDesc, nullptr ) );
-    }
-
-    static
-        void create_2d_texobj(
-        cudaTextureObject_t* tex_object
-        , cudaArray* cuda_array
-        , cudaTextureFilterMode filter_mode
-        , cudaTextureAddressMode address_mode = cudaAddressModeWrap
-        , bool normalized = true
-        ) {
-        cudaResourceDesc resDesc;
-        memset( &resDesc, 0, sizeof( resDesc ) );
-        resDesc.resType = cudaResourceTypeArray;
-        resDesc.res.array.array = cuda_array;
-
-        cudaTextureDesc texDesc;
-        memset( &texDesc, 0, sizeof( texDesc ) );
-        texDesc.addressMode[0] = address_mode;
-        texDesc.addressMode[1] = address_mode;
-        texDesc.filterMode = filter_mode;
-        texDesc.readMode = cudaReadModeElementType;
-        texDesc.normalizedCoords = normalized;
-        checkNoorErrors( cudaCreateTextureObject( tex_object, &resDesc, &texDesc, nullptr ) );
-    }
-
-    static
-        void create_surfaceobj(
-        cudaSurfaceObject_t* surface_obj
-        , cudaArray* cuda_array
-        ) {
-        cudaResourceDesc resDesc;
-        memset( &resDesc, 0, sizeof( resDesc ) );
-        resDesc.resType = cudaResourceTypeArray;
-        resDesc.res.array.array = cuda_array;
-        checkNoorErrors( cudaCreateSurfaceObject( surface_obj, &resDesc ) );
-    }
-    static cudaChannelFormatDesc _float4_channelDesc = cudaCreateChannelDesc( 32, 32, 32, 32, cudaChannelFormatKindFloat );
-    static cudaChannelFormatDesc _float2_channelDesc = cudaCreateChannelDesc( 32, 32, 0, 0, cudaChannelFormatKindFloat );
-    static cudaChannelFormatDesc _float_channelDesc = cudaCreateChannelDesc( 32, 0, 0, 0, cudaChannelFormatKindFloat );
-    static cudaChannelFormatDesc _uint4_channelDesc = cudaCreateChannelDesc( 32, 32, 32, 32, cudaChannelFormatKindUnsigned );
-    static cudaChannelFormatDesc _uint2_channelDesc = cudaCreateChannelDesc( 32, 32, 0, 0, cudaChannelFormatKindUnsigned );
-    static cudaChannelFormatDesc _uint_channelDesc = cudaCreateChannelDesc( 32, 0, 0, 0, cudaChannelFormatKindUnsigned );
+    cudaChannelFormatDesc _float4_channelDesc = cudaCreateChannelDesc( 32, 32, 32, 32, cudaChannelFormatKindFloat );
+    cudaChannelFormatDesc _float2_channelDesc = cudaCreateChannelDesc( 32, 32, 0, 0, cudaChannelFormatKindFloat );
+    cudaChannelFormatDesc _float_channelDesc = cudaCreateChannelDesc( 32, 0, 0, 0, cudaChannelFormatKindFloat );
+    cudaChannelFormatDesc _uint4_channelDesc = cudaCreateChannelDesc( 32, 32, 32, 32, cudaChannelFormatKindUnsigned );
+    cudaChannelFormatDesc _uint2_channelDesc = cudaCreateChannelDesc( 32, 32, 0, 0, cudaChannelFormatKindUnsigned );
+    cudaChannelFormatDesc _uint_channelDesc = cudaCreateChannelDesc( 32, 0, 0, 0, cudaChannelFormatKindUnsigned );
 #endif /* __CUDACC__ */
 } // namespace NOOR
 #endif /* UTILS_CUH */

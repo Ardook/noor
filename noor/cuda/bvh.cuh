@@ -196,7 +196,8 @@ bool intersect( const CudaRay& ray, CudaIntersection& I ) {
 }
 
 __device__ __forceinline__
-bool intersectP( const CudaRay& ray, const CudaIntersection& I, int* light_idx = nullptr ) {
+//bool intersectP( const CudaRay& ray, const CudaIntersection& I, int* light_idx = nullptr ) {
+bool intersectP( const CudaRay& ray, const CudaIntersection& I ) {
     uint currentNodeIndex;
     CudaBVHNode current_node;
     CudaStack<uint> stack( &shstack[_constant_spec._bvh_height * I._tid] );
@@ -212,7 +213,7 @@ bool intersectP( const CudaRay& ray, const CudaIntersection& I, int* light_idx =
             if ( current_node.is_light_node() ) {
                 const int index = current_node.get_light_idx();
                 if ( _light_manager.intersect( ray, index ) ) {
-                    if (light_idx && *light_idx != index)
+                    //if (light_idx && *light_idx != index)
                     return true;
                 }
             } else if ( current_node.is_mesh_instance() ) {

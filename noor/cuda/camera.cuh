@@ -81,8 +81,8 @@ public:
         _focal_length = focal_length;
         _type = camera_type;
         _center = _w * ( _h >> 1 ) + ( _w >> 1 );
-        _dxCamera = _rasterToCamera.transformVector( make_float3( 1, 0, 0 ) );
-        _dyCamera = _rasterToCamera.transformVector( make_float3( 0, 1, 0 ) );
+        _dxCamera = _rasterToCamera.transformVector( make_float3( .5f, 0, 0 ) );
+        _dyCamera = _rasterToCamera.transformVector( make_float3( 0, .5f, 0 ) );
     }
     CudaTransform _cameraToWorld;
     CudaTransform _rasterToCamera;

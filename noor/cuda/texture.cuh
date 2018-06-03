@@ -123,17 +123,17 @@ public:
 protected:
     __host__
         void load( const ImageTexture& t ) {
-        cudaMemcpy3DParms copyParams = { 0 };
+        cudaMemcpy3DParms copyParams;
+        memset( &copyParams, 0, sizeof( cudaMemcpy3DParms ) );
         copyParams.srcPtr = make_cudaPitchedPtr( t._data, t._num_channels * t._width * sizeof( float ), t._width, t._height );
-        copyParams.extent = make_cudaExtent( t._width, t._height, 0 );
-        copyParams.extent.depth = 1;
+        copyParams.extent = make_cudaExtent( t._width, t._height, 1 );
         copyParams.kind = cudaMemcpyHostToDevice;
         if ( width() == t._width && height() == t._height ) {
             copyParams.dstArray = _array;
             checkNoorErrors( cudaMemcpy3D( &copyParams ) );
         } else {
             cudaArray_t src_array;
-            NOOR::malloc_array( &src_array, &t._channel_desc, t._width, t._height );
+            checkNoorErrors( NOOR::malloc_array( &src_array, &t._channel_desc, t._width, t._height ) );
             copyParams.dstArray = src_array;
             checkNoorErrors( cudaMemcpy3D( &copyParams ) );
             resize( src_array, make_cudaExtent( t._width, t._height, 0 ), _extent );
@@ -143,8 +143,8 @@ protected:
         void resize( cudaArray_t src_array, const cudaExtent& old_extent, const cudaExtent& new_extent ) {
         cudaSurfaceObject_t src_surfaceobj;
         cudaSurfaceObject_t dst_surfaceobj;
-        NOOR::create_surfaceobj( &src_surfaceobj, src_array );
-        NOOR::create_surfaceobj( &dst_surfaceobj, _array );
+        checkNoorErrors( NOOR::create_surfaceobj( &src_surfaceobj, src_array ) );
+        checkNoorErrors( NOOR::create_surfaceobj( &dst_surfaceobj, _array ) );
         // run mipmap kernel
         dim3 block( 8, 8, 1 );
         dim3 grid( (uint) new_extent.width / block.x, (uint) new_extent.height / block.y, 1 );
@@ -230,11 +230,11 @@ public:
         generateMipMaps();
 
         // generate bindless texture object
-        cudaResourceDesc            resDescr;
+        cudaResourceDesc resDescr;
         memset( &resDescr, 0, sizeof( cudaResourceDesc ) );
         resDescr.resType = cudaResourceTypeMipmappedArray;
         resDescr.res.mipmap.mipmap = _mipmapArray;
-        cudaTextureDesc             texDescr;
+        cudaTextureDesc texDescr;
         memset( &texDescr, 0, sizeof( cudaTextureDesc ) );
         texDescr.normalizedCoords = 1;
         texDescr.filterMode = cudaFilterModeLinear;
@@ -243,10 +243,10 @@ public:
         texDescr.addressMode[1] = cudaAddressModeWrap;
         texDescr.addressMode[2] = cudaAddressModeClamp;
         texDescr.maxMipmapLevelClamp = float( levels - 1 );
-        texDescr.maxAnisotropy = 10;
+        texDescr.maxAnisotropy = 32;
         texDescr.readMode = cudaReadModeElementType;
         checkNoorErrors( cudaCreateTextureObject( &_read_tex_obj, &resDescr, &texDescr, NULL ) );
-        NOOR::create_surfaceobj( &_write_surface_obj, _array );
+        checkNoorErrors( NOOR::create_surfaceobj( &_write_surface_obj, _array ) );
     }
 
     __device__ __host__
@@ -336,7 +336,7 @@ public:
         }
         if ( _read_tex_obj )
             checkNoorErrors( cudaDestroyTextureObject( _read_tex_obj ) );
-        cudaDestroySurfaceObject( _write_surface_obj );
+        checkNoorErrors( cudaDestroySurfaceObject( _write_surface_obj ) );
     }
 
 };
@@ -347,19 +347,19 @@ public:
     __host__
         Cuda2DTexture( const ImageTexture& t ) :
         CudaTexture( make_cudaExtent( t._width, t._height, 0 ), t._num_channels ) {
-        NOOR::malloc_array( &_array, &t._channel_desc, width(), height() );
+        checkNoorErrors( NOOR::malloc_array( &_array, &t._channel_desc, width(), height() ) );
         load( t );
-        NOOR::create_2d_texobj( &_read_tex_obj, _array, t._filter_mode, t._address_mode );
-        NOOR::create_surfaceobj( &_write_surface_obj, _array );
+        checkNoorErrors( NOOR::create_2d_texobj( &_read_tex_obj, _array, t._filter_mode, t._address_mode ) );
+        checkNoorErrors( NOOR::create_surfaceobj( &_write_surface_obj, _array ) );
     }
 
     __host__
         Cuda2DTexture( const float4& t ) :
         CudaTexture( make_cudaExtent( 1, 1, 0 ), 4 ) {
-        NOOR::malloc_array( &_array, &NOOR::_float4_channelDesc, width(), height() );
-        NOOR::memcopy_array( _array, (void*) &t, sizeof( float4 ) );
-        NOOR::create_2d_texobj( &_read_tex_obj, _array, _filter_mode, _address_mode );
-        NOOR::create_surfaceobj( &_write_surface_obj, _array );
+        checkNoorErrors( NOOR::malloc_array( &_array, &NOOR::_float4_channelDesc, width(), height() ) );
+        checkNoorErrors( NOOR::memcopy_array( _array, (void*) &t, sizeof( float4 ) ) );
+        checkNoorErrors( NOOR::create_2d_texobj( &_read_tex_obj, _array, _filter_mode, _address_mode ) );
+        checkNoorErrors( NOOR::create_surfaceobj( &_write_surface_obj, _array ) );
     }
 
     __host__
@@ -367,9 +367,9 @@ public:
 
     __host__
         void free() {
-        if ( _array ) cudaFreeArray( _array );
+        if ( _array ) checkNoorErrors( cudaFreeArray( _array ) );
         if ( _read_tex_obj ) checkNoorErrors( cudaDestroyTextureObject( _read_tex_obj ) );
-        cudaDestroySurfaceObject( _write_surface_obj );
+        checkNoorErrors( cudaDestroySurfaceObject( _write_surface_obj ) );
     }
 };
 
@@ -387,8 +387,8 @@ public:
         for ( auto& t : payload->_textures ) {
             host_textures.push_back( T( t ) );
         }
-        NOOR::malloc( (void**) &_device_textures, _num_textures * sizeof( T ) );
-        NOOR::memcopy( _device_textures, &host_textures[0], _num_textures * sizeof( T ) );
+        checkNoorErrors( NOOR::malloc( &_device_textures, _num_textures * sizeof( T ) ) );
+        checkNoorErrors( NOOR::memcopy( _device_textures, &host_textures[0], _num_textures * sizeof( T ) ) );
     }
 
     __device__
@@ -399,7 +399,7 @@ public:
     __host__
         T getEnvTexture() {
         T t;
-        NOOR::memcopy( &t, &_device_textures[_num_textures - 1], sizeof( T ), cudaMemcpyDeviceToHost );
+        checkNoorErrors( NOOR::memcopy( &t, &_device_textures[_num_textures - 1], sizeof( T ), cudaMemcpyDeviceToHost ) );
         return t;
     }
 
@@ -407,15 +407,15 @@ public:
         void free() {
         for ( int i = 0; i < _num_textures; ++i ) {
             T t;
-            NOOR::memcopy( &t, &_device_textures[i], sizeof( T ), cudaMemcpyDeviceToHost );
+            checkNoorErrors( NOOR::memcopy( &t, &_device_textures[i], sizeof( T ), cudaMemcpyDeviceToHost ) );
             t.free();
         }
-        cudaFree( _device_textures );
+        checkNoorErrors( cudaFree( _device_textures ) );
     }
 };
 
-using CudaTextureManager = CudaTextureManagerTemplate<Cuda2DTexture>;
-//using CudaTextureManager = CudaTextureManagerTemplate<CudaMipMap>;
+//using CudaTextureManager = CudaTextureManagerTemplate<Cuda2DTexture>;
+using CudaTextureManager = CudaTextureManagerTemplate<CudaMipMap>;
 __constant__
 CudaTextureManager _texture_manager;
 #endif /* CUDATEXTURE_CUH */

@@ -63,70 +63,70 @@ struct CudaMeshManager {
     CudaMeshManager() = default;
     __host__
         CudaMeshManager( const CudaPayload* payload ) {
-        NOOR::malloc( (void**) &_vertices, payload->_n_size_bytes );
-        NOOR::malloc( (void**) &_normals, payload->_n_size_bytes );
-        NOOR::malloc( (void**) &_uvs, payload->_uv_size_bytes );
+        checkNoorErrors(NOOR::malloc(  &_vertices, payload->_n_size_bytes ));
+        checkNoorErrors(NOOR::malloc(  &_normals, payload->_n_size_bytes ));
+        checkNoorErrors(NOOR::malloc(  &_uvs, payload->_uv_size_bytes ));
 
-        NOOR::malloc( (void**) &_attributes, payload->_ai_size_bytes );
+        checkNoorErrors(NOOR::malloc(  &_attributes, payload->_ai_size_bytes ));
 
-        NOOR::malloc( (void**) &_wald_ax_nu_nv_nd, payload->_wald_size_bytes );
-        NOOR::malloc( (void**) &_wald_bnu_bnv_au_av, payload->_wald_size_bytes );
-        NOOR::malloc( (void**) &_wald_cnu_cnv_pad_pad, payload->_wald_size_bytes );
-        NOOR::malloc( (void**) &_bvh_min_right_start, payload->_bvh_size_bytes );
-        NOOR::malloc( (void**) &_bvh_max_axis_count, payload->_bvh_size_bytes );
+        checkNoorErrors(NOOR::malloc(  &_wald_ax_nu_nv_nd, payload->_wald_size_bytes ));
+        checkNoorErrors(NOOR::malloc(  &_wald_bnu_bnv_au_av, payload->_wald_size_bytes ));
+        checkNoorErrors(NOOR::malloc(  &_wald_cnu_cnv_pad_pad, payload->_wald_size_bytes ));
+        checkNoorErrors(NOOR::malloc(  &_bvh_min_right_start, payload->_bvh_size_bytes ));
+        checkNoorErrors(NOOR::malloc(  &_bvh_max_axis_count, payload->_bvh_size_bytes ));
 
         // copy
-        NOOR::memcopy( _vertices, (void*) &payload->_vertices[0], payload->_n_size_bytes );
-        NOOR::memcopy( _normals, (void*) &payload->_normals[0], payload->_n_size_bytes );
-        NOOR::memcopy( _uvs, (void*) &payload->_uvs[0], payload->_uv_size_bytes );
+        checkNoorErrors(NOOR::memcopy( _vertices, (void*) &payload->_vertices[0], payload->_n_size_bytes ));
+        checkNoorErrors(NOOR::memcopy( _normals, (void*) &payload->_normals[0], payload->_n_size_bytes ));
+        checkNoorErrors(NOOR::memcopy( _uvs, (void*) &payload->_uvs[0], payload->_uv_size_bytes ));
 
-        NOOR::memcopy( _attributes, (void*) &payload->_attribute_indices[0], payload->_ai_size_bytes );
+        checkNoorErrors(NOOR::memcopy( _attributes, (void*) &payload->_attribute_indices[0], payload->_ai_size_bytes ));
 
-        NOOR::memcopy( _wald_ax_nu_nv_nd, (void*) &payload->_wald_ax_nu_nv_nd[0], payload->_wald_size_bytes );
-        NOOR::memcopy( _wald_bnu_bnv_au_av, (void*) &payload->_wald_bnu_bnv_au_av[0], payload->_wald_size_bytes );
-        NOOR::memcopy( _wald_cnu_cnv_pad_pad, (void*) &payload->_wald_cnu_cnv_deg_mat[0], payload->_wald_size_bytes );
-        NOOR::memcopy( _bvh_min_right_start, (void*) &payload->_bvh_min_right_start_nodes[0], payload->_bvh_size_bytes );
-        NOOR::memcopy( _bvh_max_axis_count, (void*) &payload->_bvh_max_axis_count_nodes[0], payload->_bvh_size_bytes );
+        checkNoorErrors(NOOR::memcopy( _wald_ax_nu_nv_nd, (void*) &payload->_wald_ax_nu_nv_nd[0], payload->_wald_size_bytes ));
+        checkNoorErrors(NOOR::memcopy( _wald_bnu_bnv_au_av, (void*) &payload->_wald_bnu_bnv_au_av[0], payload->_wald_size_bytes ));
+        checkNoorErrors(NOOR::memcopy( _wald_cnu_cnv_pad_pad, (void*) &payload->_wald_cnu_cnv_deg_mat[0], payload->_wald_size_bytes ));
+        checkNoorErrors(NOOR::memcopy( _bvh_min_right_start, (void*) &payload->_bvh_min_right_start_nodes[0], payload->_bvh_size_bytes ));
+        checkNoorErrors(NOOR::memcopy( _bvh_max_axis_count, (void*) &payload->_bvh_max_axis_count_nodes[0], payload->_bvh_size_bytes ));
 
         // create texture object
-        NOOR::create_1d_texobj( &_vertices_texobj, _vertices, payload->_n_size_bytes, NOOR::_float4_channelDesc );
-        NOOR::create_1d_texobj( &_normals_texobj, _normals, payload->_n_size_bytes, NOOR::_float4_channelDesc );
-        NOOR::create_1d_texobj( &_uvs_texobj, _uvs, payload->_uv_size_bytes, NOOR::_float2_channelDesc );
+        checkNoorErrors(NOOR::create_1d_texobj( &_vertices_texobj, _vertices, payload->_n_size_bytes, NOOR::_float4_channelDesc ));
+        checkNoorErrors(NOOR::create_1d_texobj( &_normals_texobj, _normals, payload->_n_size_bytes, NOOR::_float4_channelDesc ));
+        checkNoorErrors(NOOR::create_1d_texobj( &_uvs_texobj, _uvs, payload->_uv_size_bytes, NOOR::_float2_channelDesc ));
 
-        NOOR::create_1d_texobj( &_attributes_texobj, _attributes, payload->_ai_size_bytes, NOOR::_uint4_channelDesc );
+        checkNoorErrors(NOOR::create_1d_texobj( &_attributes_texobj, _attributes, payload->_ai_size_bytes, NOOR::_uint4_channelDesc ));
 
-        NOOR::create_1d_texobj( &_wald_ax_nu_nv_nd_texobj, _wald_ax_nu_nv_nd, payload->_wald_size_bytes, NOOR::_uint4_channelDesc );
-        NOOR::create_1d_texobj( &_wald_bnu_bnv_au_av_texobj, _wald_bnu_bnv_au_av, payload->_wald_size_bytes, NOOR::_uint4_channelDesc );
-        NOOR::create_1d_texobj( &_wald_cnu_cnv_pad_pad_texobj, _wald_cnu_cnv_pad_pad, payload->_wald_size_bytes, NOOR::_uint4_channelDesc );
-        NOOR::create_1d_texobj( &_bvh_min_right_start_texobj, _bvh_min_right_start, payload->_bvh_size_bytes, NOOR::_uint4_channelDesc );
-        NOOR::create_1d_texobj( &_bvh_max_axis_count_texobj, _bvh_max_axis_count, payload->_bvh_size_bytes, NOOR::_uint4_channelDesc );
+        checkNoorErrors(NOOR::create_1d_texobj( &_wald_ax_nu_nv_nd_texobj, _wald_ax_nu_nv_nd, payload->_wald_size_bytes, NOOR::_uint4_channelDesc ));
+        checkNoorErrors(NOOR::create_1d_texobj( &_wald_bnu_bnv_au_av_texobj, _wald_bnu_bnv_au_av, payload->_wald_size_bytes, NOOR::_uint4_channelDesc ));
+        checkNoorErrors(NOOR::create_1d_texobj( &_wald_cnu_cnv_pad_pad_texobj, _wald_cnu_cnv_pad_pad, payload->_wald_size_bytes, NOOR::_uint4_channelDesc ));
+        checkNoorErrors(NOOR::create_1d_texobj( &_bvh_min_right_start_texobj, _bvh_min_right_start, payload->_bvh_size_bytes, NOOR::_uint4_channelDesc ));
+        checkNoorErrors(NOOR::create_1d_texobj( &_bvh_max_axis_count_texobj, _bvh_max_axis_count, payload->_bvh_size_bytes, NOOR::_uint4_channelDesc ));
     }
 
     __host__
         void free() {
-        cudaDestroyTextureObject( _vertices_texobj );
-        cudaDestroyTextureObject( _normals_texobj );
-        cudaDestroyTextureObject( _uvs_texobj );
+        checkNoorErrors( cudaDestroyTextureObject( _vertices_texobj ));
+        checkNoorErrors( cudaDestroyTextureObject( _normals_texobj ) );
+        checkNoorErrors( cudaDestroyTextureObject( _uvs_texobj ) );
 
-        cudaDestroyTextureObject( _attributes_texobj );
+        checkNoorErrors( cudaDestroyTextureObject( _attributes_texobj ) );
 
-        cudaDestroyTextureObject( _wald_ax_nu_nv_nd_texobj );
-        cudaDestroyTextureObject( _wald_bnu_bnv_au_av_texobj );
-        cudaDestroyTextureObject( _wald_cnu_cnv_pad_pad_texobj );
-        cudaDestroyTextureObject( _bvh_min_right_start_texobj );
-        cudaDestroyTextureObject( _bvh_max_axis_count_texobj );
+        checkNoorErrors( cudaDestroyTextureObject( _wald_ax_nu_nv_nd_texobj ) );
+        checkNoorErrors( cudaDestroyTextureObject( _wald_bnu_bnv_au_av_texobj ) );
+        checkNoorErrors( cudaDestroyTextureObject( _wald_cnu_cnv_pad_pad_texobj ) );
+        checkNoorErrors( cudaDestroyTextureObject( _bvh_min_right_start_texobj ) );
+        checkNoorErrors( cudaDestroyTextureObject( _bvh_max_axis_count_texobj ) );
 
-        cudaFree( _vertices );
-        cudaFree( _normals );
-        cudaFree( _uvs );
+        checkNoorErrors(cudaFree( _vertices ));
+        checkNoorErrors(cudaFree( _normals ));
+        checkNoorErrors(cudaFree( _uvs ));
 
-        cudaFree( _attributes );
+        checkNoorErrors(cudaFree( _attributes ));
 
-        cudaFree( _wald_ax_nu_nv_nd );
-        cudaFree( _wald_bnu_bnv_au_av );
-        cudaFree( _wald_cnu_cnv_pad_pad );
-        cudaFree( _bvh_min_right_start );
-        cudaFree( _bvh_max_axis_count );
+        checkNoorErrors(cudaFree( _wald_ax_nu_nv_nd ));
+        checkNoorErrors(cudaFree( _wald_bnu_bnv_au_av ));
+        checkNoorErrors(cudaFree( _wald_cnu_cnv_pad_pad ));
+        checkNoorErrors(cudaFree( _bvh_min_right_start ));
+        checkNoorErrors(cudaFree( _bvh_max_axis_count ));
     }
 
     __device__

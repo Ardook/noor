@@ -210,31 +210,31 @@ struct CudaLightManager {
         _num_lights += _num_infinite_lights;
 
         if ( _num_area_lights != 0 ) {
-            NOOR::malloc( (void**) &_area_lights, _num_area_lights * sizeof( CudaAreaLight ) );
-            NOOR::memcopy( _area_lights, (void*) &payload->_area_light_data[0], _num_area_lights * sizeof( CudaAreaLight ) );
+            checkNoorErrors(NOOR::malloc(  &_area_lights, _num_area_lights * sizeof( CudaAreaLight ) ));
+            checkNoorErrors(NOOR::memcopy( _area_lights, (void*) &payload->_area_light_data[0], _num_area_lights * sizeof( CudaAreaLight ) ));
         }
 
         if ( _num_point_lights != 0 ) {
-            NOOR::malloc( (void**) &_point_lights, _num_point_lights * sizeof( CudaPointLight ) );
-            NOOR::memcopy( _point_lights, (void*) &payload->_point_light_data[0], _num_point_lights * sizeof( CudaPointLight ) );
+            checkNoorErrors(NOOR::malloc(  &_point_lights, _num_point_lights * sizeof( CudaPointLight ) ));
+            checkNoorErrors(NOOR::memcopy( _point_lights, (void*) &payload->_point_light_data[0], _num_point_lights * sizeof( CudaPointLight ) ));
         }
 
         if ( _num_spot_lights != 0 ) {
-            NOOR::malloc( (void**) &_spot_lights, _num_spot_lights * sizeof( CudaSpotLight ) );
-            NOOR::memcopy( _spot_lights, (void*) &payload->_spot_light_data[0], _num_spot_lights * sizeof( CudaSpotLight ) );
+            checkNoorErrors(NOOR::malloc(  &_spot_lights, _num_spot_lights * sizeof( CudaSpotLight ) ));
+            checkNoorErrors(NOOR::memcopy( _spot_lights, (void*) &payload->_spot_light_data[0], _num_spot_lights * sizeof( CudaSpotLight ) ));
         }
 
         if ( _num_distant_lights != 0 ) {
-            NOOR::malloc( (void**) &_distant_lights, _num_distant_lights * sizeof( CudaDistantLight ) );
-            NOOR::memcopy( _distant_lights, (void*) &payload->_distant_light_data[0], _num_distant_lights * sizeof( CudaDistantLight ) );
+            checkNoorErrors(NOOR::malloc(  &_distant_lights, _num_distant_lights * sizeof( CudaDistantLight ) ));
+            checkNoorErrors(NOOR::memcopy( _distant_lights, (void*) &payload->_distant_light_data[0], _num_distant_lights * sizeof( CudaDistantLight ) ));
         }
 
         if ( _num_infinite_lights != 0 ) {
-            NOOR::malloc( (void**) &_infinite_lights, _num_infinite_lights * sizeof( CudaInfiniteLight ) );
-            NOOR::memcopy( _infinite_lights, (void*) &payload->_infinite_light_data[0], sizeof( CudaInfiniteLight ) );
+            checkNoorErrors(NOOR::malloc(  &_infinite_lights, _num_infinite_lights * sizeof( CudaInfiniteLight ) ));
+            checkNoorErrors(NOOR::memcopy( _infinite_lights, (void*) &payload->_infinite_light_data[0], sizeof( CudaInfiniteLight ) ));
         }
 
-        NOOR::malloc( (void**) &_lights, _num_lights * sizeof( CudaLight* ) );
+        checkNoorErrors(NOOR::malloc(  &_lights, _num_lights * sizeof( CudaLight* ) ));
 
         dim3 blockSize( 1, 1, 1 );
         dim3 gridSize( 1, 1, 1 );
@@ -251,26 +251,28 @@ struct CudaLightManager {
             _infinite_lights,
             _num_infinite_lights
             );
+        checkNoorErrors( cudaDeviceSynchronize() );
+        checkNoorErrors( cudaPeekAtLastError() );
     }
     __host__
         void free() {
         if ( _num_area_lights > 0 ) {
-            cudaFree( _area_lights );
+            checkNoorErrors(cudaFree( _area_lights ));
         }
         if ( _num_point_lights > 0 ) {
-            cudaFree( _point_lights );
+            checkNoorErrors(cudaFree( _point_lights ));
         }
         if ( _num_spot_lights > 0 ) {
-            cudaFree( _spot_lights );
+            checkNoorErrors(cudaFree( _spot_lights ));
         }
         if ( _num_distant_lights > 0 ) {
-            cudaFree( _distant_lights );
+            checkNoorErrors(cudaFree( _distant_lights ));
         }
         if ( _num_infinite_lights > 0 ) {
-            cudaFree( _infinite_lights );
+            checkNoorErrors(cudaFree( _infinite_lights ));
         }
         if ( _num_lights > 0 ) {
-            cudaFree( _lights );
+            checkNoorErrors(cudaFree( _lights ));
         }
     }
 

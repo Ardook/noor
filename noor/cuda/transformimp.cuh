@@ -53,70 +53,70 @@ struct CudaTransformManager {
     __host__
         CudaTransformManager( const CudaPayload* payload ) {
         size_t size_bytes = payload->_transforms_size_bytes;
-        NOOR::malloc( (void**) &_normal_row0, size_bytes );
-        NOOR::malloc( (void**) &_normal_row1, size_bytes );
-        NOOR::malloc( (void**) &_normal_row2, size_bytes );
+        checkNoorErrors(NOOR::malloc(  &_normal_row0, size_bytes ));
+        checkNoorErrors(NOOR::malloc(  &_normal_row1, size_bytes ));
+        checkNoorErrors(NOOR::malloc(  &_normal_row2, size_bytes ));
 
-        NOOR::malloc( (void**) &_world_to_object_row0, size_bytes );
-        NOOR::malloc( (void**) &_world_to_object_row1, size_bytes );
-        NOOR::malloc( (void**) &_world_to_object_row2, size_bytes );
+        checkNoorErrors(NOOR::malloc(  &_world_to_object_row0, size_bytes ));
+        checkNoorErrors(NOOR::malloc(  &_world_to_object_row1, size_bytes ));
+        checkNoorErrors(NOOR::malloc(  &_world_to_object_row2, size_bytes ));
 
-        NOOR::malloc( (void**) &_object_to_world_row0, size_bytes );
-        NOOR::malloc( (void**) &_object_to_world_row1, size_bytes );
-        NOOR::malloc( (void**) &_object_to_world_row2, size_bytes );
+        checkNoorErrors(NOOR::malloc(  &_object_to_world_row0, size_bytes ));
+        checkNoorErrors(NOOR::malloc(  &_object_to_world_row1, size_bytes ));
+        checkNoorErrors(NOOR::malloc(  &_object_to_world_row2, size_bytes ));
 
         // copy
-        NOOR::memcopy( _normal_row0, (void*) &payload->_normal_row0[0], size_bytes );
-        NOOR::memcopy( _normal_row1, (void*) &payload->_normal_row1[0], size_bytes );
-        NOOR::memcopy( _normal_row2, (void*) &payload->_normal_row2[0], size_bytes );
+        checkNoorErrors(NOOR::memcopy( _normal_row0, (void*) &payload->_normal_row0[0], size_bytes ));
+        checkNoorErrors(NOOR::memcopy( _normal_row1, (void*) &payload->_normal_row1[0], size_bytes ));
+        checkNoorErrors(NOOR::memcopy( _normal_row2, (void*) &payload->_normal_row2[0], size_bytes ));
 
-        NOOR::memcopy( _world_to_object_row0, (void*) &payload->_world_to_object_row0[0], size_bytes );
-        NOOR::memcopy( _world_to_object_row1, (void*) &payload->_world_to_object_row1[0], size_bytes );
-        NOOR::memcopy( _world_to_object_row2, (void*) &payload->_world_to_object_row2[0], size_bytes );
+        checkNoorErrors(NOOR::memcopy( _world_to_object_row0, (void*) &payload->_world_to_object_row0[0], size_bytes ));
+        checkNoorErrors(NOOR::memcopy( _world_to_object_row1, (void*) &payload->_world_to_object_row1[0], size_bytes ));
+        checkNoorErrors(NOOR::memcopy( _world_to_object_row2, (void*) &payload->_world_to_object_row2[0], size_bytes ));
 
-        NOOR::memcopy( _object_to_world_row0, (void*) &payload->_object_to_world_row0[0], size_bytes );
-        NOOR::memcopy( _object_to_world_row1, (void*) &payload->_object_to_world_row1[0], size_bytes );
-        NOOR::memcopy( _object_to_world_row2, (void*) &payload->_object_to_world_row2[0], size_bytes );
+        checkNoorErrors(NOOR::memcopy( _object_to_world_row0, (void*) &payload->_object_to_world_row0[0], size_bytes ));
+        checkNoorErrors(NOOR::memcopy( _object_to_world_row1, (void*) &payload->_object_to_world_row1[0], size_bytes ));
+        checkNoorErrors(NOOR::memcopy( _object_to_world_row2, (void*) &payload->_object_to_world_row2[0], size_bytes ));
 
         // create texture object
-        NOOR::create_1d_texobj( &_normal_row0_texobj, _normal_row0, size_bytes, NOOR::_float4_channelDesc );
-        NOOR::create_1d_texobj( &_normal_row1_texobj, _normal_row1, size_bytes, NOOR::_float4_channelDesc );
-        NOOR::create_1d_texobj( &_normal_row2_texobj, _normal_row2, size_bytes, NOOR::_float4_channelDesc );
+        checkNoorErrors(NOOR::create_1d_texobj( &_normal_row0_texobj, _normal_row0, size_bytes, NOOR::_float4_channelDesc ));
+        checkNoorErrors(NOOR::create_1d_texobj( &_normal_row1_texobj, _normal_row1, size_bytes, NOOR::_float4_channelDesc ));
+        checkNoorErrors(NOOR::create_1d_texobj( &_normal_row2_texobj, _normal_row2, size_bytes, NOOR::_float4_channelDesc ));
 
-        NOOR::create_1d_texobj( &_world_to_object_row0_texobj, _world_to_object_row0, size_bytes, NOOR::_float4_channelDesc );
-        NOOR::create_1d_texobj( &_world_to_object_row1_texobj, _world_to_object_row1, size_bytes, NOOR::_float4_channelDesc );
-        NOOR::create_1d_texobj( &_world_to_object_row2_texobj, _world_to_object_row2, size_bytes, NOOR::_float4_channelDesc );
+        checkNoorErrors(NOOR::create_1d_texobj( &_world_to_object_row0_texobj, _world_to_object_row0, size_bytes, NOOR::_float4_channelDesc ));
+        checkNoorErrors(NOOR::create_1d_texobj( &_world_to_object_row1_texobj, _world_to_object_row1, size_bytes, NOOR::_float4_channelDesc ));
+        checkNoorErrors(NOOR::create_1d_texobj( &_world_to_object_row2_texobj, _world_to_object_row2, size_bytes, NOOR::_float4_channelDesc ));
 
-        NOOR::create_1d_texobj( &_object_to_world_row0_texobj, _object_to_world_row0, size_bytes, NOOR::_float4_channelDesc );
-        NOOR::create_1d_texobj( &_object_to_world_row1_texobj, _object_to_world_row1, size_bytes, NOOR::_float4_channelDesc );
-        NOOR::create_1d_texobj( &_object_to_world_row2_texobj, _object_to_world_row2, size_bytes, NOOR::_float4_channelDesc );
+        checkNoorErrors(NOOR::create_1d_texobj( &_object_to_world_row0_texobj, _object_to_world_row0, size_bytes, NOOR::_float4_channelDesc ));
+        checkNoorErrors(NOOR::create_1d_texobj( &_object_to_world_row1_texobj, _object_to_world_row1, size_bytes, NOOR::_float4_channelDesc ));
+        checkNoorErrors(NOOR::create_1d_texobj( &_object_to_world_row2_texobj, _object_to_world_row2, size_bytes, NOOR::_float4_channelDesc ));
     }
 
     __host__
         void free() {
-        cudaDestroyTextureObject( _normal_row0_texobj );
-        cudaDestroyTextureObject( _normal_row1_texobj );
-        cudaDestroyTextureObject( _normal_row2_texobj );
+        checkNoorErrors( cudaDestroyTextureObject( _normal_row0_texobj ));
+        checkNoorErrors( cudaDestroyTextureObject( _normal_row1_texobj ));
+        checkNoorErrors( cudaDestroyTextureObject( _normal_row2_texobj ));
 
-        cudaDestroyTextureObject( _world_to_object_row0_texobj );
-        cudaDestroyTextureObject( _world_to_object_row1_texobj );
-        cudaDestroyTextureObject( _world_to_object_row2_texobj );
+        checkNoorErrors( cudaDestroyTextureObject( _world_to_object_row0_texobj ));
+        checkNoorErrors( cudaDestroyTextureObject( _world_to_object_row1_texobj ));
+        checkNoorErrors( cudaDestroyTextureObject( _world_to_object_row2_texobj ));
 
-        cudaDestroyTextureObject( _object_to_world_row0_texobj );
-        cudaDestroyTextureObject( _object_to_world_row1_texobj );
-        cudaDestroyTextureObject( _object_to_world_row2_texobj );
+        checkNoorErrors( cudaDestroyTextureObject( _object_to_world_row0_texobj ));
+        checkNoorErrors( cudaDestroyTextureObject( _object_to_world_row1_texobj ));
+        checkNoorErrors( cudaDestroyTextureObject( _object_to_world_row2_texobj ));
 
-        cudaFree( _normal_row0 );
-        cudaFree( _normal_row1 );
-        cudaFree( _normal_row2 );
+        checkNoorErrors(cudaFree( _normal_row0 ));
+        checkNoorErrors(cudaFree( _normal_row1 ));
+        checkNoorErrors(cudaFree( _normal_row2 ));
 
-        cudaFree( _world_to_object_row0 );
-        cudaFree( _world_to_object_row1 );
-        cudaFree( _world_to_object_row2 );
+        checkNoorErrors(cudaFree( _world_to_object_row0 ));
+        checkNoorErrors(cudaFree( _world_to_object_row1 ));
+        checkNoorErrors(cudaFree( _world_to_object_row2 ));
 
-        cudaFree( _object_to_world_row0 );
-        cudaFree( _object_to_world_row1 );
-        cudaFree( _object_to_world_row2 );
+        checkNoorErrors(cudaFree( _object_to_world_row0 ));
+        checkNoorErrors(cudaFree( _object_to_world_row1 ));
+        checkNoorErrors(cudaFree( _object_to_world_row2 ));
     }
 
     __device__

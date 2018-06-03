@@ -163,15 +163,15 @@ public:
         BxDFType getType() const { return _type; }
     __device__
         bool isSpecular() const {
-        return ( (_type & BSDF_SPECULAR) != 0 );
+        return ( ( _type & BSDF_SPECULAR ) != 0 );
     }
     __device__
         bool isConductor() const {
-        return ( (_type & BSDF_CONDUCTOR) != 0 );
+        return ( ( _type & BSDF_CONDUCTOR ) != 0 );
     }
     __device__
         bool isDielectric() const {
-        return ( (_type & BSDF_DIELECTRIC) != 0 );
+        return ( ( _type & BSDF_DIELECTRIC ) != 0 );
     }
     __device__
         CudaTrowbridgeReitz factoryDistribution( const CudaIntersection& I ) const {
@@ -190,7 +190,7 @@ public:
         return _material_manager.getTransmission( I );
     }
     __device__
-        float3 iorConductor( const CudaIntersection& I )const {
+        float3 iorConductor( const CudaIntersection& I ) const {
         return _material_manager.getIorConductor( I );
     }
     __device__
@@ -209,11 +209,13 @@ public:
     __device__
         CudaFresnel factoryFresnel( const CudaIntersection& I ) const {
         const float3 etaI = make_float3( 1.f );
-        if ( isDielectric() )
-            return CudaFresnel( etaI, iorDielectric(I) );
-        else if ( isConductor() )
+        if ( isDielectric() ) {
+            const float3 etaT = iorDielectric( I );
+            I.setEta( etaT.x );
+            return CudaFresnel( etaI, etaT );
+        } else if ( isConductor() )
             return CudaFresnel( etaI, iorConductor( I ), k( I ) );
-        else 
+        else
             return CudaFresnel();
     }
 
@@ -472,7 +474,7 @@ public:
         const float3 F = fresnel.evaluate( dot( wo, wh ) );
 
         const float sqrtDenom = dot( wo, wh ) + eta * dot( wi, wh );
-        const float factor = 1.f / eta;
+        const float factor = 1.f;// / eta;
         const CudaTrowbridgeReitz _distribution = factoryDistribution( I );
 
         const float3 result = ( make_float3( 1.f ) - F ) * T( I ) *
@@ -648,6 +650,7 @@ public:
         return 0.0f;
     }
 };
+
 __global__
 void setup_bxdfs( CudaBxDF** bxdfs ) {
     bxdfs[LambertReflection] = new CudaLambertianReflection();
@@ -675,14 +678,16 @@ public:
 
     __host__
         CudaBxDFManager( int i ) {
-        NOOR::malloc( (void**) &_bxdfs, NUM_BXDFS * sizeof( CudaBxDF* ) );
+        checkNoorErrors( NOOR::malloc( &_bxdfs, NUM_BXDFS * sizeof( CudaBxDF* ) ) );
         setup_bxdfs << < 1, 1 >> > ( _bxdfs );
+        checkNoorErrors( cudaDeviceSynchronize() );
+        checkNoorErrors( cudaPeekAtLastError() );
     }
 
     __host__
         void free() {
         free_bxdfs << < 1, 1 >> > ( _bxdfs );
-        cudaFree( _bxdfs );
+        checkNoorErrors( cudaFree( _bxdfs ) );
     }
 };
 

@@ -71,12 +71,12 @@ public:
     void update() {
         checkNoorErrors( cudaGraphicsMapResources( 1, &_glResource, nullptr ) );
         checkNoorErrors( cudaGraphicsSubResourceGetMappedArray( &_buffer_array, _glResource, 0, 0 ) );
-        NOOR::memcopy_array( _buffer_array, _buffer, _size_bytes, cudaMemcpyDeviceToDevice );
+        checkNoorErrors(NOOR::memcopy_array( _buffer_array, _buffer, _size_bytes, cudaMemcpyDeviceToDevice ));
         checkNoorErrors( cudaGraphicsUnmapResources( 1, &_glResource, nullptr ) );
     }
 
     void free() {
-        cudaFree( _buffer );
+        checkNoorErrors(cudaFree( _buffer ));
     }
 };
 __constant__
