@@ -560,14 +560,14 @@ namespace NOOR {
 
     template<class T>
     static
-        void memcopy_symbol( T* d_tex_obj, const T* s_tex_obj ) {
-        checkNoorErrors( cudaMemcpyToSymbol( *d_tex_obj, (void*) s_tex_obj, sizeof( T ), 0, cudaMemcpyHostToDevice ) );
+        void memcopy_symbol( T* d_tex_obj, const T* s_tex_obj, cudaMemcpyKind kind = cudaMemcpyHostToDevice ) {
+        checkNoorErrors( cudaMemcpyToSymbol( *d_tex_obj, (void*) s_tex_obj, sizeof( T ), 0, kind ) );
     }
 
     template<class T>
     static
-        void memcopy_symbol_async( T* d_tex_obj, const T* s_tex_obj ) {
-        checkNoorErrors( cudaMemcpyToSymbolAsync( *d_tex_obj, (void*) s_tex_obj, sizeof( T ), 0, cudaMemcpyHostToDevice ) );
+        void memcopy_symbol_async( T* d_tex_obj, const T* s_tex_obj, cudaMemcpyKind kind = cudaMemcpyHostToDevice ) {
+        checkNoorErrors( cudaMemcpyToSymbolAsync( *d_tex_obj, (void*) s_tex_obj, sizeof( T ), 0, kind ) );
     }
 
     static

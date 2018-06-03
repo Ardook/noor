@@ -163,12 +163,15 @@ public:
         return make_float3( tex.evaluateGrad<float4>( I, uvscale ) );
     }
     __device__
-        float3 getIor( const CudaIntersection& I ) const {
+        float3 getIorDielectric( const CudaIntersection& I ) const {
+        const CudaMaterial* m = &_materials[I._mat_idx];
+        return make_float3(m->_coat_ior);
+    }
+    __device__
+        float3 getIorConductor( const CudaIntersection& I ) const {
         const float2& uvscale = make_float2( 1.0f );
         const CudaTexture& tex = getIorTexture( I._mat_idx );
-        const float3 ior = make_float3( tex.evaluateGrad<float4>( I, uvscale ) );
-        I.setEta( ior.x );
-        return ior;
+        return make_float3( tex.evaluateGrad<float4>( I, uvscale ) );
     }
     __device__
         float3 getK( const CudaIntersection& I ) const {

@@ -62,7 +62,7 @@ float4 pathtracer(
             if ( ray.isDifferential() && I.isBumped() ) {
                 bump( I );
             }
-            accumulate( I, rng, wi, beta, L, _constant_spec.is_mis_enabled() );
+            accumulate( I, rng, wi, beta, L );
             if ( !I.isTransparentBounce() && ( dot( wi, I._n ) < 0 ) ) break;
             // Russian Roulette 
             if ( rr_end( rng, bounce, beta ) ) break;

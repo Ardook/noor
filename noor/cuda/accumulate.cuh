@@ -25,20 +25,6 @@ SOFTWARE.
 #define ACCUMULATE_CUH
 
 __forceinline__ __device__
-void accumulateMIS(
-    CudaIntersection& I
-    , const CudaRNG& rng
-    , float3& wi
-    , float3& beta
-    , float3& L
-) {
-    CudaBSDF bsdf;
-    factoryBSDF( I, bsdf );
-    L += beta * directMIS( bsdf, I, rng );
-    beta *= scatter( bsdf, I, rng, wi );
-}
-
-__forceinline__ __device__
 void accumulate(
     CudaIntersection& I
     , const CudaRNG& rng
@@ -48,7 +34,10 @@ void accumulate(
 ) {
     CudaBSDF bsdf;
     factoryBSDF( I, bsdf );
-    L += beta * direct( bsdf, I, rng );
+    if ( _constant_spec.is_mis_enabled() )
+        L += beta * directMIS( bsdf, I, rng );
+    else
+        L += beta * direct( bsdf, I, rng );
     beta *= scatter( bsdf, I, rng, wi );
 }
 
@@ -74,21 +63,6 @@ void bump( CudaIntersection& I ) {
    // const float sign = dot( cross( n, I._shading._dpdu ), I._shading._dpdv ) < 0.0f ? -1.0f : 1.0f;
     I._shading._dpdv = NOOR::normalize( cross( I._shading._n, I._shading._dpdu ) );
     I._shading._n = NOOR::faceforward( I._shading._n, I._n );
-}
-
-__forceinline__ __device__
-void accumulate(
-    CudaIntersection& I,
-    const CudaRNG& rng,
-    float3& wi,
-    float3& beta,
-    float3& L,
-    bool MIS
-) {
-    if ( MIS )
-        accumulateMIS( I, rng, wi, beta, L );
-    else
-        accumulate( I, rng, wi, beta, L );
 }
 
 #endif /* ACCUMULATE_CUH */

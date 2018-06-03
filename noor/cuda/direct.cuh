@@ -29,10 +29,9 @@ bool occluded( const CudaIntersection& I, const CudaVisibility& v, int* light_id
     return ( intersectP( I.spawnShadowRay( v ), I, light_idx ) );
 }
 
-template<typename BSDF>
 __forceinline__ __device__
 float3 direct(
-    const BSDF& bsdf
+    const CudaBSDF& bsdf
     , const CudaIntersection& I
     , const CudaRNG& rng
 ) {
@@ -60,9 +59,8 @@ float3 direct(
     return _constant_spec._black;
 }
 
-template<typename BSDF>
 __forceinline__ __device__
-float3 sampleLight( const BSDF& bsdf,
+float3 sampleLight( const CudaBSDF& bsdf,
                     const CudaIntersection& I,
                     const CudaRNG& rng,
                     int& light_idx
@@ -95,9 +93,8 @@ float3 sampleLight( const BSDF& bsdf,
     return Ld;
 }
 
-template<typename BSDF>
 __forceinline__ __device__
-float3 sampleBSDF( const BSDF& bsdf,
+float3 sampleBSDF( const CudaBSDF& bsdf,
                    const CudaIntersection& I,
                    const CudaRNG& rng,
                    int light_idx
@@ -133,10 +130,9 @@ float3 sampleBSDF( const BSDF& bsdf,
     return Ld;
 }
 
-template<typename BSDF>
 __forceinline__ __device__
 float3 directMIS(
-    const BSDF& bsdf
+    const CudaBSDF& bsdf
     , const CudaIntersection& I
     , const CudaRNG& rng
 ) {

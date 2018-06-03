@@ -155,9 +155,6 @@ class CudaBxDF {
 public:
     BxDFType _type;
     BxDFIndex _index;
-    CudaTrowbridgeReitz _distribution;
-    bool _distribution_is_set{ false };
-public:
     __device__
         CudaBxDF( BxDFType type, BxDFIndex index ) :_type( type ), _index( index ) {}
     __device__
@@ -166,25 +163,19 @@ public:
         BxDFType getType() const { return _type; }
     __device__
         bool isSpecular() const {
-        return ( _type & BSDF_SPECULAR );
+        return ( (_type & BSDF_SPECULAR) != 0 );
     }
-    /*__device__
-        bool isMictosurface() const {
-        return (
-            _index == MicrofacetReflectionDielectric ||
-            _index == MicrofacetReflectionConductor ||
-            _index == MicrofacetTransmission );
-    }*/
     __device__
         bool isConductor() const {
-        return ( _type & BSDF_CONDUCTOR );
+        return ( (_type & BSDF_CONDUCTOR) != 0 );
     }
     __device__
-        void factoryDistribution( const CudaIntersection& I ) {
-        if ( !_distribution_is_set ) {
-            _distribution = CudaTrowbridgeReitz( _material_manager.getRoughness( I ) );
-            _distribution_is_set = true;
-        }
+        bool isDielectric() const {
+        return ( (_type & BSDF_DIELECTRIC) != 0 );
+    }
+    __device__
+        CudaTrowbridgeReitz factoryDistribution( const CudaIntersection& I ) const {
+        return CudaTrowbridgeReitz( _material_manager.getRoughness( I ) );
     }
     __device__
         float3 R( const CudaIntersection& I )const {
@@ -199,8 +190,12 @@ public:
         return _material_manager.getTransmission( I );
     }
     __device__
-        float3 ior( const CudaIntersection& I )const {
-        return _material_manager.getIor( I );
+        float3 iorConductor( const CudaIntersection& I )const {
+        return _material_manager.getIorConductor( I );
+    }
+    __device__
+        float3 iorDielectric( const CudaIntersection& I )const {
+        return _material_manager.getIorDielectric( I );
     }
     __device__
         float3 k( const CudaIntersection& I )const {
@@ -214,14 +209,12 @@ public:
     __device__
         CudaFresnel factoryFresnel( const CudaIntersection& I ) const {
         const float3 etaI = make_float3( 1.f );
-        const float3 etaT = ior( I );
-        if ( _type & BSDF_CONDUCTOR )
-            return CudaFresnel( etaI, etaT, k( I ) );
-        else if ( _type & BSDF_DIELECTRIC ) {
-            return CudaFresnel( etaI, etaT );
-        } else {
+        if ( isDielectric() )
+            return CudaFresnel( etaI, iorDielectric(I) );
+        else if ( isConductor() )
+            return CudaFresnel( etaI, iorConductor( I ), k( I ) );
+        else 
             return CudaFresnel();
-        }
     }
 
 };
@@ -299,62 +292,6 @@ public:
 };
 
 
-class CudaFresnelSpecular : public CudaBxDF {
-public:
-    __device__
-        CudaFresnelSpecular() :
-        CudaBxDF( BxDFType( BSDF_REFLECTION | BSDF_TRANSMISSION |
-                  BSDF_SPECULAR | BSDF_DIELECTRIC ), FresnelSpecular ) {}
-
-    __device__
-        float3 f( const CudaIntersection& I,
-                  const float3 &wo,
-                  const float3 &wi ) const {
-        return make_float3( 0.f );
-    }
-
-    __device__
-        float3 Sample_f(
-        const CudaIntersection& I,
-        const float3 &wo,
-        float3 &wi,
-        const float2 &u,
-        float &pdf,
-        BxDFType &sampledType
-        ) const {
-        const CudaFresnel fresnel = factoryFresnel( I );
-        float F = fresnel.evaluate( CosTheta( wo ) ).x;
-        if ( u.x < F ) {
-            // Compute specular reflection for _FresnelSpecular_
-            // Compute perfect specular reflection direction
-            wi = make_float3( -wo.x, -wo.y, wo.z );
-            pdf = F;
-            sampledType = BxDFType( BSDF_REFLECTION | BSDF_SPECULAR );
-            return F * S( I ) / AbsCosTheta( wi );
-        } else {
-            // Compute specular transmission for _FresnelSpecular_
-            // Figure out which eta is incident and which is transmitted
-            const bool entering = CosTheta( wo ) > 0.0f;
-            const float eta = entering ? ( fresnel._etaI / fresnel._etaT ).x :
-                ( fresnel._etaT / fresnel._etaI ).x;
-
-            // Compute ray direction for specular transmission
-            if ( !Refract( wo, NOOR::faceforward( make_float3( 0, 0, 1 ), wo ), eta, wi ) ) {
-                return _constant_spec._black;
-            }
-            // Account for non-symmetry with transmission to different medium
-            pdf = 1.0f - F;
-            sampledType = BxDFType( BSDF_TRANSMISSION | BSDF_SPECULAR );
-            return T( I ) * eta * eta * ( 1.0f - F ) / AbsCosTheta( wi );
-        }
-    }
-    __device__
-        float Pdf( const CudaIntersection& I,
-                   const float3 &wo, const float3 &wi ) const {
-        return 0.0f;
-    }
-};
-
 
 class CudaSpecularReflection : public CudaBxDF {
 public:
@@ -385,7 +322,7 @@ public:
         wi = make_float3( -wo.x, -wo.y, wo.z );
         pdf = 1.0f;
         const CudaFresnel fresnel = factoryFresnel( I );
-        return fresnel.evaluate( CosTheta( wi ) ) * S( I ) / AbsCosTheta( wi );
+        return fresnel.evaluate( CosTheta( wi ) ) * R( I ) / AbsCosTheta( wi );
     }
 
     __device__
@@ -441,70 +378,6 @@ public:
 };
 
 
-class CudaFresnelBlend : public CudaBxDF {
-public:
-    __device__
-        CudaFresnelBlend() :
-        CudaBxDF( BxDFType( BSDF_REFLECTION | BSDF_GLOSSY | BSDF_DIELECTRIC ),
-                  FresnelBlend ) {}
-    __device__
-        float3 SchlickFresnel( const CudaIntersection& I, float cosTheta ) const {
-        return S( I ) + NOOR::pow5f( 1.f - cosTheta ) * ( make_float3( 1.f ) - S( I ) );
-    }
-    __device__
-        float3 f( const CudaIntersection& I,
-                  const float3 &wo,
-                  const float3 &wi ) const {
-        const float3 diffuse = ( 28.f / ( 23.f * NOOR_PI ) ) * R( I ) *
-            ( make_float3( 1.f ) - S( I ) ) *
-            ( 1.f - NOOR::pow5f( 1.f - .5f * AbsCosTheta( wi ) ) ) *
-            ( 1.f - NOOR::pow5f( 1.f - .5f * AbsCosTheta( wo ) ) );
-        float3 wh = wi + wo;
-        if ( wh.x == 0 && wh.y == 0 && wh.z == 0 ) return make_float3( 0 );
-        wh = NOOR::normalize( wh );
-        const float3 specular =
-            _distribution.D( wh ) /
-            ( 4.f * NOOR::absDot( wi, wh ) * fmaxf( AbsCosTheta( wi ), AbsCosTheta( wo ) ) ) *
-            SchlickFresnel( I, dot( wi, wh ) );
-        return diffuse + specular;
-    }
-
-    __device__
-        float3 Sample_f(
-        const CudaIntersection& I,
-        const float3 &wo,
-        float3 &wi,
-        const float2 &u,
-        float &pdf,
-        BxDFType &sampledType
-        ) const {
-        sampledType = _type;
-        float2 lu = u;
-        if ( lu.x < .5f ) {
-            lu.x = fminf( 2.f * lu.x, NOOR_ONE_MINUS_EPSILON );
-            // Cosine-sample the hemisphere, flipping the direction if necessary
-            wi = NOOR::cosineSampleHemisphere( lu );
-            if ( wo.z < 0 ) wi.z *= -1.f;
-        } else {
-            lu.x = fminf( 2.f * ( lu.x - .5f ), NOOR_ONE_MINUS_EPSILON );
-            // Sample microfacet orientation $\wh$ and reflected direction $\wi$
-            const float3 wh = _distribution.Sample_wh( wo, lu );
-            wi = Reflect( wo, wh );
-            if ( !SameHemisphere( wo, wi ) ) return make_float3( 0.f );
-        }
-        pdf = Pdf( I, wo, wi );
-        return f( I, wo, wi );
-    }
-    __device__
-        float Pdf( const CudaIntersection& I,
-                   const float3 &wo, const float3 &wi ) const {
-        if ( !SameHemisphere( wo, wi ) ) return 0.f;
-        float3 wh = NOOR::normalize( wo + wi );
-        float pdf_wh = _distribution.Pdf( wo, wh );
-        return .5f * ( AbsCosTheta( wi ) * NOOR_invPI + pdf_wh / ( 4.f * dot( wo, wh ) ) );
-    }
-};
-
 
 class CudaMicrofacetReflection : public CudaBxDF {
 public:
@@ -528,6 +401,8 @@ public:
         wh = NOOR::normalize( wh );
         const CudaFresnel fresnel = factoryFresnel( I );
         const float3 F = fresnel.evaluate( dot( wo, wh ) );
+        const CudaTrowbridgeReitz _distribution = factoryDistribution( I );
+
         return R( I ) * _distribution.D( wh ) * _distribution.G( wo, wi ) * F /
             ( 4.0f * cosThetaI * cosThetaO );
     }
@@ -544,6 +419,8 @@ public:
         sampledType = _type;
         // Sample microfacet orientation $\wh$ and reflected direction $\wi$
         if ( wo.z == 0.0f ) return _constant_spec._black;
+        const CudaTrowbridgeReitz _distribution = factoryDistribution( I );
+
         const float3 wh = _distribution.Sample_wh( wo, u );
         wi = Reflect( wo, wh );
         if ( !SameHemisphere( wo, wi ) ) {
@@ -562,6 +439,8 @@ public:
             return 0.0f;
         }
         const float3 wh = NOOR::normalize( wo + wi );
+        const CudaTrowbridgeReitz _distribution = factoryDistribution( I );
+
         return _distribution.Pdf( wo, wh ) / ( 4.0f * dot( wo, wh ) );
     }
 };
@@ -594,6 +473,8 @@ public:
 
         const float sqrtDenom = dot( wo, wh ) + eta * dot( wi, wh );
         const float factor = 1.f / eta;
+        const CudaTrowbridgeReitz _distribution = factoryDistribution( I );
+
         const float3 result = ( make_float3( 1.f ) - F ) * T( I ) *
             fabsf( _distribution.D( wh ) * _distribution.G( wo, wi ) * eta * eta *
                    NOOR::absDot( wi, wh ) * NOOR::absDot( wo, wh ) * factor * factor /
@@ -611,6 +492,8 @@ public:
         ) const {
         sampledType = _type;
         if ( wo.z == 0 ) return _constant_spec._black;
+        const CudaTrowbridgeReitz _distribution = factoryDistribution( I );
+
         const float3 wh = _distribution.Sample_wh( wo, u );
         const CudaFresnel fresnel = factoryFresnel( I );
         const float eta = CosTheta( wo ) > 0 ? ( fresnel._etaI / fresnel._etaT ).x :
@@ -624,7 +507,7 @@ public:
                    const float3 &wo, const float3 &wi ) const {
         if ( SameHemisphere( wo, wi ) ) return 0;
         const float3 etaI = make_float3( 1.f );
-        const float3 etaT = ior( I );
+        const float3 etaT = iorDielectric( I );
         const CudaFresnel fresnel = factoryFresnel( I );
         const float eta = CosTheta( wo ) > 0 ? ( fresnel._etaT / fresnel._etaI ).x :
             ( fresnel._etaI / fresnel._etaT ).x;
@@ -634,56 +517,149 @@ public:
         const float dwh_dwi =
             fabsf( ( eta * eta * dot( wi, wh ) ) / ( sqrtDenom * sqrtDenom ) );
         const float2 r = roughness( I );
+        const CudaTrowbridgeReitz _distribution = factoryDistribution( I );
+
         return _distribution.Pdf( wo, wh ) * dwh_dwi;
     }
 };
 
+class CudaFresnelBlend : public CudaBxDF {
+public:
+    __device__
+        CudaFresnelBlend() :
+        CudaBxDF( BxDFType( BSDF_REFLECTION | BSDF_GLOSSY | BSDF_DIELECTRIC ),
+                  FresnelBlend ) {}
+    __device__
+        float3 SchlickFresnel( const CudaIntersection& I, float cosTheta ) const {
+        return S( I ) + NOOR::pow5f( 1.f - cosTheta ) * ( make_float3( 1.f ) - S( I ) );
+    }
+    __device__
+        float3 f( const CudaIntersection& I,
+                  const float3 &wo,
+                  const float3 &wi ) const {
+        const float3 diffuse = ( 28.f / ( 23.f * NOOR_PI ) ) * R( I ) *
+            ( make_float3( 1.f ) - S( I ) ) *
+            ( 1.f - NOOR::pow5f( 1.f - .5f * AbsCosTheta( wi ) ) ) *
+            ( 1.f - NOOR::pow5f( 1.f - .5f * AbsCosTheta( wo ) ) );
+        float3 wh = wi + wo;
+        if ( wh.x == 0 && wh.y == 0 && wh.z == 0 ) return make_float3( 0 );
+        wh = NOOR::normalize( wh );
+        const CudaTrowbridgeReitz _distribution = factoryDistribution( I );
 
+        const float3 specular =
+            _distribution.D( wh ) /
+            ( 4.f * NOOR::absDot( wi, wh ) * fmaxf( AbsCosTheta( wi ), AbsCosTheta( wo ) ) ) *
+            SchlickFresnel( I, dot( wi, wh ) );
+        return diffuse + specular;
+    }
+
+    __device__
+        float3 Sample_f(
+        const CudaIntersection& I,
+        const float3 &wo,
+        float3 &wi,
+        const float2 &u,
+        float &pdf,
+        BxDFType &sampledType
+        ) const {
+        sampledType = _type;
+        float2 lu = u;
+        if ( lu.x < .5f ) {
+            lu.x = fminf( 2.f * lu.x, NOOR_ONE_MINUS_EPSILON );
+            // Cosine-sample the hemisphere, flipping the direction if necessary
+            wi = NOOR::cosineSampleHemisphere( lu );
+            if ( wo.z < 0 ) wi.z *= -1.f;
+        } else {
+            lu.x = fminf( 2.f * ( lu.x - .5f ), NOOR_ONE_MINUS_EPSILON );
+            const CudaTrowbridgeReitz _distribution = factoryDistribution( I );
+
+            // Sample microfacet orientation $\wh$ and reflected direction $\wi$
+            const float3 wh = _distribution.Sample_wh( wo, lu );
+            wi = Reflect( wo, wh );
+            if ( !SameHemisphere( wo, wi ) ) return make_float3( 0.f );
+        }
+        pdf = Pdf( I, wo, wi );
+        return f( I, wo, wi );
+    }
+    __device__
+        float Pdf( const CudaIntersection& I,
+                   const float3 &wo, const float3 &wi ) const {
+        if ( !SameHemisphere( wo, wi ) ) return 0.f;
+        float3 wh = NOOR::normalize( wo + wi );
+        const CudaTrowbridgeReitz _distribution = factoryDistribution( I );
+
+        float pdf_wh = _distribution.Pdf( wo, wh );
+        return .5f * ( AbsCosTheta( wi ) * NOOR_invPI + pdf_wh / ( 4.f * dot( wo, wh ) ) );
+    }
+};
+
+class CudaFresnelSpecular : public CudaBxDF {
+public:
+    __device__
+        CudaFresnelSpecular() :
+        CudaBxDF( BxDFType( BSDF_REFLECTION | BSDF_TRANSMISSION |
+                  BSDF_SPECULAR | BSDF_DIELECTRIC ), FresnelSpecular ) {}
+
+    __device__
+        float3 f( const CudaIntersection& I,
+                  const float3 &wo,
+                  const float3 &wi ) const {
+        return make_float3( 0.f );
+    }
+
+    __device__
+        float3 Sample_f(
+        const CudaIntersection& I,
+        const float3 &wo,
+        float3 &wi,
+        const float2 &u,
+        float &pdf,
+        BxDFType &sampledType
+        ) const {
+        const CudaFresnel fresnel = factoryFresnel( I );
+        float F = fresnel.evaluate( CosTheta( wo ) ).x;
+        if ( u.x < F ) {
+            // Compute specular reflection for _FresnelSpecular_
+            // Compute perfect specular reflection direction
+            wi = make_float3( -wo.x, -wo.y, wo.z );
+            pdf = F;
+            sampledType = BxDFType( BSDF_REFLECTION | BSDF_SPECULAR );
+            return F * S( I ) / AbsCosTheta( wi );
+        } else {
+            // Compute specular transmission for _FresnelSpecular_
+            // Figure out which eta is incident and which is transmitted
+            const bool entering = CosTheta( wo ) > 0.0f;
+            const float eta = entering ? ( fresnel._etaI / fresnel._etaT ).x :
+                ( fresnel._etaT / fresnel._etaI ).x;
+
+            // Compute ray direction for specular transmission
+            if ( !Refract( wo, NOOR::faceforward( make_float3( 0, 0, 1 ), wo ), eta, wi ) ) {
+                return _constant_spec._black;
+            }
+            // Account for non-symmetry with transmission to different medium
+            pdf = 1.0f - F;
+            sampledType = BxDFType( BSDF_TRANSMISSION | BSDF_SPECULAR );
+            return T( I ) * eta * eta * ( 1.0f - F ) / AbsCosTheta( wi );
+        }
+    }
+    __device__
+        float Pdf( const CudaIntersection& I,
+                   const float3 &wo, const float3 &wi ) const {
+        return 0.0f;
+    }
+};
 __global__
-void setup_bxdfs( CudaBxDF** bxdfs,
-                  // reflections
-                  CudaLambertianReflection* _lambertReflection,
-                  CudaSpecularReflection* _specularReflectionNoOp,
-                  CudaSpecularReflection* _specularReflectionDielectric,
-                  CudaMicrofacetReflection* _microfacetReflectionDielectric,
-                  CudaMicrofacetReflection* _microfacetReflectionConductor,
-                  // transmissions
-                  CudaLambertianTransmission* _lambertTransmission,
-                  CudaSpecularTransmission* _specularTransmission,
-                  CudaMicrofacetTransmission* _microfacetTransmission,
-                  // multi-lobes
-                  CudaFresnelBlend* _fresnelBlend,
-                  CudaFresnelSpecular* _fresnelSpecular
-) {
-    _lambertReflection = new CudaLambertianReflection();
-    bxdfs[LambertReflection] = _lambertReflection;
-
-    _specularReflectionNoOp = new CudaSpecularReflection( BSDF_NOOP );
-    bxdfs[SpecularReflectionNoOp] = _specularReflectionNoOp;
-
-    _specularReflectionDielectric = new CudaSpecularReflection( BSDF_DIELECTRIC );
-    bxdfs[SpecularReflectionDielectric] = _specularReflectionDielectric;
-
-    _microfacetReflectionDielectric = new CudaMicrofacetReflection( BSDF_DIELECTRIC );
-    bxdfs[MicrofacetReflectionDielectric] = _microfacetReflectionDielectric;
-
-    _microfacetReflectionConductor = new CudaMicrofacetReflection( BSDF_CONDUCTOR );
-    bxdfs[MicrofacetReflectionConductor] = _microfacetReflectionConductor;
-
-    _lambertTransmission = new CudaLambertianTransmission();
-    bxdfs[LambertTransmission] = _lambertTransmission;
-
-    _specularTransmission = new CudaSpecularTransmission();
-    bxdfs[SpecularTransmission] = _specularTransmission;
-
-    _microfacetTransmission = new CudaMicrofacetTransmission();
-    bxdfs[MicrofacetTransmission] = _microfacetTransmission;
-
-    _fresnelBlend = new CudaFresnelBlend();
-    bxdfs[FresnelBlend] = _fresnelBlend;
-
-    _fresnelSpecular = new CudaFresnelSpecular();
-    bxdfs[FresnelSpecular] = _fresnelSpecular;
+void setup_bxdfs( CudaBxDF** bxdfs ) {
+    bxdfs[LambertReflection] = new CudaLambertianReflection();
+    bxdfs[SpecularReflectionNoOp] = new CudaSpecularReflection( BSDF_NOOP );
+    bxdfs[SpecularReflectionDielectric] = new CudaSpecularReflection( BSDF_DIELECTRIC );
+    bxdfs[MicrofacetReflectionDielectric] = new CudaMicrofacetReflection( BSDF_DIELECTRIC );
+    bxdfs[MicrofacetReflectionConductor] = new CudaMicrofacetReflection( BSDF_CONDUCTOR );
+    bxdfs[LambertTransmission] = new CudaLambertianTransmission();
+    bxdfs[SpecularTransmission] = new CudaSpecularTransmission();
+    bxdfs[MicrofacetTransmission] = new CudaMicrofacetTransmission();
+    bxdfs[FresnelBlend] = new CudaFresnelBlend();
+    bxdfs[FresnelSpecular] = new CudaFresnelSpecular();
 }
 __global__
 void free_bxdfs( CudaBxDF** bxdfs ) {
@@ -691,45 +667,16 @@ void free_bxdfs( CudaBxDF** bxdfs ) {
         delete bxdfs[i];
     }
 }
-
 class CudaBxDFManager {
 public:
     CudaBxDF** _bxdfs;
-
-    // reflections
-    CudaLambertianReflection* _lambertReflection;
-    CudaSpecularReflection* _specularReflectionNoOp;
-    CudaSpecularReflection* _specularReflectionDielectric;
-    CudaMicrofacetReflection* _microfacetReflectionDielectric;
-    CudaMicrofacetReflection* _microfacetReflectionConductor;
-    // transmissions
-    CudaLambertianTransmission* _lambertTransmission;
-    CudaSpecularTransmission* _specularTransmission;
-    CudaMicrofacetTransmission* _microfacetTransmission;
-    // multi-lobes
-    CudaFresnelBlend* _fresnelBlend;
-    CudaFresnelSpecular* _fresnelSpecular;
 
     CudaBxDFManager() = default;
 
     __host__
         CudaBxDFManager( int i ) {
         NOOR::malloc( (void**) &_bxdfs, NUM_BXDFS * sizeof( CudaBxDF* ) );
-        setup_bxdfs << < 1, 1 >> > ( _bxdfs,
-                                     // reflections
-                                     _lambertReflection,
-                                     _specularReflectionNoOp,
-                                     _specularReflectionDielectric,
-                                     _microfacetReflectionDielectric,
-                                     _microfacetReflectionConductor,
-                                     // transmissions
-                                     _lambertTransmission,
-                                     _specularTransmission,
-                                     _microfacetTransmission,
-                                     // multi-lobes
-                                     _fresnelBlend,
-                                     _fresnelSpecular
-                                     );
+        setup_bxdfs << < 1, 1 >> > ( _bxdfs );
     }
 
     __host__

@@ -71,7 +71,6 @@ float Pdf(
             return ( (CudaSpecularReflection*) bxdf )->Pdf( I, woWorld, wiWorld );
         case MicrofacetReflectionDielectric:
         case MicrofacetReflectionConductor:
-            bxdf->factoryDistribution(I);
             return ( (CudaMicrofacetReflection*) bxdf )->Pdf( I, woWorld, wiWorld );
 
         // transmissions
@@ -80,7 +79,6 @@ float Pdf(
         case SpecularTransmission:
             return ( (CudaSpecularTransmission*) bxdf )->Pdf( I, woWorld, wiWorld );
         case MicrofacetTransmission:
-            bxdf->factoryDistribution(I);
             return ( (CudaMicrofacetTransmission*) bxdf )->Pdf( I, woWorld, wiWorld );
 
         // multi-lobes
@@ -109,7 +107,6 @@ float3 f(
             return ( (CudaSpecularReflection*) bxdf )->f( I, woWorld, wiWorld );
         case MicrofacetReflectionDielectric:
         case MicrofacetReflectionConductor:
-            bxdf->factoryDistribution(I);
             return ( (CudaMicrofacetReflection*) bxdf )->f( I, woWorld, wiWorld );
 
         // transmissions
@@ -118,7 +115,6 @@ float3 f(
         case SpecularTransmission:
             return ( (CudaSpecularTransmission*) bxdf )->f( I, woWorld, wiWorld );
         case MicrofacetTransmission:
-            bxdf->factoryDistribution(I);
             return ( (CudaMicrofacetTransmission*) bxdf )->f( I, woWorld, wiWorld );
 
         // multi-lobes
@@ -150,7 +146,6 @@ float3 Sample_f(
             return ( (CudaSpecularReflection*) bxdf )->Sample_f( I, woWorld, wiWorld, u, pdf, sampledType );
         case MicrofacetReflectionDielectric:
         case MicrofacetReflectionConductor:
-            bxdf->factoryDistribution(I);
             return ( (CudaMicrofacetReflection*) bxdf )->Sample_f( I, woWorld, wiWorld, u, pdf, sampledType );
 
         // transmissions
@@ -159,7 +154,6 @@ float3 Sample_f(
         case SpecularTransmission:
             return ( (CudaSpecularTransmission*) bxdf )->Sample_f( I, woWorld, wiWorld, u, pdf, sampledType );
         case MicrofacetTransmission:
-            bxdf->factoryDistribution(I);
             return ( (CudaMicrofacetTransmission*) bxdf )->Sample_f( I, woWorld, wiWorld, u, pdf, sampledType );
 
         // multi-lobes
@@ -179,10 +173,10 @@ public:
     int _nbxdfs;
 
     __device__
-        CudaBSDF():_nbxdfs(0) {}
-    
+        CudaBSDF() :_nbxdfs( 0 ) {}
+
     __device__
-    void Add( CudaBxDF *b ) {
+        void Add( CudaBxDF *b ) {
         _bxdfs[_nbxdfs++] = b;
     }
     __device__
@@ -210,7 +204,7 @@ public:
         for ( int i = 0; i < _nbxdfs; ++i )
             if ( _bxdfs[i]->MatchesFlags( flags ) ) {
                 ++matchingComps;
-                pdf += ::Pdf(_bxdfs[i], I, wo, wi );
+                pdf += ::Pdf( _bxdfs[i], I, wo, wi );
             }
         return matchingComps > 0 ? pdf / matchingComps : 0.f;
     }
@@ -230,7 +224,7 @@ public:
             if ( _bxdfs[i]->MatchesFlags( flags ) &&
                 ( ( reflect && ( _bxdfs[i]->_type & BSDF_REFLECTION ) ) ||
                  ( !reflect && ( _bxdfs[i]->_type & BSDF_TRANSMISSION ) ) ) )
-                f += ::f(_bxdfs[i], I, wo, wi );
+                f += ::f( _bxdfs[i], I, wo, wi );
         return f;
     }
     __device__
@@ -249,8 +243,8 @@ public:
             sampledType = BxDFType( 0 );
             return _constant_spec._black;
         }
-        const int comp = min( (int) floorf( u.x * matchingComps ), matchingComps-1 );
-        const float2 uRemapped = make_float2(fminf( u.x * matchingComps - comp, NOOR_ONE_MINUS_EPSILON ), u.y );
+        const int comp = min( (int) floorf( u.x * matchingComps ), matchingComps - 1 );
+        const float2 uRemapped = make_float2( fminf( u.x * matchingComps - comp, NOOR_ONE_MINUS_EPSILON ), u.y );
         CudaBxDF *bxdf = nullptr;
         int count = comp;
         for ( int i = 0; i < _nbxdfs; ++i ) {
@@ -268,7 +262,7 @@ public:
         pdf = 0;
         sampledType = bxdf->_type;
         float3 wi;
-        float3 f = ::Sample_f(bxdf, I, wo, wi, uRemapped, pdf, sampledType );
+        float3 f = ::Sample_f( bxdf, I, wo, wi, uRemapped, pdf, sampledType );
         if ( pdf == 0 ) {
             sampledType = BxDFType( 0 );
             return _constant_spec._black;
@@ -279,7 +273,7 @@ public:
         if ( !( bxdf->_type & BSDF_SPECULAR ) && matchingComps > 1 )
             for ( int i = 0; i < _nbxdfs; ++i )
                 if ( _bxdfs[i] != bxdf && _bxdfs[i]->MatchesFlags( type ) )
-                    pdf += ::Pdf(_bxdfs[i],I, wo, wi );
+                    pdf += ::Pdf( _bxdfs[i], I, wo, wi );
         if ( matchingComps > 1 ) pdf /= matchingComps;
 
         // Compute value of BSDF for sampled direction
@@ -290,7 +284,7 @@ public:
                 if ( _bxdfs[i]->MatchesFlags( type ) &&
                     ( ( reflect && ( _bxdfs[i]->_type & BSDF_REFLECTION ) ) ||
                      ( !reflect && ( _bxdfs[i]->_type & BSDF_TRANSMISSION ) ) ) )
-                    f += ::f(_bxdfs[i], I, wo, wi );
+                    f += ::f( _bxdfs[i], I, wo, wi );
         }
         return f;
     }
@@ -334,13 +328,19 @@ void factoryTranslucentBSDF( const CudaIntersection& I, CudaBSDF& bsdf ) {
 }
 
 __forceinline__ __device__
+void factorySmoothCoatingBSDF( const CudaIntersection& I, CudaBSDF& bsdf ) {
+    bsdf.Add( _bxdf_manager._bxdfs[SpecularReflectionDielectric] );
+    bsdf.Add( _bxdf_manager._bxdfs[MicrofacetReflectionConductor] );
+}
+
+__forceinline__ __device__
 void factoryBSDF( const CudaIntersection& I, CudaBSDF& bsdf ) {
     switch ( I._material_type ) {
         case DIFFUSE:
             factoryDiffuseBSDF( I, bsdf );
             break;
         case TRANSLUCENT:
-            factoryTranslucentBSDF(I,  bsdf );
+            factoryTranslucentBSDF( I, bsdf );
             break;
         case GLASS:
             factoryGlassBSDF( I, bsdf );
@@ -352,13 +352,16 @@ void factoryBSDF( const CudaIntersection& I, CudaBSDF& bsdf ) {
             factoryMetalBSDF( I, bsdf );
             break;
         case ROUGHGLASS:
-            factoryRoughGlassBSDF(I,  bsdf );
+            factoryRoughGlassBSDF( I, bsdf );
             break;
         case MIRROR:
             factoryMirrorBSDF( I, bsdf );
             break;
         case SUBSTRATE:
-            factorySubstrateBSDF(I,  bsdf );
+            factorySubstrateBSDF( I, bsdf );
+            break;
+        case SMOOTHCOATING:
+            factorySmoothCoatingBSDF( I, bsdf );
             break;
         default:
             break;
