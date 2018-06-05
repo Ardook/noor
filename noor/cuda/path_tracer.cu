@@ -46,8 +46,7 @@ float4 pathtracer(
     float3 wi;
     bool specular_bounce = false;
     for ( unsigned char bounce = 0; bounce < _constant_spec._bounces; ++bounce ) {
-        CudaIntersection I;
-        I._tid = tid;
+        CudaIntersection I(rng,tid);
         if ( intersect( ray, I ) ) {
             if ( bounce == 0 ) {
                 lookAt = make_float4( I._p, 1.f );
@@ -62,10 +61,10 @@ float4 pathtracer(
             if ( ray.isDifferential() && I.isBumped() ) {
                 bump( I );
             }
-            accumulate( I, rng, wi, beta, L );
-            //if ( !I.isTransparentBounce() && ( dot( wi, I._n ) < 0 ) ) {
-            //    break;
-            //}
+            accumulate( I, wi, beta, L );
+            if ( !I.isTransparentBounce() && ( dot( wi, I._n ) < 0 ) ) {
+                break;
+            }
             // Russian Roulette 
             if ( rr_end( rng, bounce, beta ) ) break;
             specular_bounce = I.isSpecularBounce();

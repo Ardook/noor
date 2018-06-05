@@ -49,12 +49,11 @@ float CudaAreaLight::pdf_Li(
 __forceinline__ __device__
 float3 CudaAreaLight::sample_Li(
     const CudaIntersection& I,
-    const CudaRNG& rng,
     CudaLightRecord& Lr,
     float& pdf
 ) const {
     float3 p;
-    _shape.sample( I, rng, p, pdf );
+    _shape.sample( I, p, pdf );
     if ( pdf == 0.f ) return _constant_spec._black;
     Lr._vis = CudaVisibility( I._p, p );
     return  Le( Lr._vis._wi );
@@ -82,11 +81,10 @@ float CudaInfiniteLight::pdf_Li(
 __forceinline__ __device__
 float3 CudaInfiniteLight::sample_Li(
     const CudaIntersection& I,
-    const CudaRNG& rng,
     CudaLightRecord& Lr,
     float& pdf
 ) const {
-    Lr._vis._wi = _skydome_manager.importance_sample_dir( rng, pdf );
+    Lr._vis._wi = _skydome_manager.importance_sample_dir( I._rng, pdf );
     if ( isinf( pdf ) || isnan( pdf ) ) pdf = 0.f;
     Lr._vis = CudaVisibility( I._p, I._p + 2.f*_world_radius * Lr._vis._wi );
     return Le( Lr._vis._wi );
@@ -97,7 +95,6 @@ float3 CudaInfiniteLight::sample_Li(
 __forceinline__ __device__
 float3 CudaPointLight::sample_Li(
     const CudaIntersection& I,
-    const CudaRNG& rng,
     CudaLightRecord& Lr,
     float& pdf
 ) const {
@@ -115,7 +112,6 @@ float3 CudaPointLight::sample_Li(
 __forceinline__ __device__
 float3 CudaSpotLight::sample_Li(
     const CudaIntersection& I,
-    const CudaRNG& rng,
     CudaLightRecord& Lr,
     float& pdf
 ) const {
@@ -139,7 +135,6 @@ float3 CudaSpotLight::sample_Li(
 __forceinline__ __device__
 float3 CudaDistantLight::sample_Li(
     const CudaIntersection& I,
-    const CudaRNG& rng,
     CudaLightRecord& Lr,
     float& pdf
 ) const {
@@ -296,7 +291,6 @@ struct CudaLightManager {
     __device__
         float3 sample_Li(
         const CudaIntersection& I,
-        const CudaRNG& rng,
         CudaLightRecord& Lr,
         float& pdf
         ) const {
@@ -305,20 +299,20 @@ struct CudaLightManager {
             _num_lights :
             _num_lights - 1;
         if ( num_lights == 0 ) return _constant_spec._black;
-        const int light_idx = num_lights * rng();
+        const int light_idx = num_lights * I._rng();
         Lr._light_idx = light_idx;
 
         float3 Ld = _constant_spec._black;
         if ( _lights[light_idx]->_type == Area ) {
-            Ld = ( (const CudaAreaLight*) _lights[light_idx] )->sample_Li( I, rng, Lr, pdf );
+            Ld = ( (const CudaAreaLight*) _lights[light_idx] )->sample_Li( I, Lr, pdf );
         } else if ( _lights[light_idx]->_type == Point ) {
-            Ld = ( (const CudaPointLight*) _lights[light_idx] )->sample_Li( I, rng, Lr, pdf );
+            Ld = ( (const CudaPointLight*) _lights[light_idx] )->sample_Li( I, Lr, pdf );
         } else if ( _lights[light_idx]->_type == Spot ) {
-            Ld = ( (const CudaSpotLight*) _lights[light_idx] )->sample_Li( I, rng, Lr, pdf );
+            Ld = ( (const CudaSpotLight*) _lights[light_idx] )->sample_Li( I, Lr, pdf );
         } else  if ( _lights[light_idx]->_type == Distant ) {
-            Ld = ( (const CudaDistantLight*) _lights[light_idx] )->sample_Li( I, rng, Lr, pdf );
+            Ld = ( (const CudaDistantLight*) _lights[light_idx] )->sample_Li( I, Lr, pdf );
         } else   if ( _lights[light_idx]->_type == Infinite ) {
-            Ld = ( (const CudaInfiniteLight*) _lights[light_idx] )->sample_Li( I, rng, Lr, pdf );
+            Ld = ( (const CudaInfiniteLight*) _lights[light_idx] )->sample_Li( I, Lr, pdf );
         }
         if ( isinf( pdf ) ) pdf = 0.f;
         return Ld * num_lights;

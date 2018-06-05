@@ -28,11 +28,10 @@ __forceinline__ __device__
 void sampleQuad(
     const CudaShape& quad,
     const CudaIntersection& I,
-    const CudaRNG& rng,
     float3& p,
     float& pdf
 ) {
-    p = quad._center + quad._u*rng() + quad._v*rng() + _constant_spec._reflection_bias*quad._n;
+    p = quad._center + quad._u*I._rng() + quad._v*I._rng() + _constant_spec._reflection_bias*quad._n;
     const float3 wi = I._p - p;
     const float dist2 = NOOR::length2( wi );
     pdf = dist2 / ( NOOR::absDot( quad._n, -1.0f*wi ) * quad._area );
@@ -43,11 +42,10 @@ __forceinline__ __device__
 void sampleSphere(
     const CudaShape& sphere,
     const CudaIntersection& I,
-    const CudaRNG& rng,
     float3& p,
     float& pdf
 ) {
-    const float2 r = make_float2( rng(), rng() );
+    const float2 r = make_float2( I._rng(), I._rng() );
     float3 w = normalize( sphere._center - I._p );
     float3 u, v;
     NOOR::coordinateSystem( w, u, v );
@@ -77,11 +75,10 @@ __forceinline__ __device__
 void sampleDisk(
     const CudaShape& disk,
     const CudaIntersection& I,
-    const CudaRNG& rng,
     float3& p,
     float& pdf
 ) {
-    float2 pOnDisk = NOOR::concentricSampleDisk( make_float2( rng(), rng() ) );
+    float2 pOnDisk = NOOR::concentricSampleDisk( make_float2( I._rng(), I._rng() ) );
     p = make_float3( pOnDisk.x * disk._radius, pOnDisk.y * disk._radius, 0.f );
     const float3& w = disk._n;
     float3 u, v;
@@ -114,8 +111,7 @@ bool intersectQuad(
 }
 
 __forceinline__ __device__
-bool intersectSphere( const CudaShape& sphere,
-                   const CudaRay& ray ) {
+bool intersectSphere( const CudaShape& sphere, const CudaRay& ray ) {
     const float3 o = ray.getOrigin() - sphere._center;
     const float3& d = ray.getDir();
 
@@ -143,10 +139,7 @@ bool intersectSphere( const CudaShape& sphere,
 }
 
 __forceinline__ __device__
-bool intersectDisk(
-    const CudaShape& disk,
-    const CudaRay& ray
-) {
+bool intersectDisk( const CudaShape& disk, const CudaRay& ray) {
     float denom = dot( disk._n, ray.getDir() );
     if ( denom == 0 ) return false;
     float t_hit = -( dot( ray.getOrigin(), disk._n ) - dot( disk._center, disk._n ) ) / denom;

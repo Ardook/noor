@@ -103,7 +103,6 @@ public:
     __device__
         void sample(
         const CudaIntersection& I,
-        const CudaRNG& rng,
         float3& p,
         float& pdf
         ) const;

@@ -27,7 +27,6 @@ SOFTWARE.
 __forceinline__ __device__
 void accumulate(
     CudaIntersection& I
-    , const CudaRNG& rng
     , float3& wi
     , float3& beta
     , float3& L
@@ -35,10 +34,10 @@ void accumulate(
     CudaBSDF bsdf;
     factoryBSDF( I, bsdf );
     if ( _constant_spec.is_mis_enabled() )
-        L += beta * directMIS( bsdf, I, rng );
+        L += beta * directMIS( bsdf, I );
     else
-        L += beta * direct( bsdf, I, rng );
-    beta *= scatter( bsdf, I, rng, wi );
+        L += beta * direct( bsdf, I );
+    beta *= scatter( bsdf, I, wi );
 }
 
 /* Based on PBRT bump mapping */

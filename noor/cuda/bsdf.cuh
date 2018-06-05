@@ -219,12 +219,16 @@ public:
         const float3 wo = onb.toLocal( woWorld );
         const float3 wi = onb.toLocal( wiWorld );
         const bool reflect = dot( wiWorld, I._n ) * dot( woWorld, I._n ) > 0;
+        //float a = dot( wiWorld, I._n );
+        //float b = dot( woWorld, I._n );
+        //const bool reflect = a > 0 && b > 0;
         float3 f = _constant_spec._black;
         for ( int i = 0; i < _nbxdfs; ++i )
             if ( _bxdfs[i]->MatchesFlags( flags ) &&
                 ( ( reflect && ( _bxdfs[i]->_type & BSDF_REFLECTION ) ) ||
-                 ( !reflect && ( _bxdfs[i]->_type & BSDF_TRANSMISSION ) ) ) )
+                 ( !reflect && ( _bxdfs[i]->_type & BSDF_TRANSMISSION ) ) ) ) {
                 f += ::f( _bxdfs[i], I, wo, wi );
+            }
         return f;
     }
     __device__

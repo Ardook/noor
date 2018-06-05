@@ -42,9 +42,10 @@ namespace NOOR {
         return R * SchlickWeight( cosThetaD );
     }
 
+    template<typename T>
     __device__ __host__ __forceinline__
-        void swap( float& a, float& b ) {
-        float c( a ); a = b; b = c;
+        void swap( T& a, T& b ) {
+        T c( a ); a = b; b = c;
     }
 
 
@@ -408,11 +409,14 @@ namespace NOOR {
     }
 
     __forceinline__ __host__ __device__
+        float sphericalPhi( const float3 &v, HandedNess handedness = RIGHT_HANDED ) {
+        float p = handedness == RIGHT_HANDED ? atan2f( v.z, v.x ): p = atan2f( v.y, v.x );
+        return ( p < 0 ) ? ( p + NOOR_2PI ) : p;
+    }
+
+    __forceinline__ __host__ __device__
         float sphericalTheta( const float3 &v, HandedNess handedness = RIGHT_HANDED ) {
-        if ( handedness == RIGHT_HANDED )
-            return acosf( clamp( v.y, -1.f, 1.f ) );
-        else
-            return acosf( clamp( v.z, -1.f, 1.f ) );
+        return (handedness == RIGHT_HANDED ? acosf( clamp( v.y, -1.f, 1.f ) ): acosf( clamp( v.z, -1.f, 1.f ) ));
     }
 
     __forceinline__ __host__ __device__
@@ -438,17 +442,7 @@ namespace NOOR {
         return NOOR_inv2PI / ( 1.f - cosThetaMax );
     }
 
-    __forceinline__ __host__ __device__
-        float sphericalPhi( const float3 &v, HandedNess handedness = RIGHT_HANDED ) {
-        if ( handedness == RIGHT_HANDED ) {
-            const float p = atan2f( v.z, v.x );
-            return ( p < 0 ) ? ( p + NOOR_2PI ) : p;
-        } else {
-            const float p = atan2f( v.y, v.x );
-            return ( p < 0 ) ? ( p + NOOR_2PI ) : p;
-        }
-    }
-
+    
     __forceinline__ __host__ __device__
         float3 sphericalDirection( float sinTheta, float cosTheta, float phi,
                                    const float3 &x, const float3 &y, const float3 &z

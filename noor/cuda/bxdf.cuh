@@ -54,7 +54,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef CUDABXDF_CUH
 #define CUDABXDF_CUH
 /* based on PBRT BSDF and BXDF's */
-
 #include "fresnel.cuh"
 __forceinline__ __device__
 static float CosTheta( const float3 &w ) { return w.z; }
@@ -92,8 +91,8 @@ static float CosDPhi( const float3 &wa, const float3 &wb ) {
         -1.0f, 1.0f );
 }
 __forceinline__ __device__
-static bool SameHemisphere( const float3 &w, const float3 &wp ) {
-    return w.z * wp.z > 0;
+static bool SameHemisphere( const float3 &a, const float3 &b ) {
+    return a.z * b.z > 0;
 }
 
 __forceinline__ __device__
@@ -112,7 +111,7 @@ static bool Refract( const float3 &wi, const float3 &n, float eta, float3 &wt ) 
         return false;
     }
     const float cosThetaT = sqrtf( 1.0f - sin2ThetaT );
-    wt = eta * ( -1.0f*wi ) + ( eta * cosThetaI - cosThetaT ) * n;
+    wt = -eta * wi + ( eta * cosThetaI - cosThetaT ) * n;
     return true;
 }
 
@@ -190,18 +189,6 @@ public:
         return _material_manager.getTransmission( I );
     }
     __device__
-        float3 iorConductor( const CudaIntersection& I ) const {
-        return _material_manager.getIorConductor( I );
-    }
-    __device__
-        float3 iorDielectric( const CudaIntersection& I )const {
-        return _material_manager.getIorDielectric( I );
-    }
-    __device__
-        float3 k( const CudaIntersection& I )const {
-        return _material_manager.getK( I );
-    }
-    __device__
         float2 roughness( const CudaIntersection& I )const {
         return _material_manager.getRoughness( I );
     }
@@ -210,11 +197,11 @@ public:
         CudaFresnel factoryFresnel( const CudaIntersection& I ) const {
         const float3 etaI = make_float3( 1.f );
         if ( isDielectric() ) {
-            const float3 etaT = iorDielectric( I );
+            const float3 etaT = _material_manager.getIorDielectric( I );
             I.setEta( etaT.x );
             return CudaFresnel( etaI, etaT );
         } else if ( isConductor() )
-            return CudaFresnel( etaI, iorConductor( I ), k( I ) );
+            return CudaFresnel( etaI, _material_manager.getIorConductor( I ), _material_manager.getK( I ) );
         else
             return CudaFresnel();
     }
@@ -347,6 +334,8 @@ public:
                   const float3 &wi ) const {
         return make_float3( 0.f );
     }
+
+
     __device__
         float3 Sample_f(
         const CudaIntersection& I,
@@ -397,16 +386,21 @@ public:
                   const float3 &wi ) const {
         float cosThetaO = AbsCosTheta( wo ), cosThetaI = AbsCosTheta( wi );
         // Handle degenerate cases for microfacet reflection
-        if ( cosThetaI == 0.0f || cosThetaO == 0.0f ) return _constant_spec._black;
+        if ( cosThetaI == 0.0f || cosThetaO == 0.0f ) {
+            return _constant_spec._black;
+        }
         float3 wh = wi + wo;
-        if ( wh.x == 0.0f && wh.y == 0 && wh.z == 0.0f ) return _constant_spec._black;
+        if ( NOOR::isBlack(wh) ) {
+            return _constant_spec._black;
+        }
         wh = NOOR::normalize( wh );
         const CudaFresnel fresnel = factoryFresnel( I );
         const float3 F = fresnel.evaluate( dot( wo, wh ) );
         const CudaTrowbridgeReitz _distribution = factoryDistribution( I );
 
-        return R( I ) * _distribution.D( wh ) * _distribution.G( wo, wi ) * F /
+        const float3 result = S( I ) * _distribution.D( wh ) * _distribution.G( wo, wi ) * F /
             ( 4.0f * cosThetaI * cosThetaO );
+        return result;
     }
 
     __device__
@@ -436,7 +430,8 @@ public:
     }
     __device__
         float Pdf( const CudaIntersection& I,
-                   const float3 &wo, const float3 &wi ) const {
+                   const float3 &wo, 
+                   const float3 &wi ) const {
         if ( !SameHemisphere( wo, wi ) ) {
             return 0.0f;
         }
@@ -459,7 +454,6 @@ public:
                   const float3 &wo,
                   const float3 &wi ) const {
         if ( SameHemisphere( wo, wi ) ) return _constant_spec._black;  // transmission only
-
         const float cosThetaO = CosTheta( wo );
         const float cosThetaI = CosTheta( wi );
         if ( cosThetaI == 0.0f || cosThetaO == 0.0f ) return _constant_spec._black;
@@ -467,10 +461,9 @@ public:
         // Compute $\wh$ from $\wo$ and $\wi$ for microfacet transmission
         const CudaFresnel fresnel = factoryFresnel( I );
         float eta = CosTheta( wo ) > 0.0f ? ( fresnel._etaT / fresnel._etaI ).x :
-            ( fresnel._etaI / fresnel._etaT ).x;
+                                            ( fresnel._etaI / fresnel._etaT ).x;
         float3 wh = NOOR::normalize( wo + wi * eta );
         wh *= NOOR::sign( wh.z );
-
         const float3 F = fresnel.evaluate( dot( wo, wh ) );
 
         const float sqrtDenom = dot( wo, wh ) + eta * dot( wi, wh );
@@ -483,6 +476,7 @@ public:
                    ( cosThetaI * cosThetaO * sqrtDenom * sqrtDenom ) );
         return result;
     }
+
     __device__
         float3 Sample_f(
         const CudaIntersection& I,
@@ -496,31 +490,31 @@ public:
         if ( wo.z == 0 ) return _constant_spec._black;
         const CudaTrowbridgeReitz _distribution = factoryDistribution( I );
 
-        const float3 wh = _distribution.Sample_wh( wo, u );
+        float3 wh = _distribution.Sample_wh( wo, u );
         const CudaFresnel fresnel = factoryFresnel( I );
-        const float eta = CosTheta( wo ) > 0 ? ( fresnel._etaI / fresnel._etaT ).x :
-            ( fresnel._etaT / fresnel._etaI ).x;
-        if ( !Refract( wo, wh, eta, wi ) ) return _constant_spec._black;
+        const float eta = CosTheta(wo) > 0 ? ( fresnel._etaI / fresnel._etaT ).x :
+                                              ( fresnel._etaT / fresnel._etaI ).x;
+        if ( !Refract( wo, wh, eta, wi )  ) {
+            pdf = 0;
+           return _constant_spec._black;
+        }
         pdf = Pdf( I, wo, wi );
         return f( I, wo, wi );
     }
+
     __device__
         float Pdf( const CudaIntersection& I,
-                   const float3 &wo, const float3 &wi ) const {
+                   const float3 &wo, 
+                   const float3 &wi ) const {
         if ( SameHemisphere( wo, wi ) ) return 0;
-        const float3 etaI = make_float3( 1.f );
-        const float3 etaT = iorDielectric( I );
         const CudaFresnel fresnel = factoryFresnel( I );
-        const float eta = CosTheta( wo ) > 0 ? ( fresnel._etaT / fresnel._etaI ).x :
-            ( fresnel._etaI / fresnel._etaT ).x;
-        const float3 wh = NOOR::normalize( wo + wi * eta );
-
+        float eta = CosTheta( wo ) > 0 ? ( fresnel._etaT / fresnel._etaI ).x : 
+                                         ( fresnel._etaI / fresnel._etaT ).x;
+        const float3 wh = NOOR::normalize( wo + wi *eta );
         const float sqrtDenom = dot( wo, wh ) + eta * dot( wi, wh );
         const float dwh_dwi =
             fabsf( ( eta * eta * dot( wi, wh ) ) / ( sqrtDenom * sqrtDenom ) );
-        const float2 r = roughness( I );
         const CudaTrowbridgeReitz _distribution = factoryDistribution( I );
-
         return _distribution.Pdf( wo, wh ) * dwh_dwi;
     }
 };

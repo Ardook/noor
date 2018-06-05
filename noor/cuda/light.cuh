@@ -92,7 +92,6 @@ public:
     __device__
         float3 sample_Li(
         const CudaIntersection& I,
-        const CudaRNG& rng,
         CudaLightRecord& Lr,
         float& pdf
         ) const;
@@ -119,7 +118,6 @@ public:
     __device__
         float3 sample_Li(
         const CudaIntersection& I,
-        const CudaRNG& rng,
         CudaLightRecord& Lr,
         float& pdf
         ) const;
@@ -141,7 +139,6 @@ public:
     __device__
         float3 sample_Li(
         const CudaIntersection& I,
-        const CudaRNG& rng,
         CudaLightRecord& Lr,
         float& pdf
         ) const;
@@ -182,7 +179,6 @@ public:
     __device__
         float3 sample_Li(
         const CudaIntersection& I,
-        const CudaRNG& rng,
         CudaLightRecord& Lr,
         float& pdf
         ) const;
@@ -208,7 +204,6 @@ public:
 #ifdef __CUDACC__
     __device__ float3 sample_Li(
         const CudaIntersection& I,
-        const CudaRNG& rng,
         CudaLightRecord& Lr,
         float& pdf
     ) const;

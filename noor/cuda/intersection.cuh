@@ -56,7 +56,7 @@ public:
         _vis( vis ) {}
 };
 
-class CudaIntersection {
+class  CudaIntersection {
     struct GeometryFrame {
         float3 _dpdu{ 0.0f, 0.0f, 0.0f };
         float3 _dpdv{ 0.0f, 0.0f, 0.0f };
@@ -77,12 +77,14 @@ class CudaIntersection {
             _dudx = _dudy = _dvdx = _dvdy = 0;
         }
     };
-public:
     struct ShadingFrame {
         float3 _n{ 0.0f, 0.0f, 0.0f };
         float3 _dpdu{ 0.0f, 0.0f, 0.0f };
         float3 _dpdv{ 0.0f, 0.0f, 0.0f };
     };
+public:
+    
+    const CudaRNG& _rng;
     GeometryFrame _geometry;
     ShadingFrame _shading;
     DifferentialFrame _differential;
@@ -92,14 +94,18 @@ public:
     float2 _uv{ 0.0f, 0.0f };
     float _u{ 0.0f };
     float _v{ 0.0f };
+    mutable float _eta{ 1.0f };
     uint _tri_idx{ 0u };
     uint _mat_idx{ 0u };
     uint _material_type{ DIFFUSE };
     uint _ins_idx{ 0u };
     int _tid;
     mutable bool _specular_bounce{ false };
-    mutable float _eta{ 1.0f };
 
+    __device__
+        CudaIntersection( const CudaRNG& rng, int tid ) :
+        _rng( rng ),
+        _tid( tid ) {}
     __device__
         CudaRay spawnRay( const CudaRay& ray, const float3& wi ) const {
         const bool isDifferential = isGlossyBounce() && ray.isDifferential();

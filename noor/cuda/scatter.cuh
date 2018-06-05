@@ -24,17 +24,15 @@ SOFTWARE.
 #ifndef SCATTER_CUH
 #define SCATTER_CUH
 
-template<typename BSDF>
 __forceinline__ __device__
 float3 scatter(
-    const BSDF& bsdf
+    const CudaBSDF& bsdf
     , CudaIntersection& I
-    , const CudaRNG& rng
     , float3& wi
 ) {
     BxDFType bsdfFlags = BSDF_ALL;
     BxDFType sampledType;
-    const float2 u = make_float2( rng(), rng() );
+    const float2 u = make_float2( I._rng(), I._rng() );
     float pdf = 0.0f;
     const float3 f = bsdf.Sample_f( I, I._wo, wi, u, pdf, bsdfFlags, sampledType );
     if ( pdf == 0.0f )

@@ -53,16 +53,15 @@ float CudaShape::pdf(
 
 __forceinline__ __device__
 void CudaShape::sample( const CudaIntersection& I,
-                        const CudaRNG& rng,
                         float3& p,
                         float& pdf
 ) const {
     if ( _type == QUAD ) {
-        sampleQuad( *this, I, rng, p, pdf );
+        sampleQuad( *this, I, p, pdf );
     } else if ( _type == SPHERE ) {
-        sampleSphere( *this, I, rng, p, pdf );
+        sampleSphere( *this, I, p, pdf );
     } else if ( _type == DISK ) {
-        sampleDisk( *this, I, rng, p, pdf );
+        sampleDisk( *this, I, p, pdf );
     }
 }
 

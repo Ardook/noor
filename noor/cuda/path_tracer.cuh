@@ -84,7 +84,7 @@ constexpr float NOOR_PI_over_4 = NOOR_PI / 4.0f;
 constexpr float NOOR_3PI_over_2 = 3.f * NOOR_PI_over_2;
 
 constexpr int2 skydome_res{ 2048, 2048 };
-#define SKYDOME_COLOR make_float3(.05f)
+#define SKYDOME_COLOR make_float3(.01f)
 enum MaterialType {
     DIFFUSE = 1 << 0,
     ORENNAYAR = 1 << 1,
@@ -104,8 +104,8 @@ enum MaterialType {
 };
 constexpr uint NOOR_EMITTER = EMITTER | MESHLIGHT;
 constexpr uint NOOR_TRANSPARENT = TRANSLUCENT | GLASS | ROUGHGLASS;
-constexpr uint NOOR_SPECULAR = MIRROR | GLASS;
-constexpr uint NOOR_GLOSSY = NOOR_SPECULAR | SMOOTHCOATING | METAL | SUBSTRATE | GLOSSY;
+constexpr uint NOOR_SPECULAR = MIRROR | GLASS | ROUGHGLASS;
+constexpr uint NOOR_GLOSSY = NOOR_SPECULAR | ROUGHGLASS | SMOOTHCOATING | METAL | SUBSTRATE | GLOSSY;
 enum AreaMeshLightType { QUAD = 0, SPHERE = 1, DISK = 2 };
 enum SkydomeType { HDR = 0, PHYSICAL = 1, CONSTANT = 2 };
 enum HandedNess { LEFT_HANDED = 0, RIGHT_HANDED = 1 };

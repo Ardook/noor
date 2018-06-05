@@ -34,13 +34,12 @@ __forceinline__ __device__
 float3 direct(
     const CudaBSDF& bsdf
     , const CudaIntersection& I
-    , const CudaRNG& rng
 ) {
     if ( I.isSpecularBounce() )  return _constant_spec._black;
     BxDFType bsdf_flags = I.isSpecularBounce() ? BSDF_ALL : BxDFType( BSDF_ALL & ~BSDF_SPECULAR );
     float light_pdf;
     CudaLightRecord Lr;
-    const float3 Li = _light_manager.sample_Li( I, rng, Lr, light_pdf );
+    const float3 Li = _light_manager.sample_Li( I, Lr, light_pdf );
     if ( light_pdf == 0 || NOOR::isBlack( Li ) ) {
         return _constant_spec._black;
     }
@@ -63,14 +62,13 @@ float3 direct(
 __forceinline__ __device__
 float3 sampleLight( const CudaBSDF& bsdf,
                     const CudaIntersection& I,
-                    const CudaRNG& rng,
                     int& light_idx
 ) {
     BxDFType bsdf_flags = I.isSpecularBounce() ? BSDF_ALL : BxDFType( BSDF_ALL & ~BSDF_SPECULAR );
     CudaLightRecord Lr;
     float3 Ld = _constant_spec._black;
     float light_pdf = 0.f;
-    const float3 Li = _light_manager.sample_Li( I, rng, Lr, light_pdf );
+    const float3 Li = _light_manager.sample_Li( I, Lr, light_pdf );
     if ( light_pdf == 0 || NOOR::isBlack( Li ) ) {
         return _constant_spec._black;
     }
@@ -97,14 +95,13 @@ float3 sampleLight( const CudaBSDF& bsdf,
 __forceinline__ __device__
 float3 sampleBSDF( const CudaBSDF& bsdf,
                    const CudaIntersection& I,
-                   const CudaRNG& rng,
                    int light_idx
 ) {
     BxDFType bsdf_flags = I.isSpecularBounce() ? BSDF_ALL : BxDFType( BSDF_ALL & ~BSDF_SPECULAR );
     float3 Ld = _constant_spec._black;
     if ( _light_manager.isDeltaLight( light_idx ) ) return Ld;
     BxDFType sampled_type;
-    const float2 u = make_float2( rng(), rng() );
+    const float2 u = make_float2( I._rng(), I._rng() );
     float scatter_pdf, light_pdf;
     float3 wi;
     float3 f = bsdf.Sample_f( I, I._wo, wi, u, scatter_pdf, bsdf_flags, sampled_type );
@@ -122,7 +119,6 @@ float3 sampleBSDF( const CudaBSDF& bsdf,
     const CudaRay shadow_ray = I.spawnShadowRay( wi, 2.f*_constant_spec._world_radius );
     if ( _light_manager.intersect( shadow_ray, light_idx ) ) {
         const CudaVisibility vis( I._p, shadow_ray.pointAtParameter( shadow_ray.getTmax() ) );
-        //if ( !occluded( I, vis, &light_idx ) ) {
         if ( !occluded( I, vis ) ) {
             Ld += _light_manager.Le( wi, light_idx ) * f * scatter_weight / scatter_pdf;
         } 
@@ -136,12 +132,11 @@ __forceinline__ __device__
 float3 directMIS(
     const CudaBSDF& bsdf
     , const CudaIntersection& I
-    , const CudaRNG& rng
 ) {
     int light_idx;
-    float3 Ld = sampleLight( bsdf, I, rng, light_idx );
+    float3 Ld = sampleLight( bsdf, I, light_idx );
     if ( I._material_type != SHADOW )
-        Ld += sampleBSDF( bsdf, I, rng, light_idx );
+        Ld += sampleBSDF( bsdf, I, light_idx );
     return Ld;
 }
 

@@ -113,8 +113,9 @@ public:
     }
 
     __device__
-        float3 cosine_sample_dir( const CudaIntersection& I, const CudaRNG& rng, float& pdf ) const {
-        const float2 u = make_float2( rng(), rng() );
+        float3 cosine_sample_dir( const CudaIntersection& I, 
+                                  float& pdf ) const {
+        const float2 u = make_float2( I._rng(), I._rng() );
         CudaONB onb( I._shading._n, I._shading._dpdu, I._shading._dpdv );
         const float3 dir = onb.toWorld( NOOR::cosineSampleHemisphere( u, RIGHT_HANDED ) );
         pdf = dot( dir, onb._w ) * NOOR_invPI;
@@ -122,7 +123,9 @@ public:
     }
 
     __device__
-        float3 uniform_sample_dir( const CudaIntersection& I, const CudaRNG& rng, float& pdf ) const {
+        float3 uniform_sample_dir( const CudaIntersection& I, 
+                                   const CudaRNG& rng, 
+                                   float& pdf ) const {
         const float2 u = make_float2( rng(), rng() );
         float map_pdf = NOOR::uniformHemiSpherePdf();
         pdf = map_pdf / ( 2.0f * NOOR_PI * NOOR_PI );

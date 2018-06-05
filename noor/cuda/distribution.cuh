@@ -59,7 +59,7 @@ class CudaTrowbridgeReitz {
     // TrowbridgeReitzDistribution Private Data
     float _alphax, _alphay;
 public:
-        CudaTrowbridgeReitz() = default;
+    CudaTrowbridgeReitz() = default;
     __device__
         CudaTrowbridgeReitz(
         float alphax
@@ -73,7 +73,7 @@ public:
         _alphax( RoughnessToAlpha( alpha.x ) )
         , _alphay( RoughnessToAlpha( alpha.y ) ) {}
 
-    __device__ 
+    __device__
         float RoughnessToAlpha( float roughness ) {
         return fmaxf( roughness*roughness, 1e-3f );
     }
@@ -98,8 +98,7 @@ public:
 
     __device__
         float3 Sample_wh( const float3 &wo, const float2 &u ) const {
-        const float flip = wo.z < 0.0f ? -1.f : 1.f;
-        return flip*TrowbridgeReitzSample( flip*wo, _alphax, _alphay, u.x, u.y );
+        return NOOR::sign( wo.z )*TrowbridgeReitzSample( NOOR::sign( wo.z ) * wo, _alphax, _alphay, u.x, u.y );
     }
 private:
     __device__
