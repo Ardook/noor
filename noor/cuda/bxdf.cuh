@@ -147,6 +147,7 @@ enum BxDFIndex {
     // multi-lobe
     FresnelBlend,
     FresnelSpecular,
+    FresnelGlossy,
     NUM_BXDFS
 };
 
@@ -464,13 +465,13 @@ public:
                                             ( fresnel._etaI / fresnel._etaT ).x;
         float3 wh = NOOR::normalize( wo + wi * eta );
         wh *= NOOR::sign( wh.z );
-        const float3 F = fresnel.evaluate( dot( wo, wh ) );
+        const float F = fresnel.evaluate( dot( wo, wh ) ).x;
 
         const float sqrtDenom = dot( wo, wh ) + eta * dot( wi, wh );
         const float factor = 1.f;// / eta;
         const CudaTrowbridgeReitz _distribution = factoryDistribution( I );
 
-        const float3 result = ( make_float3( 1.f ) - F ) * T( I ) *
+        const float3 result = ( 1.f - F ) * T( I ) *
             fabsf( _distribution.D( wh ) * _distribution.G( wo, wi ) * eta * eta *
                    NOOR::absDot( wi, wh ) * NOOR::absDot( wo, wh ) * factor * factor /
                    ( cosThetaI * cosThetaO * sqrtDenom * sqrtDenom ) );
@@ -644,7 +645,67 @@ public:
         return 0.0f;
     }
 };
+class CudaFresnelGlossy : public CudaBxDF {
+    CudaMicrofacetReflection _reflection;
+    CudaMicrofacetTransmission _transmission;
+public:
+    __device__
+        CudaFresnelGlossy() :
+        CudaBxDF( BxDFType( BSDF_REFLECTION | BSDF_TRANSMISSION |
+                  BSDF_GLOSSY | BSDF_DIELECTRIC ), FresnelGlossy ) {}
 
+    __device__
+        float3 f( const CudaIntersection& I,
+                  const float3 &wo,
+                  const float3 &wi ) const {
+        return CosTheta( wo ) * CosTheta( wi ) > 0 ?
+            _reflection.f( I, wo, wi ) :
+            _transmission.f( I, wo, wi );
+    }
+
+    __device__
+        float3 Sample_f(
+        const CudaIntersection& I,
+        const float3 &wo,
+        float3 &wi,
+        const float2 &u,
+        float &pdf,
+        BxDFType &sampledType
+        ) const {
+        const CudaTrowbridgeReitz _distribution = factoryDistribution( I );
+        float3 wh = _distribution.Sample_wh( wo, u );
+        CudaFresnel fresnel = factoryFresnel( I );
+        float F = fresnel.evaluate( dot( wo, wh ) ).x;
+        if ( I._rng() < F ) {
+            sampledType = _reflection._type;
+            wi = Reflect( wo, wh );
+            if ( dot( wi, wo ) <= 0 ) {
+                pdf = 0;
+                return _constant_spec._black;
+            }
+            pdf = F*_reflection.Pdf( I, wo, wi );
+            return _reflection.f( I, wo, wi );
+        } else {
+            sampledType = _transmission._type;
+            const float eta = CosTheta( wo ) ? ( fresnel._etaI / fresnel._etaT ).x :
+                                                   ( fresnel._etaT / fresnel._etaI ).x;
+            if ( !Refract( wo, wh, eta, wi ) ) {
+                wi = Reflect( wo, wh );
+                //pdf = 0;
+                //return _constant_spec._black;
+            }
+            pdf = (1.f-F)*_transmission.Pdf( I, wo, wi );
+            return _transmission.f( I, wo, wi );
+        }
+    }
+    __device__
+        float Pdf( const CudaIntersection& I,
+                   const float3 &wo, const float3 &wi ) const {
+        return CosTheta( wo ) * CosTheta( wi ) > 0 ?
+            _reflection.Pdf( I, wo, wi ) :
+            _transmission.Pdf( I, wo, wi );
+    }
+};
 __global__
 void setup_bxdfs( CudaBxDF** bxdfs ) {
     bxdfs[LambertReflection] = new CudaLambertianReflection();
@@ -657,6 +718,7 @@ void setup_bxdfs( CudaBxDF** bxdfs ) {
     bxdfs[MicrofacetTransmission] = new CudaMicrofacetTransmission();
     bxdfs[FresnelBlend] = new CudaFresnelBlend();
     bxdfs[FresnelSpecular] = new CudaFresnelSpecular();
+    bxdfs[FresnelGlossy] = new CudaFresnelGlossy();
 }
 __global__
 void free_bxdfs( CudaBxDF** bxdfs ) {

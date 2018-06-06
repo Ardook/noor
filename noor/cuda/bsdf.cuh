@@ -86,6 +86,8 @@ float Pdf(
             return ( (CudaFresnelBlend*) bxdf )->Pdf( I, woWorld, wiWorld );
         case FresnelSpecular:
             return ( (CudaFresnelSpecular*) bxdf )->Pdf( I, woWorld, wiWorld );
+        case FresnelGlossy:
+            return ( (CudaFresnelGlossy*) bxdf )->Pdf( I, woWorld, wiWorld );
         default:
             return 0.f;
     }
@@ -122,6 +124,8 @@ float3 f(
             return ( (CudaFresnelBlend*) bxdf )->f( I, woWorld, wiWorld );
         case FresnelSpecular:
             return ( (CudaFresnelSpecular*) bxdf )->f( I, woWorld, wiWorld );
+        case FresnelGlossy:
+            return ( (CudaFresnelGlossy*) bxdf )->f( I, woWorld, wiWorld );
         default:
             return _constant_spec._black;
     }
@@ -161,6 +165,8 @@ float3 Sample_f(
             return ( (CudaFresnelBlend*) bxdf )->Sample_f( I, woWorld, wiWorld, u, pdf, sampledType );
         case FresnelSpecular:
             return ( (CudaFresnelSpecular*) bxdf )->Sample_f( I, woWorld, wiWorld, u, pdf, sampledType );
+        case FresnelGlossy:
+            return ( (CudaFresnelGlossy*) bxdf )->Sample_f( I, woWorld, wiWorld, u, pdf, sampledType );
         default:
             return _constant_spec._black;
     }
@@ -219,9 +225,6 @@ public:
         const float3 wo = onb.toLocal( woWorld );
         const float3 wi = onb.toLocal( wiWorld );
         const bool reflect = dot( wiWorld, I._n ) * dot( woWorld, I._n ) > 0;
-        //float a = dot( wiWorld, I._n );
-        //float b = dot( woWorld, I._n );
-        //const bool reflect = a > 0 && b > 0;
         float3 f = _constant_spec._black;
         for ( int i = 0; i < _nbxdfs; ++i )
             if ( _bxdfs[i]->MatchesFlags( flags ) &&
@@ -308,8 +311,8 @@ void factoryMetalBSDF( const CudaIntersection& I, CudaBSDF& bsdf ) {
 }
 __forceinline__ __device__
 void factoryRoughGlassBSDF( const CudaIntersection& I, CudaBSDF& bsdf ) {
-    bsdf.Add( _bxdf_manager._bxdfs[MicrofacetReflectionDielectric] );
-    bsdf.Add( _bxdf_manager._bxdfs[MicrofacetTransmission] );
+   bsdf.Add( _bxdf_manager._bxdfs[MicrofacetReflectionDielectric] );
+   bsdf.Add( _bxdf_manager._bxdfs[MicrofacetTransmission] );
 }
 __forceinline__ __device__
 void factoryGlossyBSDF( const CudaIntersection& I, CudaBSDF& bsdf ) {
