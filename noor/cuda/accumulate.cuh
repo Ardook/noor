@@ -26,7 +26,7 @@ SOFTWARE.
 
 __forceinline__ __device__
 void accumulate(
-    CudaIntersection& I
+    const CudaIntersection& I
     , float3& wi
     , float3& beta
     , float3& L

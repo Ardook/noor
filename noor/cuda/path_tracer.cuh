@@ -102,9 +102,10 @@ enum MaterialType {
     BUMP = 1 << 13,
     MESHLIGHT = 1 << 14
 };
+constexpr uint NOOR_NO_BUMP_ALPHA = ~(BUMP | ALPHA);
 constexpr uint NOOR_EMITTER = EMITTER | MESHLIGHT;
 constexpr uint NOOR_TRANSPARENT = TRANSLUCENT | GLASS | ROUGHGLASS;
-constexpr uint NOOR_SPECULAR = MIRROR | GLASS | ROUGHGLASS;
+constexpr uint NOOR_SPECULAR = MIRROR | GLASS;
 constexpr uint NOOR_GLOSSY = NOOR_SPECULAR | ROUGHGLASS | SMOOTHCOATING | METAL | SUBSTRATE | GLOSSY;
 enum AreaMeshLightType { QUAD = 0, SPHERE = 1, DISK = 2 };
 enum SkydomeType { HDR = 0, PHYSICAL = 1, CONSTANT = 2 };

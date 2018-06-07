@@ -52,7 +52,7 @@ float4 pathtracer(
                 lookAt = make_float4( I._p, 1.f );
             }
             if ( I.isEmitter() && ( bounce == 0 || specular_bounce ) ) {
-                L += beta * ( I._material_type & MESHLIGHT ?
+                L += beta * ( I.isMeshLight() ?
                               _light_manager.Le( ray.getDir(), I._ins_idx ) :
                               _material_manager.getEmmitance( I )
                               );
@@ -62,12 +62,12 @@ float4 pathtracer(
                 bump( I );
             }
             accumulate( I, wi, beta, L );
-            if ( !I.isTransparentBounce() && ( dot( wi, I._n ) < 0 ) ) {
+            if ( !I.isTransparent() && ( dot( wi, I._n ) < 0 ) ) {
                 break;
             }
             // Russian Roulette 
             if ( rr_end( rng, bounce, beta ) ) break;
-            specular_bounce = I.isSpecularBounce();
+            specular_bounce = I.isSpecular();
             ray = I.spawnRay( ray, wi );
         } else { // no intersection 
             if ( _constant_spec.is_sky_light_enabled() && 

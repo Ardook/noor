@@ -109,23 +109,21 @@ public:
     }
     __device__
         bool intersectLeaf(
-        const CudaRay& ray
-        , CudaIntersection& intersection
+        const CudaRay& ray,
+        CudaIntersection& intersection
         ) {
         const uint start = get_start();
         const uint count = start + get_tri_count();
         CudaTriangle tri;
         bool hit = false;
         for ( uint tri_idx = start; tri_idx < count; ++tri_idx ) {
-            if ( tri.intersect( ray, tri_idx, intersection ) )
+            if ( tri.intersect( ray, intersection, tri_idx ) )
                 hit = true;
         }
         return hit;
     }
     __device__
-        bool intersectLeaf(
-        const CudaRay& ray
-        ) {
+        bool intersectLeaf( const CudaRay& ray ) {
         const uint start = get_start();
         const uint count = start + get_tri_count();
         CudaTriangle tri;
@@ -145,7 +143,7 @@ bool intersect( const CudaRay& ray, CudaIntersection& I ) {
     bool hit = false;
     uint currentNodeIndex;
     CudaBVHNode current_node;
-    CudaStack<uint> stack( &shstack[_constant_spec._bvh_height * I._tid] );
+    CudaStack<uint> stack( &shstack[_constant_spec._bvh_height * I.getTid()] );
     CudaRay lray = ray;
     uint ins_idx = 0;
     stack.push( _constant_spec._bvh_root_node );
@@ -161,7 +159,7 @@ bool intersect( const CudaRay& ray, CudaIntersection& I ) {
             if ( _light_manager.intersect( ray, light_idx ) ) {
                 hit = true;
                 I._ins_idx = light_idx;
-                I._material_type = MESHLIGHT | EMITTER;
+                I.setMaterialType( MaterialType( MESHLIGHT | EMITTER) );
             }
             continue;
         } else if ( current_node.is_mesh_instance() ) {
@@ -196,11 +194,10 @@ bool intersect( const CudaRay& ray, CudaIntersection& I ) {
 }
 
 __device__ __forceinline__
-//bool intersectP( const CudaRay& ray, const CudaIntersection& I, int* light_idx = nullptr ) {
 bool intersectP( const CudaRay& ray, const CudaIntersection& I ) {
     uint currentNodeIndex;
     CudaBVHNode current_node;
-    CudaStack<uint> stack( &shstack[_constant_spec._bvh_height * I._tid] );
+    CudaStack<uint> stack( &shstack[_constant_spec._bvh_height * I.getTid()] );
     CudaRay lray = ray;
     stack.push( _constant_spec._bvh_root_node );
     while ( !stack.isEmpty() ) {
@@ -213,7 +210,6 @@ bool intersectP( const CudaRay& ray, const CudaIntersection& I ) {
             if ( current_node.is_light_node() ) {
                 const int index = current_node.get_light_idx();
                 if ( _light_manager.intersect( ray, index ) ) {
-                    //if (light_idx && *light_idx != index)
                     return true;
                 }
             } else if ( current_node.is_mesh_instance() ) {

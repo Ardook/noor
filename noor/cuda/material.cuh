@@ -45,6 +45,7 @@ public:
     uint _metalness_tex_idx{ 0 };
 
     float _bumpfactor{ 1.f };
+    float _emitter_scale{ 1.f };
     float _coat_weight{ 1.f };
     float _coat_roughness{ .001f };
     float _coat_thickness{ 1.f };

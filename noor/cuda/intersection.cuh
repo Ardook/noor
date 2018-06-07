@@ -82,8 +82,10 @@ class  CudaIntersection {
         float3 _dpdu{ 0.0f, 0.0f, 0.0f };
         float3 _dpdv{ 0.0f, 0.0f, 0.0f };
     };
+    MaterialType _material_type{ DIFFUSE };
+    int _tid;
 public:
-    
+
     const CudaRNG& _rng;
     GeometryFrame _geometry;
     ShadingFrame _shading;
@@ -94,13 +96,10 @@ public:
     float2 _uv{ 0.0f, 0.0f };
     float _u{ 0.0f };
     float _v{ 0.0f };
-    mutable float _eta{ 1.0f };
     uint _tri_idx{ 0u };
     uint _mat_idx{ 0u };
-    uint _material_type{ DIFFUSE };
     uint _ins_idx{ 0u };
-    int _tid;
-    mutable bool _specular_bounce{ false };
+    mutable float _eta{ 1.0f };
 
     __device__
         CudaIntersection( const CudaRNG& rng, int tid ) :
@@ -108,7 +107,7 @@ public:
         _tid( tid ) {}
     __device__
         CudaRay spawnRay( const CudaRay& ray, const float3& wi ) const {
-        const bool isDifferential = isGlossyBounce() && ray.isDifferential();
+        const bool isDifferential = isGlossy() && ray.isDifferential();
         if ( isDifferential ) {
             if ( dot( wi, _n ) >= 0.0f ) {
                 const float3& origin = _p + _constant_spec._reflection_bias * _n;
@@ -116,8 +115,10 @@ public:
                 const float3 origin_dx = ( origin + _differential._dpdx );
                 const float3 origin_dy = ( origin + _differential._dpdy );
 
-                const float3 dndx = _differential._dndu * _differential._dudx + _differential._dndv * _differential._dvdx;
-                const float3 dndy = _differential._dndu * _differential._dudy + _differential._dndv * _differential._dvdy;
+                const float3 dndx = _differential._dndu * _differential._dudx +
+                    _differential._dndv * _differential._dvdx;
+                const float3 dndy = _differential._dndu * _differential._dudy +
+                    _differential._dndv * _differential._dvdy;
                 const float3 dwodx = -( ray.getDirDx() + _wo );
                 const float3 dwody = -( ray.getDirDy() + _wo );
                 const float dDNdx = dot( dwodx, _shading._n ) + dot( _wo, dndx );
@@ -183,34 +184,45 @@ public:
         void setEta( float eta ) const {
         _eta = eta;
     }
-
     __device__
-        void setSpecularBounce( bool b ) const {
-        _specular_bounce = b;
+        int getTid() const {
+        return _tid;
+    }
+    __device__
+        void setMaterialType( MaterialType material_type ) {
+        _material_type = material_type;
+    }
+    __device__
+        MaterialType getMaterialType() const {
+        return (MaterialType) ( _material_type & NOOR_NO_BUMP_ALPHA );
     }
     __device__
         bool isBumped() const {
-        return ( ( _material_type & BUMP ) != 0 );
+        return ( _material_type & BUMP );
     }
     __device__
         bool isEmitter() const {
-        return ( ( _material_type & NOOR_EMITTER ) != 0 );
+        return ( _material_type & NOOR_EMITTER );
+    }
+    __device__
+        bool isMeshLight() const {
+        return ( _material_type & MESHLIGHT );
     }
     __device__
         bool isShadowCatcher() const {
-        return ( ( _material_type & SHADOW ) != 0 );
+        return ( _material_type & SHADOW );
     }
     __device__
-        bool isSpecularBounce() const {
-        return _specular_bounce;
+        bool isSpecular() const {
+        return ( _material_type & NOOR_SPECULAR );
     }
     __device__
-        bool isTransparentBounce() const {
-        return ( ( _material_type & NOOR_TRANSPARENT ) != 0 );
+        bool isTransparent() const {
+        return ( _material_type & NOOR_TRANSPARENT );
     }
     __device__
-        bool isGlossyBounce() const {
-        return ( ( _material_type & NOOR_GLOSSY ) != 0 );
+        bool isGlossy() const {
+        return ( _material_type & NOOR_GLOSSY );
     }
     __device__
         float3 getVertex( uint attr_idx ) const {
@@ -229,7 +241,6 @@ public:
     __device__
         void updateIntersection( const CudaRay& ray ) {
         if ( _material_type & MESHLIGHT ) return;
-        _specular_bounce = ( _material_type & NOOR_SPECULAR );
         const uint4 attr_idx = _mesh_manager.getAttrIndex( _tri_idx );
         _mat_idx = attr_idx.w;
         if ( _material_type & EMITTER ) return;

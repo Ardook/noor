@@ -84,6 +84,11 @@ public:
         return m->_emittance_uvscale;
     }
     __device__
+        float getEmitterScale( const CudaIntersection& I ) const {
+        const CudaMaterial* m = &_materials[I._mat_idx];
+        return m->_emitter_scale;
+    }
+    __device__
         float getBumpFactor( const CudaIntersection& I ) const {
         const CudaMaterial* m = &_materials[I._mat_idx];
         return m->_bumpfactor;
@@ -129,7 +134,7 @@ public:
         float3 getEmmitance( const CudaIntersection& I ) const {
         const float2& uvscale = getEmittanceUVScale( I );
         const CudaTexture& tex = getEmmitanceTexture( I._mat_idx );
-        return make_float3( tex.evaluateGrad<float4>( I, uvscale ) );
+        return getEmitterScale(I) * make_float3( tex.evaluateGrad<float4>( I, uvscale ) );
     }
     __device__
         float3 getSpecular( const CudaIntersection& I ) const {

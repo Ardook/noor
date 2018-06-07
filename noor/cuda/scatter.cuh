@@ -27,7 +27,7 @@ SOFTWARE.
 __forceinline__ __device__
 float3 scatter(
     const CudaBSDF& bsdf
-    , CudaIntersection& I
+    , const CudaIntersection& I
     , float3& wi
 ) {
     BxDFType bsdfFlags = BSDF_ALL;

@@ -146,6 +146,7 @@ public:
     virtual float getMaterialCoatingThickness( int mat_idx ) const { return 1.0f; }
     virtual float getMaterialCoatingSigma( int mat_idx ) const { return 0.0f; }
     virtual float getMaterialCoatingIOR( int mat_idx ) const { return 1.5f; }
+    virtual float getMaterialEmitterScale( int mat_idx ) const { return 1.f; }
 
     virtual MaterialType getMaterialType( int mat_idx ) const = 0;
 

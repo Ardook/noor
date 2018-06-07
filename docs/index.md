@@ -1,3 +1,4 @@
+
 #### Noor
 Noor is an experimental CUDA/GPU Monte-Carlo pathtracer.  It started (Noor 1.0) as part of a final class project (real-time Whitted raytracer) in 2009 and was recently resurrected as a pathtracer to assist me in learning and reinforcing the ideas and the topics covered in the PBRT book. 
  
@@ -66,6 +67,11 @@ Noor is an experimental CUDA/GPU Monte-Carlo pathtracer.  It started (Noor 1.0) 
 * Nvidia Optix: excellent resource on the GPU side of things
 * Solid Angle Arnold Renderer: ground truth
 * Octane Renderer: ground truth
+* Pixar Luxo Jr. and Luxo Ball License: CC BY 3.0 © [pistiwique](https://www.blendswap.com/blends/view/75677)
+   * Exported from Blender and Imported to Maya	
+   * Added Noor Custom PBR Material
+* Utah Teapot: [University of Utah Rendering Competition](https://graphics.cs.utah.edu/trc/)
+* SGI Logo: Whoever owns SGI today, [HP](https://www.hpe.com/us/en/solutions/hpc-high-performance-computing.html)
 * Shader ball/knob License: CC BY 3.0 © Yasutoshi Mori
    * Removed the equations
    * Removed the backdrop
@@ -83,7 +89,9 @@ Noor is an experimental CUDA/GPU Monte-Carlo pathtracer.  It started (Noor 1.0) 
 * All the rest of the assets are created by me using Autodesk Maya
 
 #### ScreenShots:
-[![metals](screenshots/50percent/metals.jpg "metals"){:height="128px" width="512px"}](screenshots/100percent/metal.jpg)
+[![metals](screenshots/50percent/metals.jpg "metals")](screenshots/100percent/metal.jpg)
+[![trio](screenshots/50percent/screenshot-07-06-2018-11-47-47.jpg "smooth plastic")](screenshots/100percent/screenshot-07-06-2018-11-47-47.jpg)
+[![trio](screenshots/50percent/screenshot-07-06-2018-14-19-36.jpg "smooth plastic")](screenshots/100percent/screenshot-07-06-2018-14-19-36.jpg)
 [![smooth plastic](screenshots/50percent/screenshot-23-05-2018-10-05-35.jpg "smooth plastic")](screenshots/100percent/screenshot-23-05-2018-10-05-35.jpg)
 [![rough plastic](screenshots/50percent/screenshot-23-05-2018-10-08-01.jpg "rough plastic")](screenshots/100percent/screenshot-23-05-2018-10-08-01.jpg)
 [![smooth gold](screenshots/50percent/screenshot-22-05-2018-13-28-56.jpg "smooth gold")](screenshots/100percent/screenshot-22-05-2018-13-28-56.jpg)
@@ -109,7 +117,6 @@ Noor is an experimental CUDA/GPU Monte-Carlo pathtracer.  It started (Noor 1.0) 
 [![rust](screenshots/50percent/screenshot-29-05-2018-13-18-04.jpg)](screenshots/100percent/screenshot-29-05-2018-13-18-04.jpg)
 [![scratch](screenshots/50percent/screenshot-29-05-2018-14-21-34.jpg)](screenshots/100percent/screenshot-29-05-2018-14-21-34.jpg)
 [![diamond smooth leather](screenshots/50percent/screenshot-29-05-2018-15-12-52.jpg)](screenshots/100percent/screenshot-29-05-2018-15-12-52.jpg)
-[![diamond rough leather](screenshots/50percent/screenshot-29-05-2018-15-23-29.jpg)](screenshots/100percent/screenshot-29-05-2018-15-23-29.jpg)
 [![metal mesh](screenshots/50percent/screenshot-29-05-2018-16-00-16.jpg)](screenshots/100percent/screenshot-29-05-2018-16-00-16.jpg)
 [![smooth metal](screenshots/50percent/screenshot-23-05-2018-10-28-41.jpg)](screenshots/100percent/screenshot-23-05-2018-10-28-41.jpg)
 [![rough metal](screenshots/50percent/screenshot-23-05-2018-10-32-29.jpg)](screenshots/100percent/screenshot-23-05-2018-10-32-29.jpg)

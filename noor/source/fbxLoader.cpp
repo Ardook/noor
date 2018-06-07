@@ -800,7 +800,14 @@ float FBXLoader::getMaterialCoatingIOR( int mat_idx ) const {
     }
     return 1.5f;
 }
-
+float FBXLoader::getMaterialEmitterScale( int mat_idx ) const {
+    FbxProperty lProperty = _fbx_scene->GetMaterial( mat_idx )->FindProperty( "EmitterScale" );
+    if ( lProperty.IsValid() ) {
+        const float emitterScale = static_cast<float>( lProperty.Get<FbxDouble>() );
+        return emitterScale;
+    }
+    return 1.f;
+}
 glm::vec2 FBXLoader::getMaterialRoughness( int mat_idx ) const {
     FbxProperty lPropertyU = _fbx_scene->GetMaterial( mat_idx )->FindProperty( "RoughnessU" );
     FbxProperty lPropertyV = _fbx_scene->GetMaterial( mat_idx )->FindProperty( "RoughnessV" );

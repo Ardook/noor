@@ -342,7 +342,7 @@ void factorySmoothCoatingBSDF( const CudaIntersection& I, CudaBSDF& bsdf ) {
 
 __forceinline__ __device__
 void factoryBSDF( const CudaIntersection& I, CudaBSDF& bsdf ) {
-    switch ( I._material_type ) {
+    switch ( I.getMaterialType() ) {
         case DIFFUSE:
             factoryDiffuseBSDF( I, bsdf );
             break;

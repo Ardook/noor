@@ -200,6 +200,7 @@ void Model::loadMaterial() {
         mt._coat_thickness = _loader->getMaterialCoatingThickness( mat_idx );
         mt._coat_sigma = _loader->getMaterialCoatingSigma( mat_idx );
         mt._coat_ior = _loader->getMaterialCoatingIOR( mat_idx );
+        mt._emitter_scale = _loader->getMaterialEmitterScale( mat_idx );
 
         mt._type = _loader->getMaterialType( mat_idx );
         _textures.emplace_back( transmission );

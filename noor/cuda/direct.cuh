@@ -35,8 +35,8 @@ float3 direct(
     const CudaBSDF& bsdf
     , const CudaIntersection& I
 ) {
-    if ( I.isSpecularBounce() )  return _constant_spec._black;
-    BxDFType bsdf_flags = I.isSpecularBounce() ? BSDF_ALL : BxDFType( BSDF_ALL & ~BSDF_SPECULAR );
+    if ( I.isSpecular() )  return _constant_spec._black;
+    BxDFType bsdf_flags = I.isSpecular() ? BSDF_ALL : BxDFType( BSDF_ALL & ~BSDF_SPECULAR );
     float light_pdf;
     CudaLightRecord Lr;
     const float3 Li = _light_manager.sample_Li( I, Lr, light_pdf );
@@ -64,7 +64,7 @@ float3 sampleLight( const CudaBSDF& bsdf,
                     const CudaIntersection& I,
                     int& light_idx
 ) {
-    BxDFType bsdf_flags = I.isSpecularBounce() ? BSDF_ALL : BxDFType( BSDF_ALL & ~BSDF_SPECULAR );
+    BxDFType bsdf_flags = I.isSpecular() ? BSDF_ALL : BxDFType( BSDF_ALL & ~BSDF_SPECULAR );
     CudaLightRecord Lr;
     float3 Ld = _constant_spec._black;
     float light_pdf = 0.f;
@@ -97,7 +97,7 @@ float3 sampleBSDF( const CudaBSDF& bsdf,
                    const CudaIntersection& I,
                    int light_idx
 ) {
-    BxDFType bsdf_flags = I.isSpecularBounce() ? BSDF_ALL : BxDFType( BSDF_ALL & ~BSDF_SPECULAR );
+    BxDFType bsdf_flags = I.isSpecular() ? BSDF_ALL : BxDFType( BSDF_ALL & ~BSDF_SPECULAR );
     float3 Ld = _constant_spec._black;
     if ( _light_manager.isDeltaLight( light_idx ) ) return Ld;
     BxDFType sampled_type;
@@ -135,7 +135,7 @@ float3 directMIS(
 ) {
     int light_idx;
     float3 Ld = sampleLight( bsdf, I, light_idx );
-    if ( I._material_type != SHADOW )
+    if ( !I.isShadowCatcher() )
         Ld += sampleBSDF( bsdf, I, light_idx );
     return Ld;
 }

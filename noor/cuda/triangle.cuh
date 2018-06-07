@@ -75,14 +75,14 @@ public:
         return  _cnu_cnv_deg_mat.w & ALPHA;
     }
     __device__
-        uint materialType() const {
-        return  _cnu_cnv_deg_mat.w & ( ~ALPHA );
+        MaterialType materialType() const {
+        return  (MaterialType)_cnu_cnv_deg_mat.w;
     }
     __device__
         bool intersect(
-        const CudaRay& ray
-        , uint tri_idx
-        , CudaIntersection& I
+        const CudaRay& ray,
+        CudaIntersection& I,
+        uint tri_idx
         ) {
         _ax_nu_nv_nd = _mesh_manager.getWaldAxNuNvNd( tri_idx );
         _cnu_cnv_deg_mat = _mesh_manager.getWaldCnuCnvPadPad( tri_idx );
@@ -135,7 +135,7 @@ public:
             I._u = u;
             I._v = v;
             I._tri_idx = tri_idx;
-            I._material_type = materialType();
+            I.setMaterialType(  materialType());
             ray.setTmax( t );
         }
         return hit;
@@ -143,8 +143,8 @@ public:
 
     __device__
         bool intersect(
-        const CudaRay& ray
-        , uint tri_idx
+        const CudaRay& ray,
+        uint tri_idx
         ) {
         _ax_nu_nv_nd = _mesh_manager.getWaldAxNuNvNd( tri_idx );
         _cnu_cnv_deg_mat = _mesh_manager.getWaldCnuCnvPadPad( tri_idx );

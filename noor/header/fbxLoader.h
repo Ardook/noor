@@ -186,6 +186,7 @@ public:
     float getMaterialCoatingThickness( int mat_idx ) const override;
     float getMaterialCoatingSigma( int mat_idx ) const override;
     float getMaterialCoatingIOR( int mat_idx ) const override;
+    float getMaterialEmitterScale( int mat_idx ) const override;
 
     MaterialType getMaterialType( int mat_idx ) const override;
 
