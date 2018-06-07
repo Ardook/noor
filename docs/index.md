@@ -67,7 +67,9 @@ Noor is an experimental CUDA/GPU Monte-Carlo pathtracer.  It started (Noor 1.0) 
 * Nvidia Optix: excellent resource on the GPU side of things
 * Solid Angle Arnold Renderer: ground truth
 * Octane Renderer: ground truth
-* Pixar Luxo Jr. and Luxo Ball License: CC BY 3.0 © [pistiwique](https://www.blendswap.com/blends/view/75677)
+* Pixar Luxo Jr. and Luxo Ball License: 
+   * Lamp CC BY 3.0 © [pistiwique](https://www.blendswap.com/blends/view/75677)
+   * Ball CC BY 0.0 © [ethomson92](https://www.blendswap.com/blends/view/91066) 
    * Exported from Blender and Imported to Maya	
    * Added Noor Custom PBR Material
 * Utah Teapot: [University of Utah Rendering Competition](https://graphics.cs.utah.edu/trc/)
