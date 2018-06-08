@@ -25,7 +25,6 @@ SOFTWARE.
 #define DIRECT_CUH
 
 __forceinline__ __device__
-//bool occluded( const CudaIntersection& I, const CudaVisibility& v, int* light_idx = nullptr ) {
 bool occluded( const CudaIntersection& I, const CudaVisibility& v ) {
     return ( intersectP( I.spawnShadowRay( v ), I ) );
 }

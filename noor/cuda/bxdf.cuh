@@ -438,7 +438,6 @@ public:
         }
         const float3 wh = NOOR::normalize( wo + wi );
         const CudaTrowbridgeReitz _distribution = factoryDistribution( I );
-
         return _distribution.Pdf( wo, wh ) / ( 4.0f * dot( wo, wh ) );
     }
 };
@@ -511,7 +510,8 @@ public:
         const CudaFresnel fresnel = factoryFresnel( I );
         float eta = CosTheta( wo ) > 0 ? ( fresnel._etaT / fresnel._etaI ).x : 
                                          ( fresnel._etaI / fresnel._etaT ).x;
-        const float3 wh = NOOR::normalize( wo + wi *eta );
+        float3 wh = NOOR::normalize( wo + wi *eta );
+        wh *= NOOR::sign( wh.z );
         const float sqrtDenom = dot( wo, wh ) + eta * dot( wi, wh );
         const float dwh_dwi =
             fabsf( ( eta * eta * dot( wi, wh ) ) / ( sqrtDenom * sqrtDenom ) );
@@ -652,7 +652,7 @@ public:
     __device__
         CudaFresnelGlossy() :
         CudaBxDF( BxDFType( BSDF_REFLECTION | BSDF_TRANSMISSION |
-                  BSDF_GLOSSY | BSDF_DIELECTRIC ), FresnelGlossy ) {}
+                            BSDF_GLOSSY | BSDF_DIELECTRIC ), FresnelGlossy ) {}
 
     __device__
         float3 f( const CudaIntersection& I,
@@ -683,18 +683,17 @@ public:
                 pdf = 0;
                 return _constant_spec._black;
             }
-            pdf = F*_reflection.Pdf( I, wo, wi );
+            pdf = F * _reflection.Pdf( I, wo, wi );
             return _reflection.f( I, wo, wi );
         } else {
             sampledType = _transmission._type;
             const float eta = CosTheta( wo ) ? ( fresnel._etaI / fresnel._etaT ).x :
-                                                   ( fresnel._etaT / fresnel._etaI ).x;
+                                               ( fresnel._etaT / fresnel._etaI ).x;
             if ( !Refract( wo, wh, eta, wi ) ) {
-                wi = Reflect( wo, wh );
-                //pdf = 0;
-                //return _constant_spec._black;
+                pdf = 0;
+                return _constant_spec._black;
             }
-            pdf = (1.f-F)*_transmission.Pdf( I, wo, wi );
+            pdf = ( 1.f - F ) * _transmission.Pdf( I, wo, wi );
             return _transmission.f( I, wo, wi );
         }
     }

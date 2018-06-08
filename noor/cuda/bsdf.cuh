@@ -311,8 +311,9 @@ void factoryMetalBSDF( const CudaIntersection& I, CudaBSDF& bsdf ) {
 }
 __forceinline__ __device__
 void factoryRoughGlassBSDF( const CudaIntersection& I, CudaBSDF& bsdf ) {
-   bsdf.Add( _bxdf_manager._bxdfs[MicrofacetReflectionDielectric] );
-   bsdf.Add( _bxdf_manager._bxdfs[MicrofacetTransmission] );
+   //bsdf.Add( _bxdf_manager._bxdfs[MicrofacetReflectionDielectric] );
+   //bsdf.Add( _bxdf_manager._bxdfs[MicrofacetTransmission] );
+   bsdf.Add( _bxdf_manager._bxdfs[FresnelGlossy] );
 }
 __forceinline__ __device__
 void factoryGlossyBSDF( const CudaIntersection& I, CudaBSDF& bsdf ) {
