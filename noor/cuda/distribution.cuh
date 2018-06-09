@@ -72,7 +72,11 @@ public:
 
     __device__
         float RoughnessToAlpha( float roughness ) {
-        return fmaxf( roughness*roughness, 1e-3f );
+        //return fmaxf( roughness*roughness, 1e-3f );
+        roughness = fmaxf( roughness, .001f );
+        float x = logf( roughness );
+        return 1.62142f + 0.819955f * x + 0.1734f * x * x + 0.0171201f * x * x * x +
+            0.000640711f * x * x * x * x;
     }
     __device__
         float PbrtRoughnessToAlpha( float roughness ) {
