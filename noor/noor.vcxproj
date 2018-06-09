@@ -312,7 +312,7 @@ copy "shader\*.gs" "$(OutDir)\shader\"</Command>
     </PostBuildEvent>
     <CudaCompile>
       <TargetMachinePlatform>64</TargetMachinePlatform>
-      <FastMath>false</FastMath>
+      <FastMath>true</FastMath>
       <AdditionalOptions>-Wno-deprecated-gpu-targets %(AdditionalOptions)</AdditionalOptions>
       <Include>$(CudaSamplesInclude)</Include>
       <PtxAsOptionV>true</PtxAsOptionV>
@@ -329,7 +329,7 @@ copy "shader\*.gs" "$(OutDir)\shader\"</Command>
       <NvccCompilation>compile</NvccCompilation>
       <GenerateRelocatableDeviceCode>false</GenerateRelocatableDeviceCode>
       <InterleaveSourceInPTX>false</InterleaveSourceInPTX>
-      <Optimization>O2</Optimization>
+      <Optimization>O3</Optimization>
     </CudaCompile>
     <CudaLink>
       <GPUDebugInfo>false</GPUDebugInfo>

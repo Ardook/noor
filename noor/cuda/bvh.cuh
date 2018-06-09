@@ -189,6 +189,7 @@ bool intersect( const CudaRay& ray, CudaIntersection& I ) {
     if ( hit ) {
         I._p = ray.pointAtParameter( ray.getTmax() );
         I.updateIntersection( ray );
+        I._eta = _material_manager.getIorDielectric( I ).x;
     }
     return hit;
 }

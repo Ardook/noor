@@ -215,7 +215,6 @@ public:
         const float3 etaI = make_float3( 1.f );
         if ( isDielectric() ) {
             const float3 etaT = _material_manager.getIorDielectric( I );
-            //I.setEta( etaT.x );
             return CudaFresnel( etaI, etaT );
         } else if ( isConductor() ) {
             return CudaFresnel( etaI, _material_manager.getIorConductor( I ), _material_manager.getK( I ) );
@@ -577,7 +576,8 @@ public:
             lu.x = fminf( 2.f * lu.x, NOOR_ONE_MINUS_EPSILON );
             // Cosine-sample the hemisphere, flipping the direction if necessary
             wi = NOOR::cosineSampleHemisphere( lu );
-            if ( wo.z < 0 ) wi.z *= -1.f;
+            //if ( wo.z < 0 ) wi.z *= -1.f;
+            wi.z *= NOOR::sign( wi.z );
         } else {
             lu.x = fminf( 2.f * ( lu.x - .5f ), NOOR_ONE_MINUS_EPSILON );
             const CudaTrowbridgeReitz _distribution = factoryDistribution( I );
@@ -594,10 +594,10 @@ public:
         float Pdf( const CudaIntersection& I,
                    const float3 &wo, const float3 &wi ) const {
         if ( !SameHemisphere( wo, wi ) ) return 0.f;
-        float3 wh = NOOR::normalize( wo + wi );
+        const float3 wh = NOOR::normalize( wo + wi );
         const CudaTrowbridgeReitz _distribution = factoryDistribution( I );
 
-        float pdf_wh = _distribution.Pdf( wo, wh );
+        const float pdf_wh = _distribution.Pdf( wo, wh );
         return .5f * ( AbsCosTheta( wi ) * NOOR_invPI + pdf_wh / ( 4.f * dot( wo, wh ) ) );
     }
 };
