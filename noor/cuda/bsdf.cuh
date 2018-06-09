@@ -286,9 +286,10 @@ public:
         // Compute value of BSDF for sampled direction
         if ( !( bxdf->_type & BSDF_SPECULAR ) ) {
             bool reflect = dot( wiWorld, I._n ) * dot( woWorld, I._n ) > 0;
-            f = _constant_spec._black;
+            //f = _constant_spec._black;
             for ( int i = 0; i < _nbxdfs; ++i )
-                if ( _bxdfs[i]->MatchesFlags( type ) &&
+                if ( _bxdfs[i] != bxdf &&
+                    _bxdfs[i]->MatchesFlags( type ) &&
                     ( ( reflect && ( _bxdfs[i]->_type & BSDF_REFLECTION ) ) ||
                      ( !reflect && ( _bxdfs[i]->_type & BSDF_TRANSMISSION ) ) ) )
                     f += ::f( _bxdfs[i], I, wo, wi );
@@ -313,6 +314,7 @@ __forceinline__ __device__
 void factoryRoughGlassBSDF( const CudaIntersection& I, CudaBSDF& bsdf ) {
    bsdf.Add( _bxdf_manager._bxdfs[MicrofacetReflectionDielectric] );
    bsdf.Add( _bxdf_manager._bxdfs[MicrofacetTransmission] );
+   //bsdf.Add( _bxdf_manager._bxdfs[FresnelGlossy] );
 }
 __forceinline__ __device__
 void factoryGlossyBSDF( const CudaIntersection& I, CudaBSDF& bsdf ) {

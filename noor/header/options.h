@@ -135,7 +135,7 @@ const std::vector<std::string> model_files = {
 };
 std::unordered_map<std::string, float> options = {
 { "-model",(float) 0},
-{ "-hdr",(float) 4 },
+{ "-hdr",(float) 29 },
 { "-skydome",(float) 0 },
 { "-width",(float) 1024 },
 { "-height",(float) 1024 },

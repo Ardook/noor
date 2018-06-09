@@ -25,7 +25,6 @@ SOFTWARE.
 #define DIRECT_CUH
 
 __forceinline__ __device__
-//bool occluded( const CudaIntersection& I, const CudaVisibility& v, int* light_idx = nullptr ) {
 bool occluded( const CudaIntersection& I, const CudaVisibility& v ) {
     return ( intersectP( I.spawnShadowRay( v ), I ) );
 }
@@ -36,7 +35,8 @@ float3 direct(
     , const CudaIntersection& I
 ) {
     if ( I.isSpecular() )  return _constant_spec._black;
-    BxDFType bsdf_flags = I.isSpecular() ? BSDF_ALL : BxDFType( BSDF_ALL & ~BSDF_SPECULAR );
+    BxDFType bsdf_flags = I.isSpecular() ? BSDF_ALL : 
+        BxDFType( BSDF_ALL & ~BSDF_SPECULAR );
     float light_pdf;
     CudaLightRecord Lr;
     const float3 Li = _light_manager.sample_Li( I, Lr, light_pdf );
@@ -50,11 +50,8 @@ float3 direct(
     }
     f *= NOOR::absDot( Lr._vis._wi, I._shading._n );
     if ( !occluded( I, Lr._vis ) ) {
-        if ( !I.isShadowCatcher() ) {
-            return Li * f / light_pdf;
-        } else {
-            return f;
-        }
+        if ( I.isShadowCatcher() )  return f;
+        return Li * f / light_pdf;
     }
     return _constant_spec._black;
 }
@@ -77,16 +74,13 @@ float3 sampleLight( const CudaBSDF& bsdf,
     if ( NOOR::isBlack( f ) ) return _constant_spec._black;
     f *= NOOR::absDot( Lr._vis._wi, I._shading._n );
     if ( !occluded( I, Lr._vis ) ) {
-        if ( !I.isShadowCatcher() ) {
-            if ( _light_manager.isDeltaLight( light_idx ) ) {
-                Ld += Li * f / light_pdf;
-            } else {
-                const float scatter_pdf = bsdf.Pdf( I, I._wo, Lr._vis._wi, bsdf_flags );
-                const float light_weight = NOOR::powerHeuristic( 1.f, light_pdf, 1.f, scatter_pdf );
-                Ld += Li * f * light_weight / light_pdf;
-            }
+        if ( I.isShadowCatcher() ) return Ld + f;
+        if ( _light_manager.isDeltaLight( light_idx ) ) {
+            Ld += Li * f / light_pdf;
         } else {
-            Ld += f;
+            const float scatter_pdf = bsdf.Pdf( I, I._wo, Lr._vis._wi, bsdf_flags );
+            const float light_weight = NOOR::powerHeuristic( 1.f, light_pdf, 1.f, scatter_pdf );
+            Ld += Li * f * light_weight / light_pdf;
         }
     }
     return Ld;
@@ -121,7 +115,7 @@ float3 sampleBSDF( const CudaBSDF& bsdf,
         const CudaVisibility vis( I._p, shadow_ray.pointAtParameter( shadow_ray.getTmax() ) );
         if ( !occluded( I, vis ) ) {
             Ld += _light_manager.Le( wi, light_idx ) * f * scatter_weight / scatter_pdf;
-        } 
+        }
     } else if ( _constant_spec.is_sky_light_enabled() ) {
         Ld += _skydome_manager.evaluate( wi ) * f * scatter_weight / scatter_pdf;
     }

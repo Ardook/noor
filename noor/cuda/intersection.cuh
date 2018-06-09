@@ -99,7 +99,7 @@ public:
     uint _tri_idx{ 0u };
     uint _mat_idx{ 0u };
     uint _ins_idx{ 0u };
-    mutable float _eta{ 1.0f };
+    float _eta{ 1.0f };
 
     __device__
         CudaIntersection( const CudaRNG& rng, int tid ) :
@@ -110,7 +110,7 @@ public:
         const bool isDifferential = isGlossy() && ray.isDifferential();
         if ( isDifferential ) {
             if ( dot( wi, _n ) >= 0.0f ) {
-                const float3& origin = _p + _constant_spec._reflection_bias * _n;
+                const float3& origin = _p +_constant_spec._reflection_bias * _n;
                 const float3& dir = wi;
                 const float3 origin_dx = ( origin + _differential._dpdx );
                 const float3 origin_dy = ( origin + _differential._dpdy );
@@ -128,7 +128,7 @@ public:
                 const float3 dir_dy = wi - dwody + 2.f *( dot( _wo, _shading._n ) * dndy + dDNdy * _shading._n );
                 return CudaRay( origin, dir, origin_dx, origin_dy, dir_dx, dir_dy );
             } else {
-                const float3& origin = _p - _constant_spec._reflection_bias * _n;
+                const float3& origin = _p-_constant_spec._reflection_bias * _n;
                 const float3& dir = wi;
                 const float3 origin_dx = ( origin + _differential._dpdx );
                 const float3 origin_dy = ( origin + _differential._dpdy );
@@ -180,10 +180,10 @@ public:
         return CudaRay( p, v._wi, dist );
     }
 
-    __device__
+    /*__device__
         void setEta( float eta ) const {
         _eta = eta;
-    }
+    }*/
     __device__
         int getTid() const {
         return _tid;
