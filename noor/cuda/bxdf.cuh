@@ -415,7 +415,7 @@ public:
         }
         wh *= NOOR::sign( wh.z );
         const CudaFresnel fresnel = factoryFresnel( I );
-        const float F = fresnel.evaluate( dot( wo, wh ) ).x;
+        const float F = fresnel.evaluate( dot( wi, wh ) ).x;
         const CudaTrowbridgeReitz _distribution = factoryDistribution( I );
         const float3 result = F * S( I ) * _distribution.D( wh ) * _distribution.G( wo, wi ) /
                                 ( 4.0f * cosThetaI * cosThetaO );
@@ -451,7 +451,6 @@ public:
             return 0.0f;
         }
         const float3 wh = NOOR::normalize( wo + wi );
-        //wh *= NOOR::sign( wh.z );
         const CudaTrowbridgeReitz _distribution = factoryDistribution( I );
         return _distribution.Pdf( wo, wh ) / ( 4.0f * dot( wo, wh ) );
     }
@@ -501,13 +500,20 @@ public:
         sampledType = _type;
         if ( wo.z == 0 ) return _constant_spec._black;
         const CudaTrowbridgeReitz _distribution = factoryDistribution( I );
-        const float3 wh = _distribution.Sample_wh( wo, u );
+        float3 wh = _distribution.Sample_wh( wo, u );
         const CudaFresnel fresnel = factoryFresnel( I );
         const float eta = CosTheta( wo ) > 0 ? ( fresnel._etaI / fresnel._etaT ).x :
                                                ( fresnel._etaT / fresnel._etaI ).x;
         if ( !Refract( wo, wh, eta, wi ) ) {
-            pdf = 0;
-            return _constant_spec._black;
+            wi = reflect( wo, wh );
+            wh *= NOOR::sign( wh.z );
+            const float F = fresnel.evaluate( dot( wi, wh ) ).x;
+            const float cosThetaO = CosTheta( wo );
+            const float cosThetaI = CosTheta( wi );
+            const float3 result = F * S( I ) * _distribution.D( wh ) * _distribution.G( wo, wi ) /
+                ( 4.0f * cosThetaI * cosThetaO );
+            pdf = _distribution.Pdf( wo, wh ) / ( 4.0f * dot( wo, wh ) );
+            return result;
         }
         pdf = Pdf( I, wo, wi );
         return f( I, wo, wi );
@@ -522,7 +528,7 @@ public:
         float eta = CosTheta( wo ) > 0 ? ( fresnel._etaT / fresnel._etaI ).x :
             ( fresnel._etaI / fresnel._etaT ).x;
         float3 wh = NOOR::normalize( wo + wi *eta );
-        wh *= NOOR::sign( wh.z );
+        //wh *= NOOR::sign( wh.z );
         const float sqrtDenom = dot( wo, wh ) + eta * dot( wi, wh );
         const float dwh_dwi =
             fabsf( ( eta * eta * dot( wi, wh ) ) / ( sqrtDenom * sqrtDenom ) );
