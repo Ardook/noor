@@ -348,6 +348,7 @@ public:
             dim.x = 0;
             dim.y = 1;
         }
+
         const NOOR::noor_float3 dpdu( _geometry._dpdu );
         const NOOR::noor_float3 dpdv( _geometry._dpdv );
 
