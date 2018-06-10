@@ -77,7 +77,7 @@ float4 pathtracer(
             break;
         }
     }
-    L = clamp( L, 0, 60.f );
+    L = clamp( L, 0, 100.f );
     return make_float4( L, 1.f );
 }
 
