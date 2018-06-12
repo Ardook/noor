@@ -92,9 +92,9 @@ Noor is an experimental CUDA/GPU Monte-Carlo pathtracer.  It started (Noor 1.0) 
 
 #### ScreenShots:
 [![metals](screenshots/50percent/metals.jpg "metals")](screenshots/100percent/metal.jpg)
+[![infinite mirrors](screenshots/50percent/screenshot-12-06-2018-15-57-23.jpg "infinite mirrors")](screenshots/100percent/screenshot-12-06-2018-15-57-23.jpg)
 [![trio](screenshots/50percent/screenshot-07-06-2018-11-47-47.jpg "smooth plastic")](screenshots/100percent/screenshot-07-06-2018-11-47-47.jpg)
 [![trio](screenshots/50percent/screenshot-07-06-2018-14-19-36.jpg "smooth plastic")](screenshots/100percent/screenshot-07-06-2018-14-19-36.jpg)
-[![infinite mirrors](screenshots/50percent/screenshot-12-06-2018-15-57-23.jpg "infinite mirrors")](screenshots/100percent/screenshot-12-06-2018-15-57-23.jpg)
 [![smooth plastic](screenshots/50percent/screenshot-23-05-2018-10-05-35.jpg "smooth plastic")](screenshots/100percent/screenshot-23-05-2018-10-05-35.jpg)
 [![rough plastic](screenshots/50percent/screenshot-23-05-2018-10-08-01.jpg "rough plastic")](screenshots/100percent/screenshot-23-05-2018-10-08-01.jpg)
 [![smooth gold](screenshots/50percent/screenshot-22-05-2018-13-28-56.jpg "smooth gold")](screenshots/100percent/screenshot-22-05-2018-13-28-56.jpg)
