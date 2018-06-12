@@ -84,7 +84,7 @@ constexpr float NOOR_PI_over_4 = NOOR_PI / 4.0f;
 constexpr float NOOR_3PI_over_2 = 3.f * NOOR_PI_over_2;
 
 constexpr int2 skydome_res{ 2048, 2048 };
-#define SKYDOME_COLOR make_float3(.01f)
+#define SKYDOME_COLOR make_float3(.25f)
 enum MaterialType {
     DIFFUSE = 1 << 0,
     ORENNAYAR = 1 << 1,

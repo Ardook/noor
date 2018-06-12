@@ -116,9 +116,7 @@ float3 sampleBSDF( const CudaBSDF& bsdf,
         if ( !occluded( I, vis ) ) {
             Ld += _light_manager.Le( wi, light_idx ) * f * scatter_weight / scatter_pdf;
         }
-    } else if ( _constant_spec.is_sky_light_enabled() ) {
-        Ld += _skydome_manager.evaluate( wi ) * f * scatter_weight / scatter_pdf;
-    }
+    } 
     return Ld;
 }
 

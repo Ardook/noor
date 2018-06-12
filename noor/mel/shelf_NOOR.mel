@@ -1,0 +1,635 @@
+global proc shelf_NOOR () {
+    global string $gBuffStr;
+    global string $gBuffStr0;
+    global string $gBuffStr1;
+
+
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "Export All" 
+        -enableBackground 0
+        -backgroundColor 0 0 0 
+        -highlightColor 0.321569 0.521569 0.65098 
+        -align "center" 
+        -label "Export All" 
+        -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
+        -font "plainLabelFont" 
+        -imageOverlayLabel "Export All" 
+        -overlayLabelColor 0.8 0.8 0.8 
+        -overlayLabelBackColor 0 0 0 0.5 
+        -image "save.png" 
+        -image1 "save.png" 
+        -style "iconOnly" 
+        -marginWidth 4
+        -marginHeight 4
+        -command "//FBXExport -f [filename] FBXExportInAscii -v [true|false] FBXExportInstances -v [true|false] FBXExportCameras -v [true|false] FBXExportLights -v [true|false] FBXExportTriangulate -v [true|false] FBXExportUpAxis [y|z] FBXExportEmbeddedTextures -v [true|false];\n\nFBXExport -f \"C:/Users/ardavan/Desktop/fbx/temp.fbx\" FBXExportInAscii -v false FBXExportInstances -v true FBXExportCameras -v true FBXExportLights -v true FBXExportTriangulate -v true FBXExportUpAxis y FBXExportEmbeddedTextures -v true;" 
+        -sourceType "mel" 
+        -commandRepeatable 1
+        -flat 1
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "Export Selection" 
+        -enableBackground 0
+        -backgroundColor 0 0 0 
+        -highlightColor 0.321569 0.521569 0.65098 
+        -align "center" 
+        -label "Export Selection" 
+        -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
+        -font "plainLabelFont" 
+        -imageOverlayLabel "Export Selection" 
+        -overlayLabelColor 0.8 0.8 0.8 
+        -overlayLabelBackColor 0 0 0 0.5 
+        -image "save.png" 
+        -image1 "save.png" 
+        -style "iconOnly" 
+        -marginWidth 4
+        -marginHeight 4
+        -command "FBXExport -f \"C:/Users/ardavan/Desktop/fbx/temp.fbx\" -s \nFBXExportInAscii -v false \nFBXExportInstances -v true \nFBXExportCameras -v true \nFBXExportLights -v true \nFBXExportTriangulate -v true \nFBXExportUpAxis y \nFBXExportEmbeddedTextures -v true\nFBXExportFileVersion -v FBX201800;\n" 
+        -sourceType "mel" 
+        -commandRepeatable 1
+        -flat 1
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "Iron" 
+        -enableBackground 0
+        -backgroundColor 0 0 0 
+        -highlightColor 0.321569 0.521569 0.65098 
+        -align "center" 
+        -label "Iron" 
+        -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
+        -font "plainLabelFont" 
+        -imageOverlayLabel "Iron" 
+        -overlayLabelColor 0.8 0.8 0.8 
+        -overlayLabelBackColor 0 0 0 0.5 
+        -image "commandButton.png" 
+        -image1 "commandButton.png" 
+        -style "iconOnly" 
+        -marginWidth 4
+        -marginHeight 4
+        -command "//Al_Iron.txt\n//n=3.506965 2.764015 2.296961\n//k=3.687196 2.780201 2.487748\n//rgb=.13 0.15 0.16\n\nshadingNode -asShader phong -name Iron;\nsets -renderable true -noSurfaceShader true -empty -name IronSG;\nconnectAttr -f Iron.outColor IronSG.surfaceShader;\naddAttr -ln \"Type\" -nn \"Type\" -at \"enum\" -en \"DIFFUSE:ORENNAYAR:TRANSLUCENT:GLOSSY:MIRROR:GLASS:ROUGHGLASS:METAL:SUBSTRATE:EMITTER:CLEARCOAT:SHADOW:\" -dv 7;\naddAttr -ln \"RoughnessU\" -nn \"RoughnessU\" -at double  -min 0 -max 1 -dv 0.001 Iron;\nsetAttr -e-keyable true Iron.RoughnessU;\naddAttr -ln \"RoughnessV\" -nn \"RoughnessV\" -at double  -min 0 -max 1 -dv .001 Iron;\nsetAttr -e-keyable true Iron.RoughnessV;\naddAttr -ln \"Eta\"  -at double3  Iron;\naddAttr -ln \"EtaX\"  -at double -p Eta  Iron;\naddAttr -ln \"EtaY\"  -at double -p Eta  Iron;\naddAttr -ln \"EtaZ\"  -at double -p Eta  Iron;\nsetAttr -type double3 Iron.Eta 3.506965 2.764015 2.296961;\nsetAttr -e-keyable true Iron.Eta;\nsetAttr -e-keyable true Iron.EtaX;\nsetAttr -e-keyable true Iron.EtaY;\nsetAttr -e-keyable true Iron.EtaZ;\naddAttr -ln \"K\"  -at double3  Iron;\naddAttr -ln \"KX\"  -at double -p K  Iron;\naddAttr -ln \"KY\"  -at double -p K  Iron;\naddAttr -ln \"KZ\"  -at double -p K  Iron;\nsetAttr -type double3 Iron.K 3.687196 2.780201 2.487748;\nsetAttr -e-keyable true Iron.K;\nsetAttr -e-keyable true Iron.KX;\nsetAttr -e-keyable true Iron.KY;\nsetAttr -e-keyable true Iron.KZ;\n\n// Coating\naddAttr -ln \"Weight\" -nn \"Weight\" -at double  -min 0 -max 1 -dv 0.001 Iron;\nsetAttr -e-keyable true Iron.Weight;\n\naddAttr -ln \"Thickness\" -nn \"Thickness\" -at double  -min 0 -max 10 -dv 0.001 Iron;\nsetAttr -e-keyable true Iron.Thickness;\n\naddAttr -ln \"Sigma\" -nn \"Sigma\" -at double  -min 0 -max 1 -dv 0.001 Iron;\nsetAttr -e-keyable true Iron.Sigma;\n\naddAttr -ln \"IOR\" -nn \"IOR\" -at double  -min 1 -max 10 -dv 1.5 Iron;\nsetAttr -e-keyable true Iron.IOR;\n\n//RGB: 1 0.765557 0.336057\nsetAttr \"Iron.color\" -type double3 .13 0.15 0.16;\nsetAttr \"Iron.specularColor\" -type double3 .13 0.15 0.16;" 
+        -sourceType "mel" 
+        -commandRepeatable 1
+        -flat 1
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "Aluminium" 
+        -enableBackground 0
+        -backgroundColor 0 0 0 
+        -highlightColor 0.321569 0.521569 0.65098 
+        -align "center" 
+        -label "Aluminium" 
+        -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
+        -font "plainLabelFont" 
+        -imageOverlayLabel "Aluminium" 
+        -overlayLabelColor 0.8 0.8 0.8 
+        -overlayLabelBackColor 0 0 0 0.5 
+        -image "commandButton.png" 
+        -image1 "commandButton.png" 
+        -style "iconOnly" 
+        -marginWidth 4
+        -marginHeight 4
+        -command "//Al_aluminium.txt\n//n=1.740964 0.931055 0.531445\n//k=9.100455 6.205323 4.814778\n//rgb=0.913183 0.921494 0.924524\n\nshadingNode -asShader phong -name aluminium;\nsets -renderable true -noSurfaceShader true -empty -name aluminiumSG;\nconnectAttr -f aluminium.outColor aluminiumSG.surfaceShader;\naddAttr -ln \"Type\" -nn \"Type\" -at \"enum\" -en \"DIFFUSE:ORENNAYAR:TRANSLUCENT:GLOSSY:MIRROR:GLASS:ROUGHGLASS:METAL:SUBSTRATE:EMITTER:CLEARCOAT:SHADOW:\" -dv 7;\naddAttr -ln \"RoughnessU\" -nn \"RoughnessU\" -at double  -min 0 -max 1 -dv 0.001 aluminium;\nsetAttr -e-keyable true aluminium.RoughnessU;\naddAttr -ln \"RoughnessV\" -nn \"RoughnessV\" -at double  -min 0 -max 1 -dv .001 aluminium;\nsetAttr -e-keyable true aluminium.RoughnessV;\naddAttr -ln \"Eta\"  -at double3  aluminium;\naddAttr -ln \"EtaX\"  -at double -p Eta  aluminium;\naddAttr -ln \"EtaY\"  -at double -p Eta  aluminium;\naddAttr -ln \"EtaZ\"  -at double -p Eta  aluminium;\nsetAttr -type double3 aluminium.Eta 1.740964 0.931055 0.531445;\nsetAttr -e-keyable true aluminium.Eta;\nsetAttr -e-keyable true aluminium.EtaX;\nsetAttr -e-keyable true aluminium.EtaY;\nsetAttr -e-keyable true aluminium.EtaZ;\naddAttr -ln \"K\"  -at double3  aluminium;\naddAttr -ln \"KX\"  -at double -p K  aluminium;\naddAttr -ln \"KY\"  -at double -p K  aluminium;\naddAttr -ln \"KZ\"  -at double -p K  aluminium;\nsetAttr -type double3 aluminium.K 9.100455 6.205323 4.814778;\nsetAttr -e-keyable true aluminium.K;\nsetAttr -e-keyable true aluminium.KX;\nsetAttr -e-keyable true aluminium.KY;\nsetAttr -e-keyable true aluminium.KZ;\n\n// Coating\naddAttr -ln \"Weight\" -nn \"Weight\" -at double  -min 0 -max 1 -dv 0.001 aluminium;\nsetAttr -e-keyable true aluminium.Weight;\n\naddAttr -ln \"Thickness\" -nn \"Thickness\" -at double  -min 0 -max 10 -dv 0.001 aluminium;\nsetAttr -e-keyable true aluminium.Thickness;\n\naddAttr -ln \"Sigma\" -nn \"Sigma\" -at double  -min 0 -max 1 -dv 0.001 aluminium;\nsetAttr -e-keyable true aluminium.Sigma;\n\naddAttr -ln \"IOR\" -nn \"IOR\" -at double  -min 1 -max 10 -dv 1.5 aluminium;\nsetAttr -e-keyable true aluminium.IOR;\n\n//RGB: 1 0.765557 0.336057\nsetAttr \"aluminium.color\" -type double3 0.913183 0.921494 0.924524;\nsetAttr \"aluminium.specularColor\" -type double3 0.913183 0.921494 0.924524;\n" 
+        -sourceType "mel" 
+        -commandRepeatable 1
+        -flat 1
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "Chromium" 
+        -enableBackground 0
+        -backgroundColor 0 0 0 
+        -highlightColor 0.321569 0.521569 0.65098 
+        -align "center" 
+        -label "Chromium" 
+        -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
+        -font "plainLabelFont" 
+        -imageOverlayLabel "Chromium" 
+        -overlayLabelColor 0.8 0.8 0.8 
+        -overlayLabelBackColor 0 0 0 0.5 
+        -image "commandButton.png" 
+        -image1 "commandButton.png" 
+        -style "iconOnly" 
+        -marginWidth 4
+        -marginHeight 4
+        -command "//Cr_chromium.txt\n//n=3.876642 2.948598 2.046803\n//k=3.958291 3.158849 2.824535\n//rgb=0.549585 0.556114 0.554256\n\nshadingNode -asShader phong -name chromium;\nsets -renderable true -noSurfaceShader true -empty -name chromiumSG;\nconnectAttr -f chromium.outColor chromiumSG.surfaceShader;\naddAttr -ln \"Type\" -nn \"Type\" -at \"enum\" -en \"DIFFUSE:ORENNAYAR:TRANSLUCENT:GLOSSY:MIRROR:GLASS:ROUGHGLASS:METAL:SUBSTRATE:EMITTER:CLEARCOAT:SHADOW:\" -dv 7;  \naddAttr -ln \"RoughnessU\" -nn \"RoughnessU\" -at double  -min 0 -max 1 -dv 0.001 chromium;\nsetAttr -e-keyable true chromium.RoughnessU;\naddAttr -ln \"RoughnessV\" -nn \"RoughnessV\" -at double  -min 0 -max 1 -dv .001 chromium;\nsetAttr -e-keyable true chromium.RoughnessV;\naddAttr -ln \"Eta\"  -at double3  chromium;\naddAttr -ln \"EtaX\"  -at double -p Eta  chromium;\naddAttr -ln \"EtaY\"  -at double -p Eta  chromium;\naddAttr -ln \"EtaZ\"  -at double -p Eta  chromium;\nsetAttr -type double3 chromium.Eta 3.876642 2.948598 2.046803;\nsetAttr -e-keyable true chromium.Eta;\nsetAttr -e-keyable true chromium.EtaX;\nsetAttr -e-keyable true chromium.EtaY;\nsetAttr -e-keyable true chromium.EtaZ;\naddAttr -ln \"K\"  -at double3  chromium;\naddAttr -ln \"KX\"  -at double -p K  chromium;\naddAttr -ln \"KY\"  -at double -p K  chromium;\naddAttr -ln \"KZ\"  -at double -p K  chromium;\nsetAttr -type double3 chromium.K 3.958291 3.158849 2.824535;\nsetAttr -e-keyable true chromium.K;\nsetAttr -e-keyable true chromium.KX;\nsetAttr -e-keyable true chromium.KY;\nsetAttr -e-keyable true chromium.KZ;\n\n// Coating\naddAttr -ln \"Weight\" -nn \"Weight\" -at double  -min 0 -max 1 -dv 0.001 chromium;\nsetAttr -e-keyable true chromium.Weight;\n\naddAttr -ln \"Thickness\" -nn \"Thickness\" -at double  -min 0 -max 10 -dv 0.001 chromium;\nsetAttr -e-keyable true chromium.Thickness;\n\naddAttr -ln \"Sigma\" -nn \"Sigma\" -at double  -min 0 -max 1 -dv 0.001 chromium;\nsetAttr -e-keyable true chromium.Sigma;\n\naddAttr -ln \"IOR\" -nn \"IOR\" -at double  -min 1 -max 10 -dv 1.5 chromium;\nsetAttr -e-keyable true chromium.IOR;\n\n//RGB: 1 0.765557 0.336057\nsetAttr \"chromium.color\" -type double3 0.549585 0.556114 0.554256;\nsetAttr \"chromium.specularColor\" -type double3 0.549585 0.556114 0.554256;\n" 
+        -sourceType "mel" 
+        -commandRepeatable 1
+        -flat 1
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "Cobalt" 
+        -enableBackground 0
+        -backgroundColor 0 0 0 
+        -highlightColor 0.321569 0.521569 0.65098 
+        -align "center" 
+        -label "Cobalt" 
+        -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
+        -font "plainLabelFont" 
+        -imageOverlayLabel "Cobalt" 
+        -overlayLabelColor 0.8 0.8 0.8 
+        -overlayLabelBackColor 0 0 0 0.5 
+        -image "commandButton.png" 
+        -image1 "commandButton.png" 
+        -style "iconOnly" 
+        -marginWidth 4
+        -marginHeight 4
+        -command "//Co_cobalt.txt\n//n=2.683313 1.926073 1.541156\n//k=5.031959 3.590842 2.916025\n//rgb=0.662124 0.654864 0.633732\n\nshadingNode -asShader phong -name cobalt;\nsets -renderable true -noSurfaceShader true -empty -name cobaltSG;\nconnectAttr -f cobalt.outColor cobaltSG.surfaceShader;\naddAttr -ln \"Type\" -nn \"Type\" -at \"enum\" -en \"DIFFUSE:ORENNAYAR:TRANSLUCENT:GLOSSY:MIRROR:GLASS:ROUGHGLASS:METAL:SUBSTRATE:EMITTER:CLEARCOAT:SHADOW:\" -dv 7;  \naddAttr -ln \"RoughnessU\" -nn \"RoughnessU\" -at double  -min 0 -max 1 -dv 0.001 cobalt;\nsetAttr -e-keyable true cobalt.RoughnessU;\naddAttr -ln \"RoughnessV\" -nn \"RoughnessV\" -at double  -min 0 -max 1 -dv .001 cobalt;\nsetAttr -e-keyable true cobalt.RoughnessV;\naddAttr -ln \"Eta\"  -at double3  cobalt;\naddAttr -ln \"EtaX\"  -at double -p Eta  cobalt;\naddAttr -ln \"EtaY\"  -at double -p Eta  cobalt;\naddAttr -ln \"EtaZ\"  -at double -p Eta  cobalt;\nsetAttr -type double3 cobalt.Eta 2.683313 1.926073 1.541156;\nsetAttr -e-keyable true cobalt.Eta;\nsetAttr -e-keyable true cobalt.EtaX;\nsetAttr -e-keyable true cobalt.EtaY;\nsetAttr -e-keyable true cobalt.EtaZ;\naddAttr -ln \"K\"  -at double3  cobalt;\naddAttr -ln \"KX\"  -at double -p K  cobalt;\naddAttr -ln \"KY\"  -at double -p K  cobalt;\naddAttr -ln \"KZ\"  -at double -p K  cobalt;\nsetAttr -type double3 cobalt.K 5.031959 3.590842 2.916025;\nsetAttr -e-keyable true cobalt.K;\nsetAttr -e-keyable true cobalt.KX;\nsetAttr -e-keyable true cobalt.KY;\nsetAttr -e-keyable true cobalt.KZ;\n\n// Coating\naddAttr -ln \"Weight\" -nn \"Weight\" -at double  -min 0 -max 1 -dv 0.001 cobalt;\nsetAttr -e-keyable true cobalt.Weight;\n\naddAttr -ln \"Thickness\" -nn \"Thickness\" -at double  -min 0 -max 10 -dv 0.001 cobalt;\nsetAttr -e-keyable true cobalt.Thickness;\n\naddAttr -ln \"Sigma\" -nn \"Sigma\" -at double  -min 0 -max 1 -dv 0.001 cobalt;\nsetAttr -e-keyable true cobalt.Sigma;\n\naddAttr -ln \"IOR\" -nn \"IOR\" -at double  -min 1 -max 10 -dv 1.5 cobalt;\nsetAttr -e-keyable true cobalt.IOR;\n\n//RGB: 1 0.765557 0.336057\nsetAttr \"cobalt.color\" -type double3 0.662124 0.654864 0.633732;\nsetAttr \"cobalt.specularColor\" -type double3 0.662124 0.654864 0.633732;\n" 
+        -sourceType "mel" 
+        -commandRepeatable 1
+        -flat 1
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "Copper" 
+        -enableBackground 0
+        -backgroundColor 0 0 0 
+        -highlightColor 0.321569 0.521569 0.65098 
+        -align "center" 
+        -label "Copper" 
+        -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
+        -font "plainLabelFont" 
+        -imageOverlayLabel "Copper" 
+        -overlayLabelColor 0.8 0.8 0.8 
+        -overlayLabelBackColor 0 0 0 0.5 
+        -image "commandButton.png" 
+        -image1 "commandButton.png" 
+        -style "iconOnly" 
+        -marginWidth 4
+        -marginHeight 4
+        -command "//Cu_copper.txt\n//n=0.280392 0.985053 1.177397\n//k=3.913975 2.454599 2.134994\n//rgb=0.955008 0.637427 0.538163\n\nshadingNode -asShader phong -name copper;\nsets -renderable true -noSurfaceShader true -empty -name copperSG;\nconnectAttr -f copper.outColor copperSG.surfaceShader;\naddAttr -ln \"Type\" -nn \"Type\" -at \"enum\" -en \"DIFFUSE:ORENNAYAR:TRANSLUCENT:GLOSSY:MIRROR:GLASS:ROUGHGLASS:METAL:SUBSTRATE:EMITTER:CLEARCOAT:SHADOW:\" -dv 7;  \naddAttr -ln \"RoughnessU\" -nn \"RoughnessU\" -at double  -min 0 -max 1 -dv 0.001 copper;\nsetAttr -e-keyable true copper.RoughnessU;\naddAttr -ln \"RoughnessV\" -nn \"RoughnessV\" -at double  -min 0 -max 1 -dv .001 copper;\nsetAttr -e-keyable true copper.RoughnessV;\naddAttr -ln \"Eta\"  -at double3  copper;\naddAttr -ln \"EtaX\"  -at double -p Eta  copper;\naddAttr -ln \"EtaY\"  -at double -p Eta  copper;\naddAttr -ln \"EtaZ\"  -at double -p Eta  copper;\nsetAttr -type double3 copper.Eta 0.280392 0.985053 1.177397;\nsetAttr -e-keyable true copper.Eta;\nsetAttr -e-keyable true copper.EtaX;\nsetAttr -e-keyable true copper.EtaY;\nsetAttr -e-keyable true copper.EtaZ;\naddAttr -ln \"K\"  -at double3  copper;\naddAttr -ln \"KX\"  -at double -p K  copper;\naddAttr -ln \"KY\"  -at double -p K  copper;\naddAttr -ln \"KZ\"  -at double -p K  copper;\nsetAttr -type double3 copper.K 3.913975 2.454599 2.134994;\nsetAttr -e-keyable true copper.K;\nsetAttr -e-keyable true copper.KX;\nsetAttr -e-keyable true copper.KY;\nsetAttr -e-keyable true copper.KZ;\n\n// Coating\naddAttr -ln \"Weight\" -nn \"Weight\" -at double  -min 0 -max 1 -dv 0.001 copper;\nsetAttr -e-keyable true copper.Weight;\n\naddAttr -ln \"Thickness\" -nn \"Thickness\" -at double  -min 0 -max 10 -dv 0.001 copper;\nsetAttr -e-keyable true copper.Thickness;\n\naddAttr -ln \"Sigma\" -nn \"Sigma\" -at double  -min 0 -max 1 -dv 0.001 copper;\nsetAttr -e-keyable true copper.Sigma;\n\naddAttr -ln \"IOR\" -nn \"IOR\" -at double  -min 1 -max 10 -dv 1.5 copper;\nsetAttr -e-keyable true copper.IOR;\n\n//RGB: 1 0.765557 0.336057\nsetAttr \"copper.color\" -type double3 0.955008 0.637427 0.538163;\nsetAttr \"copper.specularColor\" -type double3 0.955008 0.637427 0.538163;\n" 
+        -sourceType "mel" 
+        -commandRepeatable 1
+        -flat 1
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "Gold" 
+        -enableBackground 0
+        -backgroundColor 0 0 0 
+        -highlightColor 0.321569 0.521569 0.65098 
+        -align "center" 
+        -label "Gold" 
+        -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
+        -font "plainLabelFont" 
+        -imageOverlayLabel "Gold" 
+        -overlayLabelColor 0.8 0.8 0.8 
+        -overlayLabelBackColor 0 0 0 0.5 
+        -image "commandButton.png" 
+        -image1 "commandButton.png" 
+        -style "iconOnly" 
+        -marginWidth 4
+        -marginHeight 4
+        -command "//Au_gold.txt\n//n=0.126052 0.465040 1.340442\n//k=4.230981 2.204432 1.642458\n//rgb=1 0.765557 0.336057\n\nshadingNode -asShader phong -name gold;\nsets -renderable true -noSurfaceShader true -empty -name goldSG;\nconnectAttr -f gold.outColor goldSG.surfaceShader;\naddAttr -ln \"Type\" -nn \"Type\" -at \"enum\" -en \"DIFFUSE:ORENNAYAR:TRANSLUCENT:GLOSSY:MIRROR:GLASS:ROUGHGLASS:METAL:SUBSTRATE:EMITTER:CLEARCOAT:SHADOW:\" -dv 7;  \naddAttr -ln \"RoughnessU\" -nn \"RoughnessU\" -at double  -min 0 -max 1 -dv 0.001 gold;\nsetAttr -e-keyable true gold.RoughnessU;\naddAttr -ln \"RoughnessV\" -nn \"RoughnessV\" -at double  -min 0 -max 1 -dv .001 gold;\nsetAttr -e-keyable true gold.RoughnessV;\naddAttr -ln \"Eta\"  -at double3  gold;\naddAttr -ln \"EtaX\"  -at double -p Eta  gold;\naddAttr -ln \"EtaY\"  -at double -p Eta  gold;\naddAttr -ln \"EtaZ\"  -at double -p Eta  gold;\nsetAttr -type double3 gold.Eta 0.126052 0.465040 1.340442;\nsetAttr -e-keyable true gold.Eta;\nsetAttr -e-keyable true gold.EtaX;\nsetAttr -e-keyable true gold.EtaY;\nsetAttr -e-keyable true gold.EtaZ;\naddAttr -ln \"K\"  -at double3  gold;\naddAttr -ln \"KX\"  -at double -p K  gold;\naddAttr -ln \"KY\"  -at double -p K  gold;\naddAttr -ln \"KZ\"  -at double -p K  gold;\nsetAttr -type double3 gold.K 4.230981 2.204432 1.642458;\nsetAttr -e-keyable true gold.K;\nsetAttr -e-keyable true gold.KX;\nsetAttr -e-keyable true gold.KY;\nsetAttr -e-keyable true gold.KZ;\n\n// Coating\naddAttr -ln \"Weight\" -nn \"Weight\" -at double  -min 0 -max 1 -dv 0.001 gold;\nsetAttr -e-keyable true gold.Weight;\n\naddAttr -ln \"Thickness\" -nn \"Thickness\" -at double  -min 0 -max 10 -dv 0.001 gold;\nsetAttr -e-keyable true gold.Thickness;\n\naddAttr -ln \"Sigma\" -nn \"Sigma\" -at double  -min 0 -max 1 -dv 0.001 gold;\nsetAttr -e-keyable true gold.Sigma;\n\naddAttr -ln \"IOR\" -nn \"IOR\" -at double  -min 1 -max 10 -dv 1.5 gold;\nsetAttr -e-keyable true gold.IOR;\n\n//RGB: 1 0.765557 0.336057\nsetAttr \"gold.color\" -type double3 1 0.765557 0.336057;\nsetAttr \"gold.specularColor\" -type double3 1 0.765557 0.336057;\n" 
+        -sourceType "mel" 
+        -commandRepeatable 1
+        -flat 1
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "Nickel" 
+        -enableBackground 0
+        -backgroundColor 0 0 0 
+        -highlightColor 0.321569 0.521569 0.65098 
+        -align "center" 
+        -label "Nickel" 
+        -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
+        -font "plainLabelFont" 
+        -imageOverlayLabel "Nickel" 
+        -overlayLabelColor 0.8 0.8 0.8 
+        -overlayLabelBackColor 0 0 0 0.5 
+        -image "commandButton.png" 
+        -image1 "commandButton.png" 
+        -style "iconOnly" 
+        -marginWidth 4
+        -marginHeight 4
+        -command "//Ni_nickel.txt\n//n=2.418073 1.800630 1.560135\n//k=4.962421 3.377391 2.597778\n//rgb=0.659777 0.608679 0.525649\n\nshadingNode -asShader phong -name nickel;\nsets -renderable true -noSurfaceShader true -empty -name nickelSG;\nconnectAttr -f nickel.outColor nickelSG.surfaceShader;\naddAttr -ln \"Type\" -nn \"Type\" -at \"enum\" -en \"DIFFUSE:ORENNAYAR:TRANSLUCENT:GLOSSY:MIRROR:GLASS:ROUGHGLASS:METAL:SUBSTRATE:EMITTER:CLEARCOAT:SHADOW:\" -dv 7;  \naddAttr -ln \"RoughnessU\" -nn \"RoughnessU\" -at double  -min 0 -max 1 -dv 0.001 nickel;\nsetAttr -e-keyable true nickel.RoughnessU;\naddAttr -ln \"RoughnessV\" -nn \"RoughnessV\" -at double  -min 0 -max 1 -dv .001 nickel;\nsetAttr -e-keyable true nickel.RoughnessV;\naddAttr -ln \"Eta\"  -at double3  nickel;\naddAttr -ln \"EtaX\"  -at double -p Eta  nickel;\naddAttr -ln \"EtaY\"  -at double -p Eta  nickel;\naddAttr -ln \"EtaZ\"  -at double -p Eta  nickel;\nsetAttr -type double3 nickel.Eta 2.418073 1.800630 1.560135;\nsetAttr -e-keyable true nickel.Eta;\nsetAttr -e-keyable true nickel.EtaX;\nsetAttr -e-keyable true nickel.EtaY;\nsetAttr -e-keyable true nickel.EtaZ;\naddAttr -ln \"K\"  -at double3  nickel;\naddAttr -ln \"KX\"  -at double -p K  nickel;\naddAttr -ln \"KY\"  -at double -p K  nickel;\naddAttr -ln \"KZ\"  -at double -p K  nickel;\nsetAttr -type double3 nickel.K 4.962421 3.377391 2.597778;\nsetAttr -e-keyable true nickel.K;\nsetAttr -e-keyable true nickel.KX;\nsetAttr -e-keyable true nickel.KY;\nsetAttr -e-keyable true nickel.KZ;\n\n// Coating\naddAttr -ln \"Weight\" -nn \"Weight\" -at double  -min 0 -max 1 -dv 0.001 nickel;\nsetAttr -e-keyable true nickel.Weight;\n\naddAttr -ln \"Thickness\" -nn \"Thickness\" -at double  -min 0 -max 10 -dv 0.001 nickel;\nsetAttr -e-keyable true nickel.Thickness;\n\naddAttr -ln \"Sigma\" -nn \"Sigma\" -at double  -min 0 -max 1 -dv 0.001 nickel;\nsetAttr -e-keyable true nickel.Sigma;\n\naddAttr -ln \"IOR\" -nn \"IOR\" -at double  -min 1 -max 10 -dv 1.5 nickel;\nsetAttr -e-keyable true nickel.IOR;\n\n//RGB: 1 0.765557 0.336057\nsetAttr \"nickel.color\" -type double3 0.659777 0.608679 0.525649;\nsetAttr \"nickel.specularColor\" -type double3 0.659777 0.608679 0.5256493;\n" 
+        -sourceType "mel" 
+        -commandRepeatable 1
+        -flat 1
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "Platinum" 
+        -enableBackground 0
+        -backgroundColor 0 0 0 
+        -highlightColor 0.321569 0.521569 0.65098 
+        -align "center" 
+        -label "Platinum" 
+        -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
+        -font "plainLabelFont" 
+        -imageOverlayLabel "Platinum" 
+        -overlayLabelColor 0.8 0.8 0.8 
+        -overlayLabelBackColor 0 0 0 0.5 
+        -image "commandButton.png" 
+        -image1 "commandButton.png" 
+        -style "iconOnly" 
+        -marginWidth 4
+        -marginHeight 4
+        -command "//Pt_platinum.txt\n//n=1.611123 1.267927 1.215836\n//k=1.238399 0.974601 0.934560\n//rgb=0.672411 0.637331 0.585456\n\nshadingNode -asShader phong -name platinum;\nsets -renderable true -noSurfaceShader true -empty -name platinumSG;\nconnectAttr -f platinum.outColor platinumSG.surfaceShader;\naddAttr -ln \"Type\" -nn \"Type\" -at \"enum\" -en \"DIFFUSE:ORENNAYAR:TRANSLUCENT:GLOSSY:MIRROR:GLASS:ROUGHGLASS:METAL:SUBSTRATE:EMITTER:CLEARCOAT:SHADOW:\" -dv 7;  \naddAttr -ln \"RoughnessU\" -nn \"RoughnessU\" -at double  -min 0 -max 1 -dv 0.001 platinum;\nsetAttr -e-keyable true platinum.RoughnessU;\naddAttr -ln \"RoughnessV\" -nn \"RoughnessV\" -at double  -min 0 -max 1 -dv .001 platinum;\nsetAttr -e-keyable true platinum.RoughnessV;\naddAttr -ln \"Eta\"  -at double3  platinum;\naddAttr -ln \"EtaX\"  -at double -p Eta  platinum;\naddAttr -ln \"EtaY\"  -at double -p Eta  platinum;\naddAttr -ln \"EtaZ\"  -at double -p Eta  platinum;\nsetAttr -type double3 platinum.Eta 1.611123 1.267927 1.215836;\nsetAttr -e-keyable true platinum.Eta;\nsetAttr -e-keyable true platinum.EtaX;\nsetAttr -e-keyable true platinum.EtaY;\nsetAttr -e-keyable true platinum.EtaZ;\naddAttr -ln \"K\"  -at double3  platinum;\naddAttr -ln \"KX\"  -at double -p K  platinum;\naddAttr -ln \"KY\"  -at double -p K  platinum;\naddAttr -ln \"KZ\"  -at double -p K  platinum;\nsetAttr -type double3 platinum.K 1.238399 0.974601 0.934560;\nsetAttr -e-keyable true platinum.K;\nsetAttr -e-keyable true platinum.KX;\nsetAttr -e-keyable true platinum.KY;\nsetAttr -e-keyable true platinum.KZ;\n\n// Coating\naddAttr -ln \"Weight\" -nn \"Weight\" -at double  -min 0 -max 1 -dv 0.001 platinum;\nsetAttr -e-keyable true platinum.Weight;\n\naddAttr -ln \"Thickness\" -nn \"Thickness\" -at double  -min 0 -max 10 -dv 0.001 platinum;\nsetAttr -e-keyable true platinum.Thickness;\n\naddAttr -ln \"Sigma\" -nn \"Sigma\" -at double  -min 0 -max 1 -dv 0.001 platinum;\nsetAttr -e-keyable true platinum.Sigma;\n\naddAttr -ln \"IOR\" -nn \"IOR\" -at double  -min 1 -max 10 -dv 1.5 platinum;\nsetAttr -e-keyable true platinum.IOR;\n\n//RGB: 1 0.765557 0.336057\nsetAttr \"platinum.color\" -type double3 0.672411 0.637331 0.585456;\nsetAttr \"platinum.specularColor\" -type double3 0.672411 0.637331 0.585456;\n" 
+        -sourceType "mel" 
+        -commandRepeatable 1
+        -flat 1
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "Silver" 
+        -enableBackground 0
+        -backgroundColor 0 0 0 
+        -highlightColor 0.321569 0.521569 0.65098 
+        -align "center" 
+        -label "Silver" 
+        -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
+        -font "plainLabelFont" 
+        -imageOverlayLabel "Silver" 
+        -overlayLabelColor 0.8 0.8 0.8 
+        -overlayLabelBackColor 0 0 0 0.5 
+        -image "commandButton.png" 
+        -image1 "commandButton.png" 
+        -style "iconOnly" 
+        -marginWidth 4
+        -marginHeight 4
+        -command "//Ag_silver.txt\n//n=0.066461 0.051769 0.038766\n//k=5.172729 3.346289 2.299961\n//rgb=0.971519 0.959915 0.915324\n\nshadingNode -asShader phong -name silver;\nsets -renderable true -noSurfaceShader true -empty -name silverSG;\nconnectAttr -f silver.outColor silverSG.surfaceShader;\naddAttr -ln \"Type\" -nn \"Type\" -at \"enum\" -en \"DIFFUSE:ORENNAYAR:TRANSLUCENT:GLOSSY:MIRROR:GLASS:ROUGHGLASS:METAL:SUBSTRATE:EMITTER:CLEARCOAT:SHADOW:\" -dv 7;  \naddAttr -ln \"RoughnessU\" -nn \"RoughnessU\" -at double  -min 0 -max 1 -dv 0.001 silver;\nsetAttr -e-keyable true silver.RoughnessU;\naddAttr -ln \"RoughnessV\" -nn \"RoughnessV\" -at double  -min 0 -max 1 -dv .001 silver;\nsetAttr -e-keyable true silver.RoughnessV;\naddAttr -ln \"Eta\"  -at double3  silver;\naddAttr -ln \"EtaX\"  -at double -p Eta  silver;\naddAttr -ln \"EtaY\"  -at double -p Eta  silver;\naddAttr -ln \"EtaZ\"  -at double -p Eta  silver;\nsetAttr -type double3 silver.Eta 0.066461 0.051769 0.038766;\nsetAttr -e-keyable true silver.Eta;\nsetAttr -e-keyable true silver.EtaX;\nsetAttr -e-keyable true silver.EtaY;\nsetAttr -e-keyable true silver.EtaZ;\naddAttr -ln \"K\"  -at double3  silver;\naddAttr -ln \"KX\"  -at double -p K  silver;\naddAttr -ln \"KY\"  -at double -p K  silver;\naddAttr -ln \"KZ\"  -at double -p K  silver;\nsetAttr -type double3 silver.K 5.172729 3.346289 2.299961;\nsetAttr -e-keyable true silver.K;\nsetAttr -e-keyable true silver.KX;\nsetAttr -e-keyable true silver.KY;\nsetAttr -e-keyable true silver.KZ;\n\n// Coating\naddAttr -ln \"Weight\" -nn \"Weight\" -at double  -min 0 -max 1 -dv 0.001 silver;\nsetAttr -e-keyable true silver.Weight;\n\naddAttr -ln \"Thickness\" -nn \"Thickness\" -at double  -min 0 -max 10 -dv 0.001 silver;\nsetAttr -e-keyable true silver.Thickness;\n\naddAttr -ln \"Sigma\" -nn \"Sigma\" -at double  -min 0 -max 1 -dv 0.001 silver;\nsetAttr -e-keyable true silver.Sigma;\n\naddAttr -ln \"IOR\" -nn \"IOR\" -at double  -min 1 -max 10 -dv 1.5 silver;\nsetAttr -e-keyable true silver.IOR;\n\n//RGB: 1 0.765557 0.336057\nsetAttr \"silver.color\" -type double3 0.971519 0.959915 0.915324;\nsetAttr \"silver.specularColor\" -type double3 0.971519 0.959915 0.915324;\n" 
+        -sourceType "mel" 
+        -commandRepeatable 1
+        -flat 1
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "Titanium" 
+        -enableBackground 0
+        -backgroundColor 0 0 0 
+        -highlightColor 0.321569 0.521569 0.65098 
+        -align "center" 
+        -label "Titanium" 
+        -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
+        -font "plainLabelFont" 
+        -imageOverlayLabel "Titanium" 
+        -overlayLabelColor 0.8 0.8 0.8 
+        -overlayLabelBackColor 0 0 0 0.5 
+        -image "commandButton.png" 
+        -image1 "commandButton.png" 
+        -style "iconOnly" 
+        -marginWidth 4
+        -marginHeight 4
+        -command "//Ti_titanium.txt\n//n=3.268461 2.374725 2.020458\n//k=4.562731 3.217677 2.721957\n//rgb=0.541931 0.496791 0.449419\n\nshadingNode -asShader phong -name titanium;\nsets -renderable true -noSurfaceShader true -empty -name titaniumSG;\nconnectAttr -f titanium.outColor titaniumSG.surfaceShader;\naddAttr -ln \"Type\" -nn \"Type\" -at \"enum\" -en \"DIFFUSE:ORENNAYAR:TRANSLUCENT:GLOSSY:MIRROR:GLASS:ROUGHGLASS:METAL:SUBSTRATE:EMITTER:CLEARCOAT:SHADOW:\" -dv 7;  \naddAttr -ln \"RoughnessU\" -nn \"RoughnessU\" -at double  -min 0 -max 1 -dv 0.001 titanium;\nsetAttr -e-keyable true titanium.RoughnessU;\naddAttr -ln \"RoughnessV\" -nn \"RoughnessV\" -at double  -min 0 -max 1 -dv .001 titanium;\nsetAttr -e-keyable true titanium.RoughnessV;\naddAttr -ln \"Eta\"  -at double3  titanium;\naddAttr -ln \"EtaX\"  -at double -p Eta  titanium;\naddAttr -ln \"EtaY\"  -at double -p Eta  titanium;\naddAttr -ln \"EtaZ\"  -at double -p Eta  titanium;\nsetAttr -type double3 titanium.Eta 3.268461 2.374725 2.020458;\nsetAttr -e-keyable true titanium.Eta;\nsetAttr -e-keyable true titanium.EtaX;\nsetAttr -e-keyable true titanium.EtaY;\nsetAttr -e-keyable true titanium.EtaZ;\naddAttr -ln \"K\"  -at double3  titanium;\naddAttr -ln \"KX\"  -at double -p K  titanium;\naddAttr -ln \"KY\"  -at double -p K  titanium;\naddAttr -ln \"KZ\"  -at double -p K  titanium;\nsetAttr -type double3 titanium.K 4.562731 3.217677 2.721957;\nsetAttr -e-keyable true titanium.K;\nsetAttr -e-keyable true titanium.KX;\nsetAttr -e-keyable true titanium.KY;\nsetAttr -e-keyable true titanium.KZ;\n\n// Coating\naddAttr -ln \"Weight\" -nn \"Weight\" -at double  -min 0 -max 1 -dv 0.001 titanium;\nsetAttr -e-keyable true titanium.Weight;\n\naddAttr -ln \"Thickness\" -nn \"Thickness\" -at double  -min 0 -max 10 -dv 0.001 titanium;\nsetAttr -e-keyable true titanium.Thickness;\n\naddAttr -ln \"Sigma\" -nn \"Sigma\" -at double  -min 0 -max 1 -dv 0.001 titanium;\nsetAttr -e-keyable true titanium.Sigma;\n\naddAttr -ln \"IOR\" -nn \"IOR\" -at double  -min 1 -max 10 -dv 1.5 titanium;\nsetAttr -e-keyable true titanium.IOR;\n\n//RGB: 1 0.765557 0.336057\nsetAttr \"titanium.color\" -type double3 0.541931 0.496791 0.449419;\nsetAttr \"titanium.specularColor\" -type double3 0.541931 0.496791 0.449419;\n" 
+        -sourceType "mel" 
+        -commandRepeatable 1
+        -flat 1
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "Glass" 
+        -enableBackground 0
+        -backgroundColor 0 0 0 
+        -highlightColor 0.321569 0.521569 0.65098 
+        -align "center" 
+        -label "Glass" 
+        -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
+        -font "plainLabelFont" 
+        -imageOverlayLabel "Glass" 
+        -overlayLabelColor 0.8 0.8 0.8 
+        -overlayLabelBackColor 0 0 0 0.5 
+        -image "commandButton.png" 
+        -image1 "commandButton.png" 
+        -style "iconOnly" 
+        -marginWidth 4
+        -marginHeight 4
+        -command "shadingNode -asShader phong -name glass;\nsets -renderable true -noSurfaceShader true -empty -name glassSG;\nconnectAttr -f glass.outColor glassSG.surfaceShader;\naddAttr -ln \"Type\" -nn \"Type\" -at \"enum\" -en \"DIFFUSE:ORENNAYAR:TRANSLUCENT:GLOSSY:MIRROR:GLASS:ROUGHGLASS:METAL:SUBSTRATE:EMITTER:CLEARCOAT:SHADOW:\" -dv 5;  \naddAttr -ln \"IOR\" -nn \"IOR\" -at double  -min 1 -max 10 -dv 1.5 glass;\nsetAttr -e-keyable true glass.IOR;\n\n//RGB: 1 0.765557 0.336057\nsetAttr \"glass.color\" -type double3 1 1 1 ;\nsetAttr \"glass.transparency\" -type double3 1 1 1 ;\nsetAttr \"glass.specularColor\" -type double3 1 1 1;" 
+        -sourceType "mel" 
+        -commandRepeatable 1
+        -flat 1
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "RoughGlass" 
+        -enableBackground 0
+        -backgroundColor 0 0 0 
+        -highlightColor 0.321569 0.521569 0.65098 
+        -align "center" 
+        -label "RoughGlass" 
+        -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
+        -font "plainLabelFont" 
+        -imageOverlayLabel "RoughGlass" 
+        -overlayLabelColor 0.8 0.8 0.8 
+        -overlayLabelBackColor 0 0 0 0.5 
+        -image "commandButton.png" 
+        -image1 "commandButton.png" 
+        -style "iconOnly" 
+        -marginWidth 4
+        -marginHeight 4
+        -command "shadingNode -asShader phong -name roughglass;\nsets -renderable true -noSurfaceShader true -empty -name roughglassSG;\nconnectAttr -f roughglass.outColor roughglassSG.surfaceShader;\naddAttr -ln \"Type\" -nn \"Type\" -at \"enum\" -en \"DIFFUSE:ORENNAYAR:TRANSLUCENT:GLOSSY:MIRROR:GLASS:ROUGHGLASS:METAL:SUBSTRATE:EMITTER:CLEARCOAT:SHADOW:\" -dv 6;  \naddAttr -ln \"RoughnessU\" -nn \"RoughnessU\" -at double  -min 0 -max 1 -dv 0.001 roughglass;\nsetAttr -e-keyable true roughglass.RoughnessU;\naddAttr -ln \"RoughnessV\" -nn \"RoughnessV\" -at double  -min 0 -max 1 -dv .001 roughglass;\nsetAttr -e-keyable true roughglass.RoughnessV;\naddAttr -ln \"IOR\" -nn \"IOR\" -at double  -min 1 -max 10 -dv 1.5 roughglass;\nsetAttr -e-keyable true roughglass.IOR;\n\n//RGB: 1 0.765557 0.336057\nsetAttr \"roughglass.color\" -type double3 1 1 1 ;\nsetAttr \"roughglass.transparency\" -type double3 1 1 1 ;\nsetAttr \"roughglass.specularColor\" -type double3 1 1 1;" 
+        -sourceType "mel" 
+        -commandRepeatable 1
+        -flat 1
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "Plastic" 
+        -enableBackground 0
+        -backgroundColor 0 0 0 
+        -highlightColor 0.321569 0.521569 0.65098 
+        -align "center" 
+        -label "Plastic" 
+        -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
+        -font "plainLabelFont" 
+        -imageOverlayLabel "Plastic" 
+        -overlayLabelColor 0.8 0.8 0.8 
+        -overlayLabelBackColor 0 0 0 0.5 
+        -image "commandButton.png" 
+        -image1 "commandButton.png" 
+        -style "iconOnly" 
+        -marginWidth 4
+        -marginHeight 4
+        -command "shadingNode -asShader phong -name plastic;\nsets -renderable true -noSurfaceShader true -empty -name plasticSG;\nconnectAttr -f plastic.outColor plasticSG.surfaceShader;\naddAttr -ln \"Type\" -nn \"Type\" -at \"enum\" -en \"DIFFUSE:ORENNAYAR:TRANSLUCENT:GLOSSY:MIRROR:GLASS:ROUGHGLASS:METAL:SUBSTRATE:EMITTER:CLEARCOAT:SHADOW:\" -dv 3;  \naddAttr -ln \"RoughnessU\" -nn \"RoughnessU\" -at double  -min 0 -max 1 -dv 0.001 plastic;\nsetAttr -e-keyable true plastic.RoughnessU;\naddAttr -ln \"RoughnessV\" -nn \"RoughnessV\" -at double  -min 0 -max 1 -dv .001 plastic;\nsetAttr -e-keyable true plastic.RoughnessV;\naddAttr -ln \"IOR\" -nn \"IOR\" -at double  -min 0 -max 10 -dv 1.5 plastic;\nsetAttr -e-keyable true plastic.IOR;\n\n//RGB: 1 0.765557 0.336057\nsetAttr \"plastic.color\" -type double3 1 1 1 ;\nsetAttr \"plastic.specularColor\" -type double3 1 1 1;" 
+        -sourceType "mel" 
+        -commandRepeatable 1
+        -flat 1
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "DiskLight" 
+        -enableBackground 0
+        -backgroundColor 0 0 0 
+        -highlightColor 0.321569 0.521569 0.65098 
+        -align "center" 
+        -label "DiskLight" 
+        -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
+        -font "plainLabelFont" 
+        -imageOverlayLabel "DiskLight" 
+        -overlayLabelColor 0.8 0.8 0.8 
+        -overlayLabelBackColor 0 0 0 0.5 
+        -image "light.png" 
+        -image1 "light.png" 
+        -style "iconOnly" 
+        -marginWidth 4
+        -marginHeight 4
+        -command "global proc string getObjectShapeNode ( string $object ) {\n  string $shapes[] = `listRelatives -children -shapes $object`;\n  return $shapes[0];\n}\n\ndefaultAreaLight(1, 1,1,1, 0, 0, 0,0,0, 1, 0);\nfor ($node in `ls -selection -long`)\n{\n\t//$shapenode = getObjectShapeNode($node);\n\t//setAttr ($shapenode+\".visibility\")(0);\n\t$lightnode = $node;\n\taddAttr -ln \"Type\"  -at \"enum\" -en \"QUAD:SPHERE:DISK:\" -defaultValue 2 $node;\n\taddAttr -ln \"TwoSided\" -nn \"TwoSided\" -at bool -defaultValue 1  $node;\n\t//polyDisc -sides 16 -subdivisionMode 4 -subdivisions 1 -radius 1;\n\t//for ($meshnode in `ls -selection`){\n \t\t//setAttr ($meshnode+\".rotateX\")(-90);\n\t\t//setAttr ($meshnode+\".template\")(1);\n \t\t//parent $meshnode $lightnode;\n\t//}\n\tselect $lightnode;\n}" 
+        -sourceType "mel" 
+        -commandRepeatable 1
+        -flat 1
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "QuadLight" 
+        -enableBackground 0
+        -backgroundColor 0 0 0 
+        -highlightColor 0.321569 0.521569 0.65098 
+        -align "center" 
+        -label "QuadLight" 
+        -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
+        -font "plainLabelFont" 
+        -imageOverlayLabel "QuadLight" 
+        -overlayLabelColor 0.8 0.8 0.8 
+        -overlayLabelBackColor 0 0 0 0.5 
+        -image "light.png" 
+        -image1 "light.png" 
+        -style "iconOnly" 
+        -marginWidth 4
+        -marginHeight 4
+        -command "global proc string getObjectShapeNode ( string $object ) {\n  string $shapes[] = `listRelatives -children -shapes $object`;\n  return $shapes[0];\n}\n\ndefaultAreaLight(1, 1,1,1, 0, 0, 0,0,0, 1, 0);\nfor ($node in `ls -selection -long`)\n{\n\t//$shapenode = getObjectShapeNode($node);\n\t//setAttr ($shapenode+\".visibility\")(0);\n\t$lightnode = $node;\n\taddAttr -ln \"Type\"  -at \"enum\" -en \"QUAD:SPHERE:DISK:\" -defaultValue 0 $node;\n\taddAttr -ln \"TwoSided\" -nn \"TwoSided\" -at bool -defaultValue 1  $node;\n\t//polyPlane -w 2 -h 2 -sx 1 -sy 1 -ax 0 0 -1 -cuv 2 -ch 1;\n\t//for ($meshnode in `ls -selection`){\n\t\t//setAttr ($meshnode+\".displayNormal\")(1);\n\t\t//setAttr ($meshnode+\".normalSize\")(1);\n\t\t//setAttr ($meshnode+\".template\")(1);\n \t\t//parent $meshnode $lightnode;\n\t//}\n\tselect $lightnode;\n}\n" 
+        -sourceType "mel" 
+        -commandRepeatable 1
+        -flat 1
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "SphereLight" 
+        -enableBackground 0
+        -backgroundColor 0 0 0 
+        -highlightColor 0.321569 0.521569 0.65098 
+        -align "center" 
+        -label "SphereLight" 
+        -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
+        -font "plainLabelFont" 
+        -imageOverlayLabel "SphereLight" 
+        -overlayLabelColor 0.8 0.8 0.8 
+        -overlayLabelBackColor 0 0 0 0.5 
+        -image "light.png" 
+        -image1 "light.png" 
+        -style "iconOnly" 
+        -marginWidth 4
+        -marginHeight 4
+        -command "global proc string getObjectShapeNode ( string $object ) {\n  string $shapes[] = `listRelatives -children -shapes $object`;\n  return $shapes[0];\n}\n\ndefaultAreaLight(1, 1,1,1, 0, 0, 0,0,0, 1, 0);\nfor ($node in `ls -selection -long`)\n{\n\t//$shapenode = getObjectShapeNode($node);\n\t//setAttr ($shapenode+\".visibility\")(0);\n\t$lightnode = $node;\n\taddAttr -ln \"Type\"  -at \"enum\" -en \"QUAD:SPHERE:DISK:\" -defaultValue 1 $node;\n\taddAttr -ln \"TwoSided\" -nn \"TwoSided\" -at bool -defaultValue 1  $node;\n\t//polySphere -r 1 -sx 20 -sy 20 -ax 0 0 -1 -cuv 2 -ch 1;\n\t//for ($meshnode in `ls -selection`){\n\t\t//setAttr ($meshnode+\".template\")(1);\n \t\t//parent $meshnode $lightnode;\n\t//}\n\tselect $lightnode;\n}\n" 
+        -sourceType "mel" 
+        -commandRepeatable 1
+        -flat 1
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "Emitter" 
+        -enableBackground 0
+        -backgroundColor 0 0 0 
+        -highlightColor 0.321569 0.521569 0.65098 
+        -align "center" 
+        -label "Emitter" 
+        -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
+        -font "plainLabelFont" 
+        -imageOverlayLabel "Emitter" 
+        -overlayLabelColor 0.8 0.8 0.8 
+        -overlayLabelBackColor 0 0 0 0.5 
+        -image "Light.png" 
+        -image1 "Light.png" 
+        -style "iconOnly" 
+        -marginWidth 4
+        -marginHeight 4
+        -command "shadingNode -asShader phong -name emitter;\nsets -renderable true -noSurfaceShader true -empty -name emitterSG;\nconnectAttr -f emitter.outColor emitterSG.surfaceShader;\naddAttr -ln \"Type\" -nn \"Type\" -at \"enum\" -en \"DIFFUSE:ORENNAYAR:TRANSLUCENT:GLOSSY:MIRROR:GLASS:ROUGHGLASS:METAL:SUBSTRATE:EMITTER:CLEARCOAT:SHADOW:\" -dv 7;  \naddAttr -ln \"EmitterScale\" -nn \"EmitterScale\" -at double -min 1 -max 1000 -dv 1 emitter;\nsetAttr -e-keyable true emitter.EmitterScale;\nsetAttr \"emitter.color\" -type double3 1 1 1 ;\nsetAttr \"emitter.incandescence\" -type double3 1 1 1;" 
+        -sourceType "mel" 
+        -commandRepeatable 1
+        -flat 1
+    ;
+
+} 

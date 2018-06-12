@@ -281,6 +281,9 @@
     <None Include="..\docs\index.md">
       <Filter>pages</Filter>
     </None>
+    <None Include="mel\shelf_NOOR.mel">
+      <Filter>mel</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="shader">
@@ -306,6 +309,9 @@
     </Filter>
     <Filter Include="pages">
       <UniqueIdentifier>{cf3f32d6-97f7-4fc7-ba87-41db23975507}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="mel">
+      <UniqueIdentifier>{09e821e2-6e61-4010-9e0c-16abee5f0a6f}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
