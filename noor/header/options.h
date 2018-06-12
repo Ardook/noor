@@ -27,49 +27,33 @@ SOFTWARE.
 const std::string models_dir( "c:\\dev\\assets\\models\\" );
 const std::string texture_dir( "c:\\dev\\assets\\textures\\hdr\\" );
 const std::vector<std::string> hdr_files = {
-    /*0*/std::string( texture_dir + "ennis.hdr" )
-    /*1*/,std::string( texture_dir + "skylight-morn.exr" )
-    /*2*/,std::string( texture_dir + "pisa_latlong.exr" )
-    /*3*/,std::string( texture_dir + "sky.exr" )
-    /*4*/,std::string( texture_dir + "skylight-morn.exr" )
-    /*5*/,std::string( texture_dir + "ridgecrest.hdr" )
-    /*6*/,std::string( texture_dir + "Sky019.exr" )
-    /*7*/,std::string( texture_dir + "CedarCity.hdr" )
-    /*8*/,std::string( texture_dir + "hdri_sky_01_full.hdr" )
-    /*9*/,std::string( texture_dir + "hdri_sky_02_full.hdr" )
-    /*10*/,std::string( texture_dir + "hdri_sky_03_full.hdr" )
-    /*11*/,std::string( texture_dir + "Annecy-8000x4000.hdr" )
-    /*12*/,std::string( texture_dir + "Annecy-4000x2000.hdr" )
-    /*13*/,std::string( texture_dir + "octane_studio1.hdr" )
-    /*14*/,std::string( texture_dir + "octane_studio2.hdr" )
-    /*15*/,std::string( texture_dir + "octane_studio3.hdr" )
-    /*16*/,std::string( texture_dir + "octane_studio4.hdr" )
-    /*17*/,std::string( texture_dir + "octane_studio5.hdr" )
-    /*18*/,std::string( texture_dir + "octane_studio6.hdr" )
-    /*19*/,std::string( texture_dir + "octane_studio7.hdr" )
-    /*20*/,std::string( texture_dir + "octane_studio8.hdr" )
-    /*21*/,std::string( texture_dir + "octane_studio9.hdr" )
-    /*22*/,std::string( texture_dir + "octane_studio10.hdr" )
-    /*23*/,std::string( texture_dir + "georgentor_4k.hdr" )
-    /*24*/,std::string( texture_dir + "vignaioli_night_4k.hdr" )
-    /*25*/,std::string( texture_dir + "san_giuseppe_bridge_4k.hdr" )
-    /*26*/,std::string( texture_dir + "hotel_room_4k.hdr" )
-    /*27*/,std::string( texture_dir + "cayley_interior_4k.hdr" )
-    /*28*/,std::string( texture_dir + "hall_con.hdr" )
-    /*29*/,std::string( texture_dir + "envmap.exr" )
-    /*30*/,std::string( texture_dir + "harties_4k.hdr" )
-    /*31*/,std::string( texture_dir + "flower_road_4k.hdr" )
-    /*32*/,std::string( texture_dir + "noon_grass_4k.hdr" )
-    /*33*/,std::string( texture_dir + "umhlanga_sunrise_4k.hdr" )
-    /*34*/,std::string( texture_dir + "noon_grass_8k.hdr" )
-    /*35*/,std::string( texture_dir + "canada_montreal_loft_max_sunny.exr" )
-    /*36*/,std::string( texture_dir + "canada_montreal_nad_cafeteria_bright.exr" )
-    /*37*/,std::string( texture_dir + "canada_montreal_nad_photorealism.exr" )
-    /*38*/,std::string( texture_dir + "canada_montreal_pierre_bathroom.exr" )
-    /*39*/,std::string( texture_dir + "canada_montreal_pierre_kitchen.exr" )
-    /*40*/,std::string( texture_dir + "canada_montreal_thea.exr" )
-    /*41*/,std::string( texture_dir + "studio_small_06_2k.hdr" )
-    /*42*/,std::string( texture_dir + "studio_small_01_2k.hdr" )
+    /*0*/std::string( texture_dir + "skylight-morn.exr" ),
+    /*1*/std::string( texture_dir + "skylight-morn.exr" ),
+    /*2*/std::string( texture_dir + "pisa_latlong.exr" ),
+    /*3*/std::string( texture_dir + "sky.exr" ),
+    /*4*/std::string( texture_dir + "hdri_sky_01_full.hdr" ),
+    /*5*/std::string( texture_dir + "hdri_sky_02_full.hdr" ),
+    /*6*/std::string( texture_dir + "hdri_sky_03_full.hdr" ),
+    /*7*/std::string( texture_dir + "georgentor_4k.hdr" ),
+    /*8*/std::string( texture_dir + "vignaioli_night_4k.hdr" ),
+    /*9*/std::string( texture_dir + "san_giuseppe_bridge_4k.hdr" ),
+    /*10*/std::string( texture_dir + "hotel_room_4k.hdr" ),
+    /*11*/std::string( texture_dir + "cayley_interior_4k.hdr" ),
+    /*12*/std::string( texture_dir + "hall_con.hdr" ),
+    /*13*/std::string( texture_dir + "envmap.exr" ),
+    /*14*/std::string( texture_dir + "harties_4k.hdr" ),
+    /*15*/std::string( texture_dir + "flower_road_4k.hdr" ),
+    /*16*/std::string( texture_dir + "noon_grass_4k.hdr" ),
+    /*17*/std::string( texture_dir + "umhlanga_sunrise_4k.hdr" ),
+    /*18*/std::string( texture_dir + "noon_grass_8k.hdr" ),
+    /*19*/std::string( texture_dir + "canada_montreal_loft_max_sunny.exr" ),
+    /*20*/std::string( texture_dir + "canada_montreal_nad_cafeteria_bright.exr" ),
+    /*21*/std::string( texture_dir + "canada_montreal_nad_photorealism.exr" ),
+    /*22*/std::string( texture_dir + "canada_montreal_pierre_bathroom.exr" ),
+    /*23*/std::string( texture_dir + "canada_montreal_pierre_kitchen.exr" ),
+    /*24*/std::string( texture_dir + "canada_montreal_thea.exr" ),
+    /*25*/std::string( texture_dir + "studio_small_06_2k.hdr" ),
+    /*26*/std::string( texture_dir + "studio_small_01_2k.hdr" )
 };
 
 
@@ -108,34 +92,28 @@ const std::vector<std::string> model_files = {
     /*31*/  ,std::string( models_dir + "obj\\testing\\dragon.obj" )
     /*32*/  ,std::string( "C:\\Users\\ardavan\\Desktop\\fbx\\cornellbox_original.fbx" )
     /*33*/  ,std::string( "C:\\Users\\ardavan\\Desktop\\fbx\\cornellbox_spheres.fbx" )
-    /*34*/  ,std::string( "C:\\Users\\ardavan\\Desktop\\fbx\\cornellbox.fbx" )
-    /*35*/  ,std::string( "C:\\Users\\ardavan\\Desktop\\fbx\\mitsuba.fbx" )
-    /*36*/  ,std::string( "C:\\Users\\ardavan\\Desktop\\fbx\\f16.fbx" )
-    /*37*/  ,std::string( "C:\\Users\\ardavan\\Desktop\\fbx\\head.fbx" )
-    /*38*/  ,std::string( "C:\\Users\\ardavan\\Desktop\\fbx\\car.fbx" )
-    /*39*/  ,std::string( "C:\\Users\\ardavan\\Desktop\\fbx\\dragon.fbx" )
-    /*40*/  ,std::string( "C:\\Users\\ardavan\\Desktop\\fbx\\museum.fbx" )
-    /*41*/  ,std::string( "C:\\Users\\ardavan\\Desktop\\fbx\\train.fbx" )
-    /*42*/  ,std::string( "C:\\Users\\ardavan\\Desktop\\fbx\\treasure.fbx" )
-    /*43*/  ,std::string( "C:\\Users\\ardavan\\Desktop\\fbx\\cabin.fbx" )
-    /*44*/  ,std::string( "C:\\Users\\ardavan\\Desktop\\fbx\\girls.fbx" )
-    /*45*/  ,std::string( "C:\\Users\\ardavan\\Desktop\\fbx\\carnival.fbx" )
-    /*46*/  ,std::string( "C:\\Users\\ardavan\\Desktop\\fbx\\lighthouse.fbx" )
-    /*47*/  ,std::string( "C:\\Users\\ardavan\\Desktop\\fbx\\frozentest.fbx" )
-    /*48*/  ,std::string( "C:\\Users\\ardavan\\Desktop\\fbx\\instancedtest.fbx" )
-    /*49*/  ,std::string( "C:\\Users\\ardavan\\Desktop\\fbx\\sphere.fbx" )
+    /*34*/  ,std::string( "C:\\Users\\ardavan\\Desktop\\fbx\\dragon.fbx" )
+    /*35*/  ,std::string( "C:\\Users\\ardavan\\Desktop\\fbx\\museum.fbx" )
+    /*36*/  ,std::string( "C:\\Users\\ardavan\\Desktop\\fbx\\train.fbx" )
+    /*37*/  ,std::string( "C:\\Users\\ardavan\\Desktop\\fbx\\treasure.fbx" )
+    /*38*/  ,std::string( "C:\\Users\\ardavan\\Desktop\\fbx\\cabin.fbx" )
+    /*39*/  ,std::string( "C:\\Users\\ardavan\\Desktop\\fbx\\carnival.fbx" )
+    /*40*/  ,std::string( "C:\\Users\\ardavan\\Desktop\\fbx\\lighthouse.fbx" )
+    /*41*/  ,std::string( "C:\\Users\\ardavan\\Desktop\\fbx\\frozentest.fbx" )
+    /*42*/  ,std::string( "C:\\Users\\ardavan\\Desktop\\fbx\\instancedtest.fbx" )
+    /*43*/  ,std::string( "C:\\Users\\ardavan\\Desktop\\fbx\\lighttest.fbx" )
+    /*44*/  ,std::string( "C:\\Users\\ardavan\\Desktop\\fbx\\indoor.fbx" )
+    /*45*/  ,std::string( "C:\\Users\\ardavan\\Desktop\\fbx\\outdoor.fbx" )
+    /*46*/  ,std::string( "C:\\Users\\ardavan\\Desktop\\fbx\\combo_lores.fbx" )
+    /*47*/  ,std::string( "C:\\Users\\ardavan\\Desktop\\fbx\\combo_hires.fbx" )
+    /*48*/  ,std::string( "C:\\Users\\ardavan\\Desktop\\fbx\\combo.fbx" )
+    /*49*/  ,std::string( "C:\\Users\\ardavan\\Desktop\\fbx\\test.fbx" )
     /*50*/  ,std::string( "C:\\Users\\ardavan\\Desktop\\fbx\\temp.fbx" )
-    /*51*/  ,std::string( "C:\\Users\\ardavan\\Desktop\\fbx\\lighttest.fbx" )
-    /*52*/  ,std::string( "C:\\Users\\ardavan\\Desktop\\fbx\\indoor.fbx" )
-    /*53*/  ,std::string( "C:\\Users\\ardavan\\Desktop\\fbx\\outdoor.fbx" )
-    /*54*/  ,std::string( "C:\\Users\\ardavan\\Desktop\\fbx\\combo_lores.fbx" )
-    /*55*/  ,std::string( "C:\\Users\\ardavan\\Desktop\\fbx\\combo_hires.fbx" )
-    /*56*/  ,std::string( "C:\\Users\\ardavan\\Desktop\\fbx\\combo.fbx" )
-    /*57*/  ,std::string( "C:\\Users\\ardavan\\Desktop\\fbx\\test.fbx" )
 };
+
 std::unordered_map<std::string, float> options = {
 { "-model",(float) 0},
-{ "-hdr",(float) 29 },
+{ "-hdr",(float) 13 },
 { "-skydome",(float) 0 },
 { "-width",(float) 1024 },
 { "-height",(float) 1024 },
@@ -145,7 +123,7 @@ std::unordered_map<std::string, float> options = {
 { "-bounces",(float) 2 },
 { "-rr",(float) 1 },
 { "-gpu",(float) 0 },
-{ "-bvh_num_bins",(float) 64 },
+{ "-bvh_num_bins",(float) 16 },
 { "-bvh_max_height",(float) 32 },
 { "-bvh_min_leaf_tris",(float) 2 },
 { "-bvh_max_leaf_tris",(float) 2 },

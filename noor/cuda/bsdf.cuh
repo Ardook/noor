@@ -59,33 +59,37 @@ __forceinline__ __device__
 float Pdf(
     CudaBxDF* bxdf,
     const CudaIntersection& I,
-    const float3 &woWorld,
-    const float3 &wiWorld
+    const float3 &wo,
+    const float3 &wi
 ) {
     switch ( bxdf->_index ) {
         // reflections
+        case ShadowCatcher:
+            return ( (CudaShadowCatcher*) bxdf )->Pdf( I, wo, wi );
         case LambertReflection:
-            return ( (CudaLambertianReflection*) bxdf )->Pdf( I, woWorld, wiWorld );
+            return ( (CudaLambertianReflection*) bxdf )->Pdf( I, wo, wi );
         case SpecularReflectionNoOp:
         case SpecularReflectionDielectric:
-            return ( (CudaSpecularReflection*) bxdf )->Pdf( I, woWorld, wiWorld );
+            return ( (CudaSpecularReflection*) bxdf )->Pdf( I, wo, wi );
         case MicrofacetReflectionDielectric:
         case MicrofacetReflectionConductor:
-            return ( (CudaMicrofacetReflection*) bxdf )->Pdf( I, woWorld, wiWorld );
+            return ( (CudaMicrofacetReflection*) bxdf )->Pdf( I, wo, wi );
 
         // transmissions
         case LambertTransmission:
-            return ( (CudaLambertianTransmission*) bxdf )->Pdf( I, woWorld, wiWorld );
+            return ( (CudaLambertianTransmission*) bxdf )->Pdf( I, wo, wi );
         case SpecularTransmission:
-            return ( (CudaSpecularTransmission*) bxdf )->Pdf( I, woWorld, wiWorld );
+            return ( (CudaSpecularTransmission*) bxdf )->Pdf( I, wo, wi );
         case MicrofacetTransmission:
-            return ( (CudaMicrofacetTransmission*) bxdf )->Pdf( I, woWorld, wiWorld );
+            return ( (CudaMicrofacetTransmission*) bxdf )->Pdf( I, wo, wi );
 
         // multi-lobes
         case FresnelBlend:
-            return ( (CudaFresnelBlend*) bxdf )->Pdf( I, woWorld, wiWorld );
+            return ( (CudaFresnelBlend*) bxdf )->Pdf( I, wo, wi );
         case FresnelSpecular:
-            return ( (CudaFresnelSpecular*) bxdf )->Pdf( I, woWorld, wiWorld );
+            return ( (CudaFresnelSpecular*) bxdf )->Pdf( I, wo, wi );
+        case ClearCoat:
+            return ( (CudaClearCoat*) bxdf )->Pdf( I, wo, wi );
         default:
             return 0.f;
     }
@@ -95,33 +99,37 @@ __forceinline__ __device__
 float3 f(
     CudaBxDF* bxdf,
     const CudaIntersection& I,
-    const float3 &woWorld,
-    const float3 &wiWorld
+    const float3 &wo,
+    const float3 &wi
 ) {
     switch ( bxdf->_index ) {
         // reflections
+        case ShadowCatcher:
+            return ( (CudaShadowCatcher*) bxdf )->f( I, wo, wi );
         case LambertReflection:
-            return ( (CudaLambertianReflection*) bxdf )->f( I, woWorld, wiWorld );
+            return ( (CudaLambertianReflection*) bxdf )->f( I, wo, wi );
         case SpecularReflectionNoOp:
         case SpecularReflectionDielectric:
-            return ( (CudaSpecularReflection*) bxdf )->f( I, woWorld, wiWorld );
+            return ( (CudaSpecularReflection*) bxdf )->f( I, wo, wi );
         case MicrofacetReflectionDielectric:
         case MicrofacetReflectionConductor:
-            return ( (CudaMicrofacetReflection*) bxdf )->f( I, woWorld, wiWorld );
+            return ( (CudaMicrofacetReflection*) bxdf )->f( I, wo, wi );
 
         // transmissions
         case LambertTransmission:
-            return ( (CudaLambertianTransmission*) bxdf )->f( I, woWorld, wiWorld );
+            return ( (CudaLambertianTransmission*) bxdf )->f( I, wo, wi );
         case SpecularTransmission:
-            return ( (CudaSpecularTransmission*) bxdf )->f( I, woWorld, wiWorld );
+            return ( (CudaSpecularTransmission*) bxdf )->f( I, wo, wi );
         case MicrofacetTransmission:
-            return ( (CudaMicrofacetTransmission*) bxdf )->f( I, woWorld, wiWorld );
+            return ( (CudaMicrofacetTransmission*) bxdf )->f( I, wo, wi );
 
         // multi-lobes
         case FresnelBlend:
-            return ( (CudaFresnelBlend*) bxdf )->f( I, woWorld, wiWorld );
+            return ( (CudaFresnelBlend*) bxdf )->f( I, wo, wi );
         case FresnelSpecular:
-            return ( (CudaFresnelSpecular*) bxdf )->f( I, woWorld, wiWorld );
+            return ( (CudaFresnelSpecular*) bxdf )->f( I, wo, wi );
+        case ClearCoat:
+            return ( (CudaClearCoat*) bxdf )->f( I, wo, wi );
         default:
             return _constant_spec._black;
     }
@@ -131,36 +139,40 @@ __forceinline__ __device__
 float3 Sample_f(
     CudaBxDF* bxdf,
     const CudaIntersection& I,
-    const float3 &woWorld,
-    float3 &wiWorld,
+    const float3 &wo,
+    float3 &wi,
     const float2 &u,
     float &pdf,
     BxDFType &sampledType
 ) {
     switch ( bxdf->_index ) {
         // reflections
+        case ShadowCatcher:
+            return ( (CudaShadowCatcher*) bxdf )->Sample_f( I, wo, wi, u, pdf, sampledType );
         case LambertReflection:
-            return ( (CudaLambertianReflection*) bxdf )->Sample_f( I, woWorld, wiWorld, u, pdf, sampledType );
+            return ( (CudaLambertianReflection*) bxdf )->Sample_f( I, wo, wi, u, pdf, sampledType );
         case SpecularReflectionNoOp:
         case SpecularReflectionDielectric:
-            return ( (CudaSpecularReflection*) bxdf )->Sample_f( I, woWorld, wiWorld, u, pdf, sampledType );
+            return ( (CudaSpecularReflection*) bxdf )->Sample_f( I, wo, wi, u, pdf, sampledType );
         case MicrofacetReflectionDielectric:
         case MicrofacetReflectionConductor:
-            return ( (CudaMicrofacetReflection*) bxdf )->Sample_f( I, woWorld, wiWorld, u, pdf, sampledType );
+            return ( (CudaMicrofacetReflection*) bxdf )->Sample_f( I, wo, wi, u, pdf, sampledType );
 
         // transmissions
         case LambertTransmission:
-            return ( (CudaLambertianTransmission*) bxdf )->Sample_f( I, woWorld, wiWorld, u, pdf, sampledType );
+            return ( (CudaLambertianTransmission*) bxdf )->Sample_f( I, wo, wi, u, pdf, sampledType );
         case SpecularTransmission:
-            return ( (CudaSpecularTransmission*) bxdf )->Sample_f( I, woWorld, wiWorld, u, pdf, sampledType );
+            return ( (CudaSpecularTransmission*) bxdf )->Sample_f( I, wo, wi, u, pdf, sampledType );
         case MicrofacetTransmission:
-            return ( (CudaMicrofacetTransmission*) bxdf )->Sample_f( I, woWorld, wiWorld, u, pdf, sampledType );
+            return ( (CudaMicrofacetTransmission*) bxdf )->Sample_f( I, wo, wi, u, pdf, sampledType );
 
         // multi-lobes
         case FresnelBlend:
-            return ( (CudaFresnelBlend*) bxdf )->Sample_f( I, woWorld, wiWorld, u, pdf, sampledType );
+            return ( (CudaFresnelBlend*) bxdf )->Sample_f( I, wo, wi, u, pdf, sampledType );
         case FresnelSpecular:
-            return ( (CudaFresnelSpecular*) bxdf )->Sample_f( I, woWorld, wiWorld, u, pdf, sampledType );
+            return ( (CudaFresnelSpecular*) bxdf )->Sample_f( I, wo, wi, u, pdf, sampledType );
+        case ClearCoat:
+            return ( (CudaClearCoat*) bxdf )->Sample_f( I, wo, wi, u, pdf, sampledType );
         default:
             return _constant_spec._black;
     }
@@ -169,7 +181,6 @@ float3 Sample_f(
 class CudaBSDF {
 public:
     CudaBxDF* _bxdfs[8];
-    //BxDFArray _bxdfs;
     int _nbxdfs;
 
     __device__
@@ -186,6 +197,7 @@ public:
             if ( _bxdfs[i]->MatchesFlags( flags ) ) ++num;
         return num;
     }
+
     __device__
         float Pdf(
         const CudaIntersection& I,
@@ -208,6 +220,7 @@ public:
             }
         return matchingComps > 0 ? pdf / matchingComps : 0.f;
     }
+
     __device__
         float3 f(
         const CudaIntersection& I,
@@ -228,6 +241,7 @@ public:
             }
         return f;
     }
+
     __device__
         float3 Sample_f(
         const CudaIntersection& I,
@@ -282,9 +296,8 @@ public:
             bool reflect = dot( wiWorld, I._n ) * dot( woWorld, I._n ) > 0;
             //f = _constant_spec._black;
             for ( int i = 0; i < _nbxdfs; ++i )
-                if ( _bxdfs[i] != bxdf &&
-                    _bxdfs[i]->MatchesFlags( type ) &&
-                    ( ( reflect && ( _bxdfs[i]->_type & BSDF_REFLECTION ) ) ||
+                if ( _bxdfs[i] != bxdf && _bxdfs[i]->MatchesFlags( type ) &&
+                     ( ( reflect && ( _bxdfs[i]->_type & BSDF_REFLECTION ) ) ||
                      ( !reflect && ( _bxdfs[i]->_type & BSDF_TRANSMISSION ) ) ) )
                     f += ::f( _bxdfs[i], I, wo, wi );
         }
@@ -292,6 +305,15 @@ public:
     }
 };
 
+__forceinline__ __device__
+void factoryClearCoatBSDF( const CudaIntersection& I, CudaBSDF& bsdf ) {
+    bsdf.Add( _bxdf_manager._bxdfs[ClearCoat] );
+}
+
+__forceinline__ __device__
+void factoryShadowCatcherBSDF( const CudaIntersection& I, CudaBSDF& bsdf ) {
+    bsdf.Add( _bxdf_manager._bxdfs[ShadowCatcher] );
+}
 __forceinline__ __device__
 void factoryDiffuseBSDF( const CudaIntersection& I, CudaBSDF& bsdf ) {
     bsdf.Add( _bxdf_manager._bxdfs[LambertReflection] );
@@ -329,15 +351,13 @@ void factoryTranslucentBSDF( const CudaIntersection& I, CudaBSDF& bsdf ) {
     bsdf.Add( _bxdf_manager._bxdfs[LambertTransmission] );
 }
 
-__forceinline__ __device__
-void factorySmoothCoatingBSDF( const CudaIntersection& I, CudaBSDF& bsdf ) {
-    bsdf.Add( _bxdf_manager._bxdfs[SpecularReflectionDielectric] );
-    bsdf.Add( _bxdf_manager._bxdfs[MicrofacetReflectionConductor] );
-}
 
 __forceinline__ __device__
 void factoryBSDF( const CudaIntersection& I, CudaBSDF& bsdf ) {
     switch ( I.getMaterialType() ) {
+        case SHADOWCATCHER:
+            factoryShadowCatcherBSDF( I, bsdf );
+            break;
         case DIFFUSE:
             factoryDiffuseBSDF( I, bsdf );
             break;
@@ -362,8 +382,8 @@ void factoryBSDF( const CudaIntersection& I, CudaBSDF& bsdf ) {
         case SUBSTRATE:
             factorySubstrateBSDF( I, bsdf );
             break;
-        case SMOOTHCOATING:
-            factorySmoothCoatingBSDF( I, bsdf );
+        case CLEARCOAT:
+            factoryClearCoatBSDF( I, bsdf );
             break;
         default:
             break;

@@ -39,10 +39,9 @@ void accumulate(
         L += beta * direct( bsdf, I );
     beta *= scatter( bsdf, I, wi );
 }
-
 /* Based on PBRT bump mapping */
 __forceinline__ __device__
-void bump( CudaIntersection& I ) {
+void bump( const CudaIntersection& I, CudaIntersection::ShadingFrame& frame ) {
     float du = .5f * ( fabsf( I._differential._dudx ) + fabsf( I._differential._dudy ) );
     float dv = .5f * ( fabsf( I._differential._dvdx ) + fabsf( I._differential._dvdy ) );
 
@@ -54,14 +53,20 @@ void bump( CudaIntersection& I ) {
     const float uDisplace = scale * ( _material_manager.getBump( I, du, 0 ) - displace ) / du;
     const float vDisplace = scale * ( _material_manager.getBump( I, 0, dv ) - displace ) / dv;
     // Compute bump-mapped differential geometry
-    I._shading._dpdu += uDisplace* I._shading._n;
-    I._shading._dpdv += vDisplace* I._shading._n;
-    I._shading._n = NOOR::normalize( cross( I._shading._dpdu, I._shading._dpdv ) );
+    frame._dpdu += uDisplace* I._shading._n;
+    frame._dpdv += vDisplace* I._shading._n;
+    frame._n = NOOR::normalize( cross( frame._dpdu, frame._dpdv ) );
 
-    I._shading._dpdu = NOOR::normalize( I._shading._dpdu - I._shading._n*dot( I._shading._n, I._shading._dpdu ) );
-   // const float sign = dot( cross( n, I._shading._dpdu ), I._shading._dpdv ) < 0.0f ? -1.0f : 1.0f;
-    I._shading._dpdv = NOOR::normalize( cross( I._shading._n, I._shading._dpdu ) );
-    I._shading._n = NOOR::faceforward( I._shading._n, I._n );
+    frame._dpdu = NOOR::normalize( frame._dpdu - frame._n*dot( frame._n, frame._dpdu ) );
+    // const float sign = dot( cross( n, I._shading._dpdu ), I._shading._dpdv ) < 0.0f ? -1.0f : 1.0f;
+    frame._dpdv = NOOR::normalize( cross( frame._n, frame._dpdu ) );
+    frame._n = NOOR::faceforward( frame._n, I._n );
+}
+
+/* Based on PBRT bump mapping */
+__forceinline__ __device__
+void bump( CudaIntersection& I ) {
+    bump( I, I.getShadingFrame() );
 }
 
 #endif /* ACCUMULATE_CUH */

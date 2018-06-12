@@ -44,8 +44,8 @@ SOFTWARE.
 #include <vector>
 
 // Kernel configuration 
-#define THREAD_W 16
-#define THREAD_H 16 
+#define THREAD_W 8
+#define THREAD_H 8 
 #define THREAD_N THREAD_W * THREAD_H
 
 // BVH masks
@@ -96,8 +96,8 @@ enum MaterialType {
     METAL = 1 << 7,
     SUBSTRATE = 1 << 8,
     EMITTER = 1 << 9,
-    SMOOTHCOATING = 1 << 10,
-    SHADOW = 1 << 11,
+    CLEARCOAT = 1 << 10,
+    SHADOWCATCHER = 1 << 11,
     ALPHA = 1 << 12,
     BUMP = 1 << 13,
     MESHLIGHT = 1 << 14
@@ -105,8 +105,8 @@ enum MaterialType {
 constexpr uint NOOR_NO_BUMP_ALPHA = ~(BUMP | ALPHA);
 constexpr uint NOOR_EMITTER = EMITTER | MESHLIGHT;
 constexpr uint NOOR_TRANSPARENT = TRANSLUCENT | GLASS | ROUGHGLASS;
-constexpr uint NOOR_SPECULAR = MIRROR | GLASS;
-constexpr uint NOOR_GLOSSY = NOOR_SPECULAR | ROUGHGLASS | SMOOTHCOATING | METAL | SUBSTRATE | GLOSSY;
+constexpr uint NOOR_SPECULAR = MIRROR | GLASS | CLEARCOAT;
+constexpr uint NOOR_GLOSSY = NOOR_SPECULAR | ROUGHGLASS | CLEARCOAT | METAL | SUBSTRATE | GLOSSY;
 enum AreaMeshLightType { QUAD = 0, SPHERE = 1, DISK = 2 };
 enum SkydomeType { HDR = 0, PHYSICAL = 1, CONSTANT = 2 };
 enum HandedNess { LEFT_HANDED = 0, RIGHT_HANDED = 1 };

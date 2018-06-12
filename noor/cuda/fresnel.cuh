@@ -71,13 +71,18 @@ float fresnelDielectric( float cosThetaI, float etaI, float etaT ) {
     // Handle total internal reflection
     if ( sinThetaT >= 1.0f ) return 1.0f;
     const float cosThetaT = sqrtf( fmaxf( 0.0f, 1.0f - sinThetaT * sinThetaT ) );
-    const float Rparl = ( ( etaT * cosThetaI ) - ( etaI * cosThetaT ) ) / ( ( etaT * cosThetaI ) + ( etaI * cosThetaT ) );
-    const float Rperp = ( ( etaI * cosThetaI ) - ( etaT * cosThetaT ) ) / ( ( etaI * cosThetaI ) + ( etaT * cosThetaT ) );
+    const float Rparl = ( ( etaT * cosThetaI ) - ( etaI * cosThetaT ) ) / 
+        ( ( etaT * cosThetaI ) + ( etaI * cosThetaT ) );
+    const float Rperp = ( ( etaI * cosThetaI ) - ( etaT * cosThetaT ) ) / 
+        ( ( etaI * cosThetaI ) + ( etaT * cosThetaT ) );
     const float result = ( Rparl * Rparl + Rperp * Rperp ) / 2.0f;
     return result;
 }
 __forceinline__ __device__
-float3 fresnelConductor( float cosThetaI, const float3& etaI, const float3& etaT, const float3& k ) {
+float3 fresnelConductor( float cosThetaI, 
+                         const float3& etaI, 
+                         const float3& etaT, 
+                         const float3& k ) {
     cosThetaI = clamp( cosThetaI, -1.0f, 1.0f );
     const float3 eta = etaT / etaI;
     const float3 etak = k / etaI;

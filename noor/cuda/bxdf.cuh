@@ -100,22 +100,6 @@ static float3 Reflect( const float3 &wo, const float3 &n ) {
     return -1.0f*wo + 2.0f * dot( wo, n ) * n;
 }
 
-
-__forceinline__ __device__
-static bool Refract( const float3 &wi, const float3 &n, float eta, float3 &wt, float& cosThetaT ) {
-    const float cosThetaI = dot( n, wi );
-    const float sin2ThetaI = fmaxf( 0.0f, 1.0f - cosThetaI * cosThetaI );
-    const float sin2ThetaT = eta * eta * sin2ThetaI;
-
-    // Handle total internal reflection for transmission
-    if ( sin2ThetaT >= 1.0f ) {
-        return false;
-    }
-    cosThetaT = sqrtf( 1.0f - sin2ThetaT );
-    wt = -eta * wi + ( eta * cosThetaI - cosThetaT ) * n;
-    return true;
-}
-
 __forceinline__ __device__
 static bool Refract( const float3 &wi, const float3 &n, float eta, float3 &wt ) {
     const float cosThetaI = dot( n, wi );
@@ -149,7 +133,8 @@ enum BxDFType {
 
 enum BxDFIndex {
     //reflections
-    LambertReflection = 0,
+    ShadowCatcher = 0,
+    LambertReflection,
     SpecularReflectionNoOp,
     SpecularReflectionDielectric,
     MicrofacetReflectionDielectric,
@@ -163,7 +148,7 @@ enum BxDFIndex {
     // multi-lobe
     FresnelBlend,
     FresnelSpecular,
-    FresnelGlossy,
+    ClearCoat,
     NUM_BXDFS
 };
 
@@ -222,6 +207,42 @@ public:
             return CudaFresnel();
     }
 
+};
+class CudaShadowCatcher: public CudaBxDF {
+public:
+    __device__
+        CudaShadowCatcher() :
+        CudaBxDF( BxDFType( BSDF_REFLECTION | BSDF_TRANSMISSION | BSDF_DIFFUSE ),
+                  ShadowCatcher ) {}
+
+    __device__
+        float Pdf( const CudaIntersection& I,
+                   const float3 &wo, 
+                   const float3 &wi ) const {
+        return 1.f;
+    }
+
+    __device__
+    float3 f( const CudaIntersection& I,
+              const float3 &wo, 
+              const float3 &wi ) const {
+        const CudaONB onb( I._shading._n, I._shading._dpdu, I._shading._dpdv );
+        return _skydome_manager.evaluate( -onb.toWorld( wo ), false ) / AbsCosTheta( wi );
+    }
+
+    __device__
+        float3 Sample_f(
+        const CudaIntersection& I,
+        const float3 &wo,
+        float3 &wi,
+        const float2 &u,
+        float &pdf,
+        BxDFType &sampledType
+        ) const {
+        pdf = 1.f;
+        wi = NOOR::uniformSampleHemisphere( u, LEFT_HANDED );
+        return f( I, wo, wi );
+    }
 };
 
 class CudaLambertianReflection : public CudaBxDF {
@@ -384,8 +405,6 @@ public:
     }
 };
 
-
-
 class CudaMicrofacetReflection : public CudaBxDF {
 public:
     __device__
@@ -415,7 +434,7 @@ public:
         }
         wh *= NOOR::sign( wh.z );
         const CudaFresnel fresnel = factoryFresnel( I );
-        const float F = fresnel.evaluate( dot( wi, wh ) ).x;
+        const float3 F = fresnel.evaluate( dot( wo, wh ) );
         const CudaTrowbridgeReitz _distribution = factoryDistribution( I );
         const float3 result = F * S( I ) * _distribution.D( wh ) * _distribution.G( wo, wi ) /
                                 ( 4.0f * cosThetaI * cosThetaO );
@@ -439,7 +458,6 @@ public:
             pdf = 0.0f;
             return _constant_spec._black;
         }
-
         pdf = _distribution.Pdf( wo, wh ) / ( 4.0f * dot( wo, wh ) );
         return f( I, wo, wi );
     }
@@ -663,9 +681,125 @@ public:
         return 0.0f;
     }
 };
+class CudaClearCoat : public CudaBxDF {
+    CudaMicrofacetReflection _substrate;
+    CudaSpecularReflection _coat;
+public:
+    __device__
+        CudaClearCoat() :
+        CudaBxDF( BxDFType( BSDF_GLOSSY | BSDF_REFLECTION | BSDF_SPECULAR ), ClearCoat ),
+        _substrate( CudaMicrofacetReflection( BSDF_CONDUCTOR ) ),
+        _coat( CudaSpecularReflection( BSDF_DIELECTRIC ) )
+        {}
+  __device__
+      float absorption( const CudaIntersection& I,
+                        const float3& wo,
+                        const float3& wi) const {
+      const float sigma = _material_manager.getCoatSigma( I );
+      const float thickness = _material_manager.getCoatThickness( I );
+      float sigmaA = sigma * thickness;
+      if ( sigmaA != 0 ) {
+          return expf( -sigmaA * ( 1.f / AbsCosTheta( wo ) + 1.f / AbsCosTheta( wi ) ) );
+      }
+      return 1.f;
+  }
+    __device__
+        float3 f(
+        const CudaIntersection& I
+        , const float3 &wo
+        , const float3 &wi
+        ) const {
+        const CudaFresnel fresnel = _coat.factoryFresnel( I );
+        const float eta = (fresnel._etaI / fresnel._etaT).x;
+        const float F0 = fresnel.evaluate( CosTheta( wo ) ).x;
+        const float F1 = fresnel.evaluate( CosTheta( wi ) ).x;
+        const float3 n = make_float3( 0, 0, 1 );
+        float3 wo_c, wi_c;
+        Refract( wo, n, eta, wo_c );
+        Refract( wi, n, eta, wi_c );
+        wo_c *= -1;
+        wi_c *= -1;
+        const float3 result = _substrate.f( I, wo_c, wi_c ) * ( 1.f - F0 ) * ( 1.f - F1 );
+        return result * absorption( I, wo_c, wi_c );
+    }
 
+    __device__
+        float Pdf(
+        const CudaIntersection& I
+        , const float3 &wo
+        , const float3 &wi
+        ) const {
+        const CudaFresnel fresnel = _coat.factoryFresnel( I );
+        const float eta = (fresnel._etaI / fresnel._etaT).x;
+        const float F = fresnel.evaluate( CosTheta( wo ) ).x;
+        const float3 n = make_float3( 0, 0, 1 );
+
+        float3 wo_c, wi_c;
+        Refract( wo, n, eta, wo_c );
+        Refract( wi, n, eta, wi_c );
+        wo_c *= -1;
+        wi_c *= -1;
+
+        const float w = _material_manager.getCoatWeight( I );
+        const float coatPdf =  F*w / ( F*w + ( 1 - F ) * ( 1 - w ) );
+        const float substratePdf = _substrate.Pdf( I, wo_c, wi_c ) * (1.f - coatPdf);
+        return substratePdf + coatPdf;
+    }
+
+    __device__
+        float3 Sample_f(
+        const CudaIntersection& I,
+        const float3 &wo,
+        float3 &wi,
+        const float2 &u,
+        float &pdf,
+        BxDFType &sampledType
+        ) const {
+        const CudaFresnel fresnel = _coat.factoryFresnel( I );
+        const float eta = (fresnel._etaI / fresnel._etaT).x;
+        const float F0 = fresnel.evaluate( CosTheta(wo) ).x;
+        const float w = _material_manager.getCoatWeight( I );
+        const float probSpecular = F0*w / ( F0*w + ( 1 - F0 ) * ( 1 - w ) );
+        const float probSubstrate = 1.f - probSpecular;
+        bool choseSpecular = false;
+        float2 sample( u );
+        if ( sample.y < probSpecular ) {
+            sample.y /= probSpecular;
+            choseSpecular = true;
+        } else {
+            sample.y = ( sample.y - probSpecular ) / ( 1.f - probSpecular );
+            choseSpecular = false;
+        }
+        float3 result;
+        if ( choseSpecular ) {
+            result = _coat.Sample_f( I, wo, wi, sample, pdf, sampledType );
+            pdf *= probSpecular;
+        } else {
+            float3 wi_c, wo_c;  
+            float3 n = make_float3( 0, 0, 1 );
+            // refract in
+            Refract( wo, n, eta, wo_c );
+            result = _substrate.Sample_f( I, -wo_c, wi_c, sample, pdf, sampledType );
+            float F1 = fresnel.evaluate( CosTheta( -wi_c ) ).x;
+            // refract out
+            Refract( -wi_c, -n, 1.f/eta, wi );
+            if ( F1 == 1.f ) {
+                pdf = 0.f;
+                return _constant_spec._black;
+            }
+            result *= absorption(I, wo_c, wi_c) * ( 1.f - F0 )*( 1.f - F1 );
+
+            // wi_c refracts out of the surface cosine factor
+            result /= AbsCosTheta( wi_c );
+            
+            pdf *= probSubstrate;
+        }
+        return result;
+    }
+};
 __global__
 void setup_bxdfs( CudaBxDF** bxdfs ) {
+    bxdfs[ShadowCatcher] = new CudaShadowCatcher();
     bxdfs[LambertReflection] = new CudaLambertianReflection();
     bxdfs[SpecularReflectionNoOp] = new CudaSpecularReflection( BSDF_NOOP );
     bxdfs[SpecularReflectionDielectric] = new CudaSpecularReflection( BSDF_DIELECTRIC );
@@ -676,6 +810,7 @@ void setup_bxdfs( CudaBxDF** bxdfs ) {
     bxdfs[MicrofacetTransmission] = new CudaMicrofacetTransmission();
     bxdfs[FresnelBlend] = new CudaFresnelBlend();
     bxdfs[FresnelSpecular] = new CudaFresnelSpecular();
+    bxdfs[ClearCoat] = new CudaClearCoat();
 }
 __global__
 void free_bxdfs( CudaBxDF** bxdfs ) {
@@ -708,32 +843,3 @@ __constant__
 CudaBxDFManager _bxdf_manager;
 #endif /* CUDABXDF_CUH */
 
-//class CudaShadowCatcher: public CudaBxDF {
-//public:
-//    __device__
-//        CudaShadowCatcher() :
-//        CudaBxDF( BxDFType( BSDF_REFLECTION | BSDF_DIFFUSE ) ) {}
-//
-//    __device__
-//        float Pdf( const float3 &wo, const float3 &wi ) const {
-//        return 1.f;
-//    }
-//
-//    __device__
-//    float3 f( const float3 &wo, const float3 &wi ) const {
-//        return _skydome_manager.evaluate( -1.f*wo, false ) / AbsCosTheta( wi );
-//    }
-//
-//    __device__
-//        float3 Sample_f(
-//        const float3 &wo
-//        , float3 &wi
-//        , const float2 &u
-//        , float &pdf
-//        , BxDFType &sampledType
-//        ) const {
-//        pdf = 1.f;
-//        wi = NOOR::uniformSampleHemisphere( u );
-//        return f( wo, wi );
-//    }
-//};

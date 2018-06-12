@@ -77,15 +77,15 @@ class  CudaIntersection {
             _dudx = _dudy = _dvdx = _dvdy = 0;
         }
     };
+    
+    MaterialType _material_type{ DIFFUSE };
+    int _tid;
+public:
     struct ShadingFrame {
         float3 _n{ 0.0f, 0.0f, 0.0f };
         float3 _dpdu{ 0.0f, 0.0f, 0.0f };
         float3 _dpdv{ 0.0f, 0.0f, 0.0f };
     };
-    MaterialType _material_type{ DIFFUSE };
-    int _tid;
-public:
-
     const CudaRNG& _rng;
     GeometryFrame _geometry;
     ShadingFrame _shading;
@@ -105,6 +105,7 @@ public:
         CudaIntersection( const CudaRNG& rng, int tid ) :
         _rng( rng ),
         _tid( tid ) {}
+
     __device__
         CudaRay spawnRay( const CudaRay& ray, const float3& wi ) const {
         const bool isDifferential = isGlossy() && ray.isDifferential();
@@ -179,11 +180,10 @@ public:
         dist -= dist * _constant_spec._shadow_bias;
         return CudaRay( p, v._wi, dist );
     }
-
-    /*__device__
-        void setEta( float eta ) const {
-        _eta = eta;
-    }*/
+    __device__
+        ShadingFrame& getShadingFrame() {
+        return _shading;
+    }
     __device__
         int getTid() const {
         return _tid;
@@ -210,7 +210,7 @@ public:
     }
     __device__
         bool isShadowCatcher() const {
-        return ( _material_type & SHADOW );
+        return ( _material_type & SHADOWCATCHER );
     }
     __device__
         bool isSpecular() const {
