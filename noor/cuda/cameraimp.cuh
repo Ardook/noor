@@ -173,11 +173,13 @@ CudaCamera _constant_camera;
 
 __forceinline__ __device__
 CudaRay generateRay( int x, int y, const CudaRNG& rng ) {
-    if ( _constant_camera._type == ORTHO )
-        return ( (const CudaOrthoCamera&) _constant_camera ).generateRay( x, y, rng );
-    else if ( _constant_camera._type == ENV )
-        return ( (const CudaEnvCamera&) _constant_camera ).generateRay( x, y, rng );
-    else
-        return ( (const CudaPerspCamera&) _constant_camera ).generateRay( x, y, rng );
+    switch ( _constant_camera._type ) {
+        case ORTHO:
+            return ( (const CudaOrthoCamera&) _constant_camera ).generateRay( x, y, rng );
+        case ENV:
+            return ( (const CudaEnvCamera&) _constant_camera ).generateRay( x, y, rng );
+        default:
+            return ( (const CudaPerspCamera&) _constant_camera ).generateRay( x, y, rng );
+    }
 }
 #endif /* CUDACAMERAIMP_CUH */

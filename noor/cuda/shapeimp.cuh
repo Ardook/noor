@@ -56,12 +56,18 @@ void CudaShape::sample( const CudaIntersection& I,
                         float3& p,
                         float& pdf
 ) const {
-    if ( _type == QUAD ) {
-        sampleQuad( *this, I, p, pdf );
-    } else if ( _type == SPHERE ) {
-        sampleSphere( *this, I, p, pdf );
-    } else if ( _type == DISK ) {
-        sampleDisk( *this, I, p, pdf );
+    switch ( _type ) {
+        case QUAD:
+            sampleQuad( *this, I, p, pdf );
+            break;
+        case SPHERE:
+            sampleSphere( *this, I, p, pdf );
+            break;
+        case DISK:
+            sampleDisk( *this, I, p, pdf );
+            break;
+        default:
+            break;
     }
 }
 
@@ -70,25 +76,29 @@ bool CudaShape::intersect( const CudaRay& ray,
                            float3& p,
                            float3& n
 ) const {
-    if ( _type == QUAD )
-        return intersectQuad( *this, ray, p, n );
-    else if ( _type == SPHERE )
-        return intersectSphere( *this, ray, p, n );
-    else if ( _type == DISK )
-        return intersectDisk( *this, ray, p, n );
-    else
-        return false;
+    switch ( _type ) {
+        case QUAD:
+            return intersectQuad( *this, ray, p, n );
+        case SPHERE:
+            return intersectSphere( *this, ray, p, n );
+        case DISK:
+            return intersectDisk( *this, ray, p, n );
+        default:
+            return false;
+    }
 }
 
 __forceinline__ __device__
 bool CudaShape::intersect( const CudaRay& ray ) const {
-    if ( _type == QUAD )
-        return intersectQuad( *this, ray );
-    else if ( _type == SPHERE )
-        return intersectSphere( *this, ray );
-    else if ( _type == DISK )
-        return intersectDisk( *this, ray );
-    else
-        return false;
+    switch ( _type ) {
+        case QUAD:
+            return intersectQuad( *this, ray );
+        case SPHERE:
+            return intersectSphere( *this, ray );
+        case DISK:
+            return intersectDisk( *this, ray );
+        default:
+            return false;
+    }
 }
 #endif

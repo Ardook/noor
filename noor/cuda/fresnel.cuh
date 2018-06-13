@@ -126,12 +126,14 @@ public:
         CudaFresnel() : _type(NOOP)  {}
     __device__
         float3 evaluate( float cosThetaI ) const {
-        if ( _type == CONDUCTOR )
-            return fresnelConductor( cosThetaI, _etaI, _etaT, _k );
-        else if ( _type == DIELECTRIC )
-            return make_float3( fresnelDielectric( cosThetaI, _etaI.x, _etaT.x ) );
-        else
-            return make_float3(1.f);
+        switch ( _type ) {
+            case CONDUCTOR:
+                return fresnelConductor( cosThetaI, _etaI, _etaT, _k );
+            case DIELECTRIC: 
+                return make_float3( fresnelDielectric( cosThetaI, _etaI.x, _etaT.x ) );
+            default:
+                return make_float3( 1.f );
+        }
     }
 };
 

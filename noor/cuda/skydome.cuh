@@ -95,15 +95,11 @@ public:
     __device__
         float3 evaluate( const float3& dir, bool constant = false ) const {
         if ( constant ) return make_float3( .6f );
-        if ( _type == PHYSICAL ) {
-            const float phi = NOOR::sphericalPhi( dir ) * NOOR_inv2PI;
-            const float theta = NOOR::sphericalTheta( dir ) * NOOR_invPI;
-            return _constant_hosek_sky.querySkyModel( dir );
-        } else {
-            const float phi = NOOR::sphericalPhi( dir ) * NOOR_inv2PI;
-            const float theta = NOOR::sphericalTheta( dir ) * NOOR_invPI;
-            return make_float3( _tex.evaluate( phi, theta ) );
-        }
+        const float phi = NOOR::sphericalPhi( dir ) * NOOR_inv2PI;
+        const float theta = NOOR::sphericalTheta( dir ) * NOOR_invPI;
+        return ( _type == PHYSICAL ) ?
+            _constant_hosek_sky.querySkyModel( dir ) :
+            make_float3( _tex.evaluate( phi, theta ) );
     }
 
     __device__
@@ -113,7 +109,7 @@ public:
     }
 
     __device__
-        float3 cosine_sample_dir( const CudaIntersection& I, 
+        float3 cosine_sample_dir( const CudaIntersection& I,
                                   float& pdf ) const {
         const float2 u = make_float2( I._rng(), I._rng() );
         CudaONB onb( I._shading._n, I._shading._dpdu, I._shading._dpdv );
@@ -123,8 +119,8 @@ public:
     }
 
     __device__
-        float3 uniform_sample_dir( const CudaIntersection& I, 
-                                   const CudaRNG& rng, 
+        float3 uniform_sample_dir( const CudaIntersection& I,
+                                   const CudaRNG& rng,
                                    float& pdf ) const {
         const float2 u = make_float2( rng(), rng() );
         float map_pdf = NOOR::uniformHemiSpherePdf();

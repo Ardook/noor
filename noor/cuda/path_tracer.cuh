@@ -44,7 +44,7 @@ SOFTWARE.
 #include <vector>
 
 // Kernel configuration 
-#define THREAD_W 8
+#define THREAD_W 16
 #define THREAD_H 8 
 #define THREAD_N THREAD_W * THREAD_H
 

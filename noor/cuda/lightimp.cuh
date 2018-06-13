@@ -62,7 +62,9 @@ float3 CudaAreaLight::sample_Li(
 //-------------- Infinite Light ----------------
 __forceinline__ __device__
 float3 CudaInfiniteLight::Le( const float3& w ) const {
-    return _skydome_manager.evaluate( w );
+    return ( _constant_spec.is_sky_light_enabled() ) ?
+        _skydome_manager.evaluate( w ) :
+        _constant_spec._black;
 }
 
 __forceinline__ __device__
@@ -70,6 +72,7 @@ float CudaInfiniteLight::pdf_Li(
     const CudaIntersection& I,
     const float3& wi
 ) const {
+    if ( !_constant_spec.is_sky_light_enabled() ) return 0.f;
     const float theta = NOOR::sphericalTheta( wi );
     const float phi = NOOR::sphericalPhi( wi );
     const float sinTheta = sinf( theta );
@@ -205,31 +208,31 @@ struct CudaLightManager {
         _num_lights += _num_infinite_lights;
 
         if ( _num_area_lights != 0 ) {
-            checkNoorErrors(NOOR::malloc(  &_area_lights, _num_area_lights * sizeof( CudaAreaLight ) ));
-            checkNoorErrors(NOOR::memcopy( _area_lights, (void*) &payload->_area_light_data[0], _num_area_lights * sizeof( CudaAreaLight ) ));
+            checkNoorErrors( NOOR::malloc( &_area_lights, _num_area_lights * sizeof( CudaAreaLight ) ) );
+            checkNoorErrors( NOOR::memcopy( _area_lights, (void*) &payload->_area_light_data[0], _num_area_lights * sizeof( CudaAreaLight ) ) );
         }
 
         if ( _num_point_lights != 0 ) {
-            checkNoorErrors(NOOR::malloc(  &_point_lights, _num_point_lights * sizeof( CudaPointLight ) ));
-            checkNoorErrors(NOOR::memcopy( _point_lights, (void*) &payload->_point_light_data[0], _num_point_lights * sizeof( CudaPointLight ) ));
+            checkNoorErrors( NOOR::malloc( &_point_lights, _num_point_lights * sizeof( CudaPointLight ) ) );
+            checkNoorErrors( NOOR::memcopy( _point_lights, (void*) &payload->_point_light_data[0], _num_point_lights * sizeof( CudaPointLight ) ) );
         }
 
         if ( _num_spot_lights != 0 ) {
-            checkNoorErrors(NOOR::malloc(  &_spot_lights, _num_spot_lights * sizeof( CudaSpotLight ) ));
-            checkNoorErrors(NOOR::memcopy( _spot_lights, (void*) &payload->_spot_light_data[0], _num_spot_lights * sizeof( CudaSpotLight ) ));
+            checkNoorErrors( NOOR::malloc( &_spot_lights, _num_spot_lights * sizeof( CudaSpotLight ) ) );
+            checkNoorErrors( NOOR::memcopy( _spot_lights, (void*) &payload->_spot_light_data[0], _num_spot_lights * sizeof( CudaSpotLight ) ) );
         }
 
         if ( _num_distant_lights != 0 ) {
-            checkNoorErrors(NOOR::malloc(  &_distant_lights, _num_distant_lights * sizeof( CudaDistantLight ) ));
-            checkNoorErrors(NOOR::memcopy( _distant_lights, (void*) &payload->_distant_light_data[0], _num_distant_lights * sizeof( CudaDistantLight ) ));
+            checkNoorErrors( NOOR::malloc( &_distant_lights, _num_distant_lights * sizeof( CudaDistantLight ) ) );
+            checkNoorErrors( NOOR::memcopy( _distant_lights, (void*) &payload->_distant_light_data[0], _num_distant_lights * sizeof( CudaDistantLight ) ) );
         }
 
         if ( _num_infinite_lights != 0 ) {
-            checkNoorErrors(NOOR::malloc(  &_infinite_lights, _num_infinite_lights * sizeof( CudaInfiniteLight ) ));
-            checkNoorErrors(NOOR::memcopy( _infinite_lights, (void*) &payload->_infinite_light_data[0], sizeof( CudaInfiniteLight ) ));
+            checkNoorErrors( NOOR::malloc( &_infinite_lights, _num_infinite_lights * sizeof( CudaInfiniteLight ) ) );
+            checkNoorErrors( NOOR::memcopy( _infinite_lights, (void*) &payload->_infinite_light_data[0], sizeof( CudaInfiniteLight ) ) );
         }
 
-        checkNoorErrors(NOOR::malloc(  &_lights, _num_lights * sizeof( CudaLight* ) ));
+        checkNoorErrors( NOOR::malloc( &_lights, _num_lights * sizeof( CudaLight* ) ) );
 
         dim3 blockSize( 1, 1, 1 );
         dim3 gridSize( 1, 1, 1 );
@@ -252,22 +255,22 @@ struct CudaLightManager {
     __host__
         void free() {
         if ( _num_area_lights > 0 ) {
-            checkNoorErrors(cudaFree( _area_lights ));
+            checkNoorErrors( cudaFree( _area_lights ) );
         }
         if ( _num_point_lights > 0 ) {
-            checkNoorErrors(cudaFree( _point_lights ));
+            checkNoorErrors( cudaFree( _point_lights ) );
         }
         if ( _num_spot_lights > 0 ) {
-            checkNoorErrors(cudaFree( _spot_lights ));
+            checkNoorErrors( cudaFree( _spot_lights ) );
         }
         if ( _num_distant_lights > 0 ) {
-            checkNoorErrors(cudaFree( _distant_lights ));
+            checkNoorErrors( cudaFree( _distant_lights ) );
         }
         if ( _num_infinite_lights > 0 ) {
-            checkNoorErrors(cudaFree( _infinite_lights ));
+            checkNoorErrors( cudaFree( _infinite_lights ) );
         }
         if ( _num_lights > 0 ) {
-            checkNoorErrors(cudaFree( _lights ));
+            checkNoorErrors( cudaFree( _lights ) );
         }
     }
 
@@ -303,16 +306,24 @@ struct CudaLightManager {
         Lr._light_idx = light_idx;
 
         float3 Ld = _constant_spec._black;
-        if ( _lights[light_idx]->_type == Area ) {
-            Ld = ( (const CudaAreaLight*) _lights[light_idx] )->sample_Li( I, Lr, pdf );
-        } else if ( _lights[light_idx]->_type == Point ) {
-            Ld = ( (const CudaPointLight*) _lights[light_idx] )->sample_Li( I, Lr, pdf );
-        } else if ( _lights[light_idx]->_type == Spot ) {
-            Ld = ( (const CudaSpotLight*) _lights[light_idx] )->sample_Li( I, Lr, pdf );
-        } else  if ( _lights[light_idx]->_type == Distant ) {
-            Ld = ( (const CudaDistantLight*) _lights[light_idx] )->sample_Li( I, Lr, pdf );
-        } else   if ( _lights[light_idx]->_type == Infinite ) {
-            Ld = ( (const CudaInfiniteLight*) _lights[light_idx] )->sample_Li( I, Lr, pdf );
+        switch ( _lights[light_idx]->_type ) {
+            case Area:
+                Ld = ( (const CudaAreaLight*) _lights[light_idx] )->sample_Li( I, Lr, pdf );
+                break;
+            case Point:
+                Ld = ( (const CudaPointLight*) _lights[light_idx] )->sample_Li( I, Lr, pdf );
+                break;
+            case Spot:
+                Ld = ( (const CudaSpotLight*) _lights[light_idx] )->sample_Li( I, Lr, pdf );
+                break;
+            case Distant:
+                Ld = ( (const CudaDistantLight*) _lights[light_idx] )->sample_Li( I, Lr, pdf );
+                break;
+            case Infinite:
+                Ld = ( (const CudaInfiniteLight*) _lights[light_idx] )->sample_Li( I, Lr, pdf );
+                break;
+            default:
+                break;
         }
         if ( isinf( pdf ) ) pdf = 0.f;
         return Ld * num_lights;
@@ -325,16 +336,25 @@ struct CudaLightManager {
         int light_idx
         ) const {
         float pdf = 0.f;
-        if ( _lights[light_idx]->_type == Area )
-            pdf = ( (const CudaAreaLight*) _lights[light_idx] )->pdf_Li( I, wi );
-        else if ( _lights[light_idx]->_type == Point )
-            pdf = ( (const CudaPointLight*) _lights[light_idx] )->pdf_Li( I, wi );
-        else if ( _lights[light_idx]->_type == Spot )
-            pdf = ( (const CudaSpotLight*) _lights[light_idx] )->pdf_Li( I, wi );
-        else if ( _lights[light_idx]->_type == Distant )
-            pdf = ( (const CudaDistantLight*) _lights[light_idx] )->pdf_Li( I, wi );
-        else if ( _constant_spec.is_sky_light_enabled() && _lights[light_idx]->_type == Infinite )
-            pdf = ( (const CudaInfiniteLight*) _lights[light_idx] )->pdf_Li( I, wi );
+        switch ( _lights[light_idx]->_type ) {
+            case Area:
+                pdf = ( (const CudaAreaLight*) _lights[light_idx] )->pdf_Li( I, wi );
+                break;
+            case Point:
+                pdf = ( (const CudaPointLight*) _lights[light_idx] )->pdf_Li( I, wi );
+                break;
+            case Spot:
+                pdf = ( (const CudaSpotLight*) _lights[light_idx] )->pdf_Li( I, wi );
+                break;
+            case Distant:
+                pdf = ( (const CudaDistantLight*) _lights[light_idx] )->pdf_Li( I, wi );
+                break;
+            case Infinite:
+                pdf = ( (const CudaInfiniteLight*) _lights[light_idx] )->pdf_Li( I, wi );
+                break;
+            default:
+                break;
+        }
         return isinf( pdf ) ? 0.f : pdf;
     }
 
@@ -344,18 +364,20 @@ struct CudaLightManager {
         const float3& wi,
         int light_idx
         ) const {
-        if ( _lights[light_idx]->_type == Area )
-            return ( (const CudaAreaLight*) _lights[light_idx] )->Le( wi );
-        else if ( _lights[light_idx]->_type == Point )
-            return ( (const CudaPointLight*) _lights[light_idx] )->Le( wi );
-        else if ( _lights[light_idx]->_type == Spot )
-            return ( (const CudaSpotLight*) _lights[light_idx] )->Le( wi );
-        else  if ( _lights[light_idx]->_type == Distant )
-            return ( (const CudaDistantLight*) _lights[light_idx] )->Le( wi );
-        else if ( _constant_spec.is_sky_light_enabled() && _lights[light_idx]->_type == Infinite )
-            return ( (const CudaInfiniteLight*) _lights[light_idx] )->Le( wi );
-        else
-            return _constant_spec._black;
+        switch ( _lights[light_idx]->_type ) {
+            case Area:
+                return ( (const CudaAreaLight*) _lights[light_idx] )->Le( wi );
+            case Point:
+                return ( (const CudaPointLight*) _lights[light_idx] )->Le( wi );
+            case Spot:
+                return ( (const CudaSpotLight*) _lights[light_idx] )->Le( wi );
+            case Distant:
+                return ( (const CudaDistantLight*) _lights[light_idx] )->Le( wi );
+            case Infinite:
+                return ( (const CudaInfiniteLight*) _lights[light_idx] )->Le( wi );
+            default:
+                return _constant_spec._black;
+        }
     }
 };
 

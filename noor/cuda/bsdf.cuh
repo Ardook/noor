@@ -177,10 +177,37 @@ float3 Sample_f(
             return _constant_spec._black;
     }
 }
+struct BxDFs {
+    CudaBxDF* _bxdf0{nullptr};
+    CudaBxDF* _bxdf1{nullptr};
+    CudaBxDF* _bxdf2{nullptr};
+    CudaBxDF* _bxdf3{nullptr};
+    CudaBxDF* _bxdf4{nullptr};
+    CudaBxDF* _bxdf5{nullptr};
+    CudaBxDF* _bxdf6{nullptr};
+    CudaBxDF* _bxdf7{nullptr};
+    int _nbxdfs{ 0 };
+
+    __device__
+        void Add( CudaBxDF *b ) {
+        *(&_bxdf0 + _nbxdfs * sizeof( CudaBxDF* )) = b;
+        ++_nbxdfs;
+    }
+    __device__
+        CudaBxDF*& operator[]( int i ) {
+        return (CudaBxDF*) *( &_bxdf0 + i * sizeof( CudaBxDF* ) );
+    }
+
+    __device__
+        CudaBxDF* operator[]( int i ) const {
+        return ( CudaBxDF* ) *( &_bxdf0 + i * sizeof( CudaBxDF* ) );
+    }
+};
 
 class CudaBSDF {
 public:
     CudaBxDF* _bxdfs[8];
+    //BxDFs _bxdfs;
     int _nbxdfs;
 
     __device__
