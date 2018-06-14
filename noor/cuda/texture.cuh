@@ -25,6 +25,8 @@ SOFTWARE.
 #define CUDATEXTURE_CUH
 #include "image.cuh"
 using NOOR::nearestPow2;
+using NOOR::prevPow2;
+using NOOR::nextPow2;
 class CudaTexture {
 protected:
     cudaExtent _extent;
@@ -216,6 +218,8 @@ public:
     __host__
         CudaMipMap( const ImageTexture& t ) :
         CudaTexture( make_cudaExtent( nearestPow2( t._width ), nearestPow2( t._height ), 0 ),
+        //CudaTexture( make_cudaExtent( prevPow2( t._width ), prevPow2( t._height ), 0 ),
+        //CudaTexture( make_cudaExtent( nextPow2( t._width ), nextPow2( t._height ), 0 ),
                      t._num_channels,
                      t._filter_mode,
                      t._address_mode

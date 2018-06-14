@@ -79,7 +79,7 @@ void resize_kernel(
 
     ResampleWeight temp;
     if ( threadIdx.y == 0 ) {
-        // Compute image resampling weights for _i_th texel
+        // Compute image resampling weights for i'th texel
         float sumWts = 0.f;
         temp.firstTexel = floorf( center_x - filterwidth + .5f );
         for ( int j = 0; j < 4; ++j ) {
@@ -101,7 +101,7 @@ void resize_kernel(
             color += temp.weight[j] * ( surf2Dread<T>( src_surfaceobj, old_x * sizeof( T ), center_y ) );
     }
     if ( threadIdx.x == 0 ) {
-        // Compute image resampling weights for _i_th texel
+        // Compute image resampling weights for i'th texel
         float sumWts = 0.f;
         temp.firstTexel = floorf( center_y - filterwidth + 0.5f );
         for ( int j = 0; j < 4; ++j ) {
@@ -111,7 +111,6 @@ void resize_kernel(
         }
         // Normalize filter weights for texel resampling
         temp.weight /= sumWts;
-        assert( temp.weight.x + temp.weight.y + temp.weight.z + temp.weight.w == 1.0f );
         wt[threadIdx.y] = temp;
     }
     __syncthreads();

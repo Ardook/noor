@@ -65,7 +65,6 @@ public:
     __host__
         void update() {
         if ( _type == PHYSICAL ) {
-        // width = cols and height = rows
             dim3 blockSize( 32, 32, 1 );
             dim3 gridSize( ( (uint) _tex.width() + blockSize.x - 1 ) / blockSize.x,
                 ( (uint) _tex.height() + blockSize.y - 1 ) / blockSize.y, 1 );
@@ -94,9 +93,11 @@ public:
 
     __device__
         float3 evaluate( const float3& dir, bool constant = false ) const {
-        if ( constant ) return make_float3( .6f );
+        if ( constant ) return SKYDOME_COLOR;
         const float phi = NOOR::sphericalPhi( dir ) * NOOR_inv2PI;
         const float theta = NOOR::sphericalTheta( dir ) * NOOR_invPI;
+        //const float2 gradx{.005f,.005f};
+        //const float2 grady{.005f,.005f};
         return ( _type == PHYSICAL ) ?
             _constant_hosek_sky.querySkyModel( dir ) :
             make_float3( _tex.evaluate( phi, theta ) );

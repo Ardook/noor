@@ -84,9 +84,8 @@ public:
     }
     __device__
         float3 querySkyModel( const float3& v ) const {
-        if ( v.y < 0.f ) return _ground_albedo;
-        const float scale = .05f;
-
+        if ( v.y < 0.f ) return make_float3( 0 );
+        const float scale = .025f;
         const float theta = clamp( NOOR::sphericalTheta( v, RIGHT_HANDED ), 0.f, NOOR_PI_over_2 );
         const float gamma = acosf( clamp( dot( v, _solar_dir ), -1.f, 1.f ) );
         float3 rgb;
@@ -94,9 +93,9 @@ public:
         rgb.y = arhosek_tristim_skymodel_radiance( _state_g, theta, gamma, 1 );
         rgb.z = arhosek_tristim_skymodel_radiance( _state_b, theta, gamma, 2 );
         if ( gamma < _solar_radius ) {
-            return _solar_scale* NOOR::inverseGammaCorrect( rgb );
+            return _solar_scale* rgb;
         }
-        return NOOR::inverseGammaCorrect( rgb * scale );
+        return rgb * scale;
     }
 };
 #ifdef __CUDACC__

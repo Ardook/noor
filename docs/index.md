@@ -1,15 +1,7 @@
 
 #### Noor
-Noor is an experimental CUDA/GPU Monte-Carlo pathtracer.  It started (Noor 1.0) as part of a final class project (real-time Whitted raytracer) in 2009 and was recently resurrected as a pathtracer to assist me in learning and reinforcing the ideas and the topics covered in the PBRT book. 
+Noor is an experimental GPU Monte-Carlo pathtracer.  It started (Noor 1.0) as part of a final class project (real-time Whitted raytracer) in 2009 and was recently resurrected as a pathtracer to assist me in learning and reinforcing the ideas and the topics covered in the PBRT book. 
  
-#### Development environment:
-* Windows 10 64 bit 
-* Visual Studio 2015 with Visual Assist 
-* Nvidia CUDA ToolKit 9.1 and Nsight for Visual Studio 
-* C++ (11 & 14)
-* Autodesk Maya
-* Gimp 
-
 #### Acceleration Data Structures:
 * BVH
 * SBVH (removed)
@@ -135,17 +127,3 @@ Noor is an experimental CUDA/GPU Monte-Carlo pathtracer.  It started (Noor 1.0) 
 [![dof train](screenshots/50percent/screenshot-23-05-2018-14-19-09.jpg "DOF thin lens")](screenshots/100percent/screenshot-23-05-2018-14-19-09.jpg)
 [![no MIS](screenshots/50percent/screenshot-26-05-2018-15-47-11.jpg "veach no MIS")](screenshots/100percent/screenshot-26-05-2018-15-47-11.jpg)
 [![MIS](screenshots/50percent/screenshot-26-05-2018-15-47-17.jpg "veach MIS")](screenshots/100percent/screenshot-26-05-2018-15-47-17.jpg)
-[![MIS](screenshots/50percent/screenshot-26-05-2018-18-14-15.jpg "indoors studio")](screenshots/100percent/screenshot-26-05-2018-18-14-15.jpg)
-[![MIS](screenshots/50percent/screenshot-26-05-2018-18-14-22.jpg "indoors studio importance sampled test")](screenshots/100percent/screenshot-26-05-2018-18-14-22.jpg)
-[![MIS](screenshots/50percent/screenshot-26-05-2018-18-15-29.jpg "indoors")](screenshots/100percent/screenshot-26-05-2018-18-15-29.jpg)
-[![MIS](screenshots/50percent/screenshot-26-05-2018-18-15-35.jpg "indoors importance sampled test")](screenshots/100percent/screenshot-26-05-2018-18-15-35.jpg)
-[![MIS](screenshots/50percent/screenshot-26-05-2018-18-18-04.jpg "outdoors")](screenshots/100percent/screenshot-26-05-2018-18-18-04.jpg)
-[![MIS](screenshots/50percent/screenshot-26-05-2018-18-18-09.jpg "outdoors importance sampled test")](screenshots/100percent/screenshot-26-05-2018-18-18-09.jpg)
-[![MIS](screenshots/50percent/screenshot-26-05-2018-18-25-14.jpg "hosek physical sun-sky mid day")](screenshots/100percent/screenshot-26-05-2018-18-25-14.jpg)
-[![MIS](screenshots/50percent/screenshot-26-05-2018-18-25-20.jpg "hosek physical sun-sky mid day importance sampled test")](screenshots/100percent/screenshot-26-05-2018-18-25-20.jpg)
-[![MIS](screenshots/50percent/screenshot-26-05-2018-18-25-28.jpg "hosek physical sun-sky noon")](screenshots/100percent/screenshot-26-05-2018-18-25-28.jpg)
-[![MIS](screenshots/50percent/screenshot-26-05-2018-18-25-30.jpg "hosek physical sun-sky noon importance sampled test")](screenshots/100percent/screenshot-26-05-2018-18-25-30.jpg)
-[![MIS](screenshots/50percent/screenshot-26-05-2018-18-25-38.jpg "hosek physical sun-sky evening")](screenshots/100percent/screenshot-26-05-2018-18-25-38.jpg)
-[![MIS](screenshots/50percent/screenshot-26-05-2018-18-25-41.jpg "hosek physical sun-sky evening importance sampled test")](screenshots/100percent/screenshot-26-05-2018-18-25-41.jpg)
-[![MIS](screenshots/50percent/screenshot-26-05-2018-18-25-51.jpg "hosek physical sun-sky sunset")](screenshots/100percent/screenshot-26-05-2018-18-25-51.jpg)
-[![MIS](screenshots/50percent/screenshot-26-05-2018-18-25-54.jpg "hosek physical sun-sky sunset importance sampled test")](screenshots/100percent/screenshot-26-05-2018-18-25-54.jpg)
