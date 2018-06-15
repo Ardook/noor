@@ -26,40 +26,50 @@ SOFTWARE.
 #include "tinyexr.h"
 
 #define STB_IMAGE_IMPLEMENTATION
+#define STBI_FAILURE_USERMSG
 #include "stb_image.h"
 
 #include "path_tracer.cuh"
 
+static inline void print_error( const std::string& filename,
+                                const char* file,
+                                int line ) {
+    std::string msg = "File " + std::string( file ) + " LINE " + std::to_string( line ) + "\n";
+    std::cerr << "Noor Error: unable to read/open texture file " + filename;
+}
+
+static inline void print_error_stb( const std::string& filename,
+                                    const char* file,
+                                    int line ) {
+    print_error( filename, file, line );
+    std::cerr << "\nSTB Error: " + std::string( stbi_failure_reason() ) << std::endl;
+}
 
 void ImageTexture::load( const std::string& filename ) {
     const char* err;
     if ( NOOR::contains( filename, "exr" ) ) {
         if ( LoadEXR( &_data, &_width, &_height, filename.c_str(), &err ) < 0 ) {
-            std::string msg = "File " + std::string( __FILE__ ) + " LINE " + std::to_string( __LINE__ ) + "\n";
-            msg += "Error: unable to read/open texture file " + filename;
-            std::cerr << msg << std::endl;
+            print_error( filename, __FILE__, __LINE__ );
             exit( EXIT_FAILURE );
         }
         _num_channels = 4;
     } else {
-        if ( ( _data = stbi_loadf( filename.c_str(), &_width, &_height, &_num_channels, 0 ) ) == nullptr ) {
-            std::string msg = "File " + std::string( __FILE__ ) + " LINE " + std::to_string( __LINE__ ) + "\n";
-            msg += "Error: unable to read/open texture file " + filename;
-            std::cerr << msg << std::endl;
+        if ( stbi_info( filename.c_str(), &_width, &_height, &_num_channels ) != 1 ) {
+            print_error_stb( filename, __FILE__, __LINE__ );
             exit( EXIT_FAILURE );
         }
-        if ( _num_channels == 3){
-            stbi_image_free( _data );
-            if ( ( _data = stbi_loadf( filename.c_str(), &_width, &_height, &_num_channels, 4 ) ) == nullptr ) {
-                std::string msg = "File " + std::string( __FILE__ ) + " LINE " + std::to_string( __LINE__ ) + "\n";
-                msg += "Error: unable to read/open texture file " + filename;
-                std::cerr << msg << std::endl;
-                exit( EXIT_FAILURE );
-            }
+        if ( _num_channels == 3 ) {
+            _data = stbi_loadf( filename.c_str(), &_width, &_height, &_num_channels, 4 );
             _num_channels = 4;
+        } else {
+            _data = stbi_loadf( filename.c_str(), &_width, &_height, &_num_channels, 0 );
         }
-        _channel_desc = _num_channels == 4 ? 
-            _float4_channelDesc : 
+        if ( _data == nullptr ) {
+            print_error_stb( filename, __FILE__, __LINE__ );
+            exit( EXIT_FAILURE );
+        }
+        _channel_desc = _num_channels == 4 ?
+            _float4_channelDesc :
             ( _num_channels == 2 ? _float2_channelDesc : _float_channelDesc );
         assert( _num_channels == 1 || _num_channels == 2 || _num_channels == 4 );
     }

@@ -34,7 +34,7 @@ SOFTWARE.
 // vector types
 #include <helper_math.h>
 // findCudaGLDevice
-#include <helper_cuda_gl.h>
+#include <helper_gl.h>
 #include <math_constants.h>
 #define GLM_FORCE_CUDA
 #include <glm/glm.hpp>

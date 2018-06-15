@@ -165,7 +165,7 @@
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
-    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 9.1.props" />
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 9.2.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
@@ -217,7 +217,7 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;WIN64;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>c:\dev\thirdparty\glfw\include;c:\dev\thirdparty\glew\include;c:\dev\thirdparty\glm;c:\dev\thirdparty\glm_obj\include;c:\dev\thirdparty\fbx\include;$(CudaToolkitIncludeDir);$(CudaSamplesInclude);%(AdditionalIncludeDirectories);$(SolutionDir)$(ProjectName)\header;$(SolutionDir)$(ProjectName)\cuda;$(SolutionDir)$(ProjectName)\external</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>c:\dev\thirdparty\glfw\include;c:\dev\thirdparty\glew\include;c:\dev\thirdparty\glm;c:\dev\thirdparty\glm_obj\include;c:\dev\thirdparty\fbx\include;$(SolutionDir)$(ProjectName)\header;$(SolutionDir)$(ProjectName)\cuda;$(SolutionDir)$(ProjectName)\external;$(CudaSamplesInclude);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <MultiProcessorCompilation>false</MultiProcessorCompilation>
@@ -276,7 +276,7 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
       <WarningLevel>Level3</WarningLevel>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;WIN64;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>c:\dev\thirdparty\glfw\include;c:\dev\thirdparty\glew\include;c:\dev\thirdparty\glm;c:\dev\thirdparty\glm_obj\include;c:\dev\thirdparty\fbx\include;$(CudaToolkitIncludeDir);$(CudaSamplesInclude);%(AdditionalIncludeDirectories);$(SolutionDir)$(ProjectName)\header;$(SolutionDir)$(ProjectName)\cuda;$(SolutionDir)$(ProjectName)\external</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>c:\dev\thirdparty\glfw\include;c:\dev\thirdparty\glew\include;c:\dev\thirdparty\glm;c:\dev\thirdparty\glm_obj\include;c:\dev\thirdparty\fbx\include;$(SolutionDir)$(ProjectName)\header;$(SolutionDir)$(ProjectName)\cuda;$(SolutionDir)$(ProjectName)\external;$(CudaSamplesInclude);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -340,6 +340,6 @@ copy "shader\*.gs" "$(OutDir)\shader\"</Command>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
-    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 9.1.targets" />
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 9.2.targets" />
   </ImportGroup>
 </Project>

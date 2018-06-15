@@ -24,39 +24,40 @@ SOFTWARE.
 #ifndef OPTIONS_H
 #define OPTIONS_H
 
-const std::string models_dir( "c:\\dev\\assets\\models\\" );
-const std::string texture_dir( "c:\\dev\\assets\\textures\\hdr\\" );
+const std::string texture_dir( "C:\\Users\\ardavan\\Desktop\\noor\\docs\\scenes\\textures\\" );
 const std::vector<std::string> hdr_files = {
-    /*0*/std::string( texture_dir + "skylight-morn.exr" ),
-    /*1*/std::string( texture_dir + "skylight-morn.exr" ),
-    /*2*/std::string( texture_dir + "pisa_latlong.exr" ),
-    /*3*/std::string( texture_dir + "sky.exr" ),
-    /*4*/std::string( texture_dir + "hdri_sky_01_full.hdr" ),
-    /*5*/std::string( texture_dir + "hdri_sky_02_full.hdr" ),
-    /*6*/std::string( texture_dir + "hdri_sky_03_full.hdr" ),
-    /*7*/std::string( texture_dir + "georgentor_4k.hdr" ),
-    /*8*/std::string( texture_dir + "vignaioli_night_4k.hdr" ),
-    /*9*/std::string( texture_dir + "san_giuseppe_bridge_4k.hdr" ),
-    /*10*/std::string( texture_dir + "hotel_room_4k.hdr" ),
-    /*11*/std::string( texture_dir + "cayley_interior_4k.hdr" ),
-    /*12*/std::string( texture_dir + "hall_con.hdr" ),
-    /*13*/std::string( texture_dir + "envmap.exr" ),
-    /*14*/std::string( texture_dir + "harties_4k.hdr" ),
-    /*15*/std::string( texture_dir + "flower_road_4k.hdr" ),
-    /*16*/std::string( texture_dir + "noon_grass_4k.hdr" ),
-    /*17*/std::string( texture_dir + "umhlanga_sunrise_4k.hdr" ),
-    /*18*/std::string( texture_dir + "noon_grass_8k.hdr" ),
-    /*19*/std::string( texture_dir + "canada_montreal_loft_max_sunny.exr" ),
-    /*20*/std::string( texture_dir + "canada_montreal_nad_cafeteria_bright.exr" ),
-    /*21*/std::string( texture_dir + "canada_montreal_nad_photorealism.exr" ),
-    /*22*/std::string( texture_dir + "canada_montreal_pierre_bathroom.exr" ),
-    /*23*/std::string( texture_dir + "canada_montreal_pierre_kitchen.exr" ),
-    /*24*/std::string( texture_dir + "canada_montreal_thea.exr" ),
-    /*25*/std::string( texture_dir + "studio_small_06_2k.hdr" ),
-    /*26*/std::string( texture_dir + "studio_small_01_2k.hdr" )
+    /*0*/std::string( texture_dir + "hdri\\skylight-morn.exr" ),
+    /*1*/std::string( texture_dir + "hdri\\skylight-morn.exr" ),
+    /*2*/std::string( texture_dir + "hdri\\pisa_latlong.exr" ),
+    /*3*/std::string( texture_dir + "hdri\\sky.exr" ),
+    /*4*/std::string( texture_dir + "hdri\\hdri_sky_01_full.hdr" ),
+    /*5*/std::string( texture_dir + "hdri\\hdri_sky_02_full.hdr" ),
+    /*6*/std::string( texture_dir + "hdri\\hdri_sky_03_full.hdr" ),
+    /*7*/std::string( texture_dir + "hdri\\georgentor_4k.hdr" ),
+    /*8*/std::string( texture_dir + "hdri\\vignaioli_night_4k.hdr" ),
+    /*9*/std::string( texture_dir + "hdri\\san_giuseppe_bridge_4k.hdr" ),
+    /*10*/std::string( texture_dir + "hdri\\hotel_room_4k.hdr" ),
+    /*11*/std::string( texture_dir + "hdri\\cayley_interior_4k.hdr" ),
+    /*12*/std::string( texture_dir + "hdri\\hall_con.hdr" ),
+    /*13*/std::string( texture_dir + "hdri\\envmap.exr" ),
+    /*14*/std::string( texture_dir + "hdri\\harties_4k.hdr" ),
+    /*15*/std::string( texture_dir + "hdri\\flower_road_4k.hdr" ),
+    /*16*/std::string( texture_dir + "hdri\\noon_grass_4k.hdr" ),
+    /*17*/std::string( texture_dir + "hdri\\umhlanga_sunrise_4k.hdr" ),
+    /*18*/std::string( texture_dir + "hdri\\noon_grass_8k.hdr" ),
+    /*19*/std::string( texture_dir + "hdri\\canada_montreal_loft_max_sunny.exr" ),
+    /*20*/std::string( texture_dir + "hdri\\canada_montreal_nad_cafeteria_bright.exr" ),
+    /*21*/std::string( texture_dir + "hdri\\canada_montreal_nad_photorealism.exr" ),
+    /*22*/std::string( texture_dir + "hdri\\canada_montreal_pierre_bathroom.exr" ),
+    /*23*/std::string( texture_dir + "hdri\\canada_montreal_pierre_kitchen.exr" ),
+    /*24*/std::string( texture_dir + "hdri\\canada_montreal_thea.exr" ),
+    /*25*/std::string( texture_dir + "hdri\\studio_small_06_2k.hdr" ),
+    /*26*/std::string( texture_dir + "hdri\\studio_small_01_2k.hdr" ),
+    /*27*/std::string( texture_dir + "hdrihaven\\16k\\blue_lagoon_16k.hdr" )
 };
 
 
+const std::string models_dir( "c:\\dev\\assets\\models\\" );
 const std::vector<std::string> model_files = {
     /*0*/   std::string( models_dir + "obj\\cornell-box\\CornellBox-Original.obj" )
     /*1*/   ,std::string( models_dir + "obj\\cornell-box\\CornellBox-Sphere.obj" )

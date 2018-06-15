@@ -147,7 +147,6 @@ protected:
         cudaSurfaceObject_t dst_surfaceobj;
         checkNoorErrors( NOOR::create_surfaceobj( &src_surfaceobj, src_array ) );
         checkNoorErrors( NOOR::create_surfaceobj( &dst_surfaceobj, _array ) );
-        // run mipmap kernel
         dim3 block( 8, 8, 1 );
         dim3 grid( (uint) new_extent.width / block.x, (uint) new_extent.height / block.y, 1 );
         size_t shmsize = 8 * sizeof( ResampleWeight );
