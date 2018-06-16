@@ -309,7 +309,7 @@ void Model::loadMaterial() {
     if ( _spec._model_spec._skydome_type == 0 )
         _textures.emplace_back( _spec._model_spec._hdr_filename, cudaFilterModeLinear, cudaAddressModeClamp );
     else if ( _spec._model_spec._skydome_type == 1 )
-        _textures.emplace_back( skydome_res.x, skydome_res.y, cudaFilterModeLinear, cudaAddressModeClamp );
+        _textures.emplace_back( skydome_res.x, skydome_res.y, 4, cudaFilterModeLinear, cudaAddressModeClamp );
     else
         _textures.emplace_back( SKYDOME_COLOR );
 

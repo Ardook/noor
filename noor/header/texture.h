@@ -27,101 +27,67 @@ SOFTWARE.
 const cudaChannelFormatDesc _float4_channelDesc{ cudaCreateChannelDesc( 32, 32, 32, 32, cudaChannelFormatKindFloat ) };
 const cudaChannelFormatDesc _float2_channelDesc{ cudaCreateChannelDesc( 32, 32, 0, 0, cudaChannelFormatKindFloat ) };
 const cudaChannelFormatDesc _float_channelDesc{ cudaCreateChannelDesc( 32, 0, 0, 0, cudaChannelFormatKindFloat ) };
-class ImageTexture {
+
+class Texture {
 public:
-    std::string _filename{ "" };
-    int _width{ 0 };
-    int _height{ 0 };
-    int _num_channels{ 0 };
-    size_t _size_bytes{ 0 };
     float* _data{ nullptr };
-    cudaTextureFilterMode _filter_mode{ cudaFilterModeLinear };
-    cudaTextureAddressMode _address_mode{ cudaAddressModeWrap };
-    cudaChannelFormatDesc _channel_desc{ _float4_channelDesc };
+    int _width;
+    int _height;
+    int _num_channels;
+    size_t _size_bytes;
+    cudaTextureFilterMode _filter_mode;
+    cudaTextureAddressMode _address_mode;
+    cudaChannelFormatDesc _channel_desc;
 
-    ImageTexture() = default;
-    ImageTexture( const ImageTexture& t ) = default;
-    ImageTexture( int w,
-                  int h,
-                  cudaTextureFilterMode filter_mode = cudaFilterModeLinear,
-                  cudaTextureAddressMode address_mode = cudaAddressModeWrap ) :
-        _width( w )
-        , _height( h )
-        , _num_channels( 4 )
-        , _size_bytes( w*h * sizeof( float4 ) )
-        , _filter_mode( filter_mode )
-        , _address_mode( address_mode ) {
-        _data = new float[_width*_height * 4];
-        memset( _data, 0, _size_bytes );
-    }
-    ImageTexture( const float3& c ) :
-        _width( 1 )
-        , _height( 1 )
-        , _num_channels( 4 )
-        , _size_bytes( sizeof( float4 ) )
-        , _filter_mode( cudaFilterModePoint )
-        , _address_mode( cudaAddressModeClamp ) {
-        _data = new float[_num_channels];
-        _data[0] = c.x;
-        _data[1] = c.y;
-        _data[2] = c.z;
-        _data[3] = 1.0f;
-    }
-    ImageTexture( const float4& c ) :
-        _width( 1 )
-        , _height( 1 )
-        , _num_channels( 4 )
-        , _size_bytes( sizeof( float4 ) )
-        , _filter_mode( cudaFilterModePoint )
-        , _address_mode( cudaAddressModeClamp ) {
-        _data = new float[_num_channels];
-        _data[0] = c.x;
-        _data[1] = c.y;
-        _data[2] = c.z;
-        _data[3] = c.w;
-    }
-    ImageTexture( const float2& c ) :
-        _width( 1 )
-        , _height( 1 )
-        , _num_channels( 2 )
-        , _size_bytes( sizeof( float2 ) )
-        , _filter_mode( cudaFilterModePoint )
-        , _address_mode( cudaAddressModeClamp )
-        , _channel_desc( _float2_channelDesc ) {
-        _data = new float[_num_channels];
-        _data[0] = c.x;
-        _data[1] = c.y;
-    }
-    ImageTexture( float c ) :
-        _width( 1 )
-        , _height( 1 )
-        , _num_channels( 1 )
-        , _size_bytes( sizeof( float ) )
-        , _filter_mode( cudaFilterModePoint )
-        , _address_mode( cudaAddressModeClamp )
-        , _channel_desc( _float_channelDesc ) {
-        _data = new float[_num_channels];
-        _data[0] = c;
-    }
-    ImageTexture& operator=( const ImageTexture& tex ) = delete;
-    ImageTexture(
-        const std::string& filename
-        , cudaTextureFilterMode filter_mode = cudaFilterModeLinear
-        , cudaTextureAddressMode address_mode = cudaAddressModeWrap
+    Texture() = default;
+    Texture(
+        int width,
+        int height,
+        int num_channels,
+        cudaTextureFilterMode filter_mode,
+        cudaTextureAddressMode address_mode,
+        cudaChannelFormatDesc channel_desc
     ) :
-        _filename( filename )
-        , _filter_mode( filter_mode )
-        , _address_mode( address_mode ) {
-        load( filename );
+        _width( width ),
+        _height( height ),
+        _num_channels( num_channels ),
+        _filter_mode( filter_mode ),
+        _address_mode( address_mode ) {
+        _num_channels = _num_channels == 3 ? 4 : _num_channels;
+        int n = _width * _height * _num_channels;
+        _size_bytes = sizeof( float ) * n;
+        _data = new float[n];
     }
 
-    ImageTexture& operator=( ImageTexture&& tex ) {
+    ~Texture() {
+        if ( _data != nullptr ) {
+            delete[] _data;
+            _data = nullptr;
+        }
+    }
+
+    Texture( const Texture& t ) = default;
+    //	ImageTexture& operator=(const ImageTexture& tex) = delete;
+
+    Texture( Texture&& tex ) :
+        _width( tex._width )
+        , _height( tex._height )
+        , _num_channels( tex._num_channels )
+        , _size_bytes( tex._size_bytes )
+        , _data( tex._data )
+        , _filter_mode( tex._filter_mode )
+        , _address_mode( tex._address_mode )
+        , _channel_desc( tex._channel_desc ) {
+        tex._size_bytes = 0;
+        tex._data = nullptr;
+    }
+
+    Texture& operator=( Texture&& tex ) {
         if ( this == &tex )
             return *this;
         if ( _data != nullptr ) {
             delete[] _data; _data = nullptr;
         }
-        _filename = tex._filename;
         _width = tex._width;
         _height = tex._height;
         _num_channels = tex._num_channels;
@@ -134,26 +100,46 @@ public:
         tex._data = nullptr;
         return *this;
     }
+};
 
-    ImageTexture( ImageTexture&& tex ) :
-        _filename( tex._filename )
-        , _width( tex._width )
-        , _height( tex._height )
-        , _num_channels( tex._num_channels )
-        , _size_bytes( tex._size_bytes )
-        , _data( tex._data )
-        , _filter_mode( tex._filter_mode )
-        , _address_mode( tex._address_mode )
-        , _channel_desc( tex._channel_desc ) {
-        tex._size_bytes = 0;
-        tex._data = nullptr;
+class ImageTexture : public Texture {
+public:
+    ImageTexture() = default;
+
+    template<typename T>
+    ImageTexture( const T& c ) :
+        Texture( 1, 1,
+                 sizeof( T ) / sizeof( float ),
+                 cudaFilterModePoint,
+                 cudaAddressModeClamp,
+                 _float4_channelDesc
+        ) {
+        memset( _data, 1, _size_bytes );
+        memcpy( _data, &c, sizeof(c) );
+        _channel_desc = _num_channels == 4 ?
+            _float4_channelDesc :
+            ( _num_channels == 2 ? _float2_channelDesc : _float_channelDesc );
     }
 
-    ~ImageTexture() {
-        if ( _data ) {
-            delete[] _data;
-            _data = nullptr;
-        }
+    ImageTexture(
+        const std::string& filename,
+        cudaTextureFilterMode filter_mode = cudaFilterModeLinear,
+        cudaTextureAddressMode address_mode = cudaAddressModeWrap
+    ) : Texture() {
+        _filter_mode = filter_mode;
+        _address_mode = address_mode;
+        load( filename );
+    }
+
+    ImageTexture(
+        int w,
+        int h,
+        int num_channels = 4,
+        cudaTextureFilterMode filter_mode = cudaFilterModeLinear,
+        cudaTextureAddressMode address_mode = cudaAddressModeWrap,
+        cudaChannelFormatDesc channel_desc = _float4_channelDesc
+    ) : Texture( w, h, num_channels, filter_mode, address_mode, channel_desc ) {
+        memset( _data, 0, _size_bytes );
     }
 
     void load( const std::string& filename );

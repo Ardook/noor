@@ -43,6 +43,7 @@ static inline void print_error_stb( const std::string& filename,
                                     int line ) {
     print_error( filename, file, line );
     std::cerr << "\nSTB Error: " + std::string( stbi_failure_reason() ) << std::endl;
+    exit( EXIT_FAILURE );
 }
 
 void ImageTexture::load( const std::string& filename ) {
@@ -56,7 +57,6 @@ void ImageTexture::load( const std::string& filename ) {
     } else {
         if ( stbi_info( filename.c_str(), &_width, &_height, &_num_channels ) != 1 ) {
             print_error_stb( filename, __FILE__, __LINE__ );
-            exit( EXIT_FAILURE );
         }
         if ( _num_channels == 3 ) {
             _data = stbi_loadf( filename.c_str(), &_width, &_height, &_num_channels, 4 );
@@ -66,12 +66,11 @@ void ImageTexture::load( const std::string& filename ) {
         }
         if ( _data == nullptr ) {
             print_error_stb( filename, __FILE__, __LINE__ );
-            exit( EXIT_FAILURE );
         }
-        _channel_desc = _num_channels == 4 ?
-            _float4_channelDesc :
-            ( _num_channels == 2 ? _float2_channelDesc : _float_channelDesc );
-        assert( _num_channels == 1 || _num_channels == 2 || _num_channels == 4 );
     }
+    _channel_desc = _num_channels == 4 ?
+        _float4_channelDesc :
+        ( _num_channels == 2 ? _float2_channelDesc : _float_channelDesc );
+    assert( _num_channels == 1 || _num_channels == 2 || _num_channels == 4 );
     _size_bytes = _width * _height * _num_channels * sizeof( float );
 }
