@@ -26,7 +26,7 @@ SOFTWARE.
 
 const std::string texture_dir( "C:\\Users\\ardavan\\Desktop\\noor\\docs\\scenes\\textures\\" );
 const std::vector<std::string> hdr_files = {
-    /*0*/std::string( texture_dir + "hdri\\skylight-morn.exr" ),
+    /*0*/std::string( texture_dir + "hdri\\env.hdr" ),
     /*1*/std::string( texture_dir + "hdri\\skylight-morn.exr" ),
     /*2*/std::string( texture_dir + "hdri\\pisa_latlong.exr" ),
     /*3*/std::string( texture_dir + "hdri\\sky.exr" ),
@@ -114,7 +114,7 @@ const std::vector<std::string> model_files = {
 
 std::unordered_map<std::string, float> options = {
 { "-model",(float) 0},
-{ "-hdr",(float) 13 },
+{ "-hdr",(float) 0 },
 { "-skydome",(float) 0 },
 { "-width",(float) 1024 },
 { "-height",(float) 1024 },

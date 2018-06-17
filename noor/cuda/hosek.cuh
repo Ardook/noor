@@ -95,7 +95,7 @@ public:
         if ( gamma < _solar_radius ) {
             return _solar_scale* rgb;
         }
-        return rgb * scale;
+        return NOOR::inverseGammaCorrect( rgb * scale );
     }
 };
 #ifdef __CUDACC__

@@ -91,7 +91,7 @@ Noor is an experimental GPU Monte-Carlo pathtracer.  It started (Noor 1.0) as pa
 [![rough plastic](screenshots/50percent/screenshot-23-05-2018-10-08-01.jpg "rough plastic")](screenshots/100percent/screenshot-23-05-2018-10-08-01.jpg)
 [![smooth gold](screenshots/50percent/screenshot-22-05-2018-13-28-56.jpg "smooth gold")](screenshots/100percent/screenshot-22-05-2018-13-28-56.jpg)
 [![rough gold](screenshots/50percent/screenshot-22-05-2018-13-27-03.jpg "rough gold")](screenshots/100percent/screenshot-22-05-2018-13-27-03.jpg)
-[![rough gold smooth coat](screenshots/50percent/screenshot-22-05-2018-13-13-45.jpg "rough gold smoothcoating")](screenshots/100percent/screenshot-22-05-2018-13-13-45.jpg)
+[![rough gold clear coat](screenshots/50percent/screenshot-22-05-2018-13-13-45.jpg "rough gold clear coat")](screenshots/100percent/screenshot-22-05-2018-13-13-45.jpg)
 [![aniso rough gold](screenshots/50percent/screenshot-23-05-2018-10-15-17.jpg "anisotropic rough gold")](screenshots/100percent/screenshot-23-05-2018-10-15-17.jpg)
 [![smooth glass](screenshots/50percent/screenshot-21-05-2018-13-47-19.jpg "smooth glass")](screenshots/100percent/screenshot-21-05-2018-13-47-19.jpg)
 [![rough glass](screenshots/50percent/screenshot-29-05-2018-18-30-13.jpg "rough glass")](screenshots/100percent/screenshot-29-05-2018-18-30-13.jpg)

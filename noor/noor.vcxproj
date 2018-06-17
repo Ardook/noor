@@ -217,7 +217,7 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;WIN64;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>c:\dev\thirdparty\glfw\include;c:\dev\thirdparty\glew\include;c:\dev\thirdparty\glm;c:\dev\thirdparty\glm_obj\include;c:\dev\thirdparty\fbx\include;$(SolutionDir)$(ProjectName)\header;$(SolutionDir)$(ProjectName)\cuda;$(SolutionDir)$(ProjectName)\external;$(CudaSamplesInclude);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>c:\dev\thirdparty\fbx\include;c:\dev\thirdparty\glfw\include;c:\dev\thirdparty\glew\include;c:\dev\thirdparty\glm;c:\dev\thirdparty\glm_obj\include;$(SolutionDir)$(ProjectName)\header;$(SolutionDir)$(ProjectName)\cuda;$(SolutionDir)$(ProjectName)\external;$(CudaSamplesInclude);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <MultiProcessorCompilation>false</MultiProcessorCompilation>
@@ -243,7 +243,8 @@ copy "shader\*.gs" "$(OutDir)\shader\"</Command>
       <CodeGeneration>compute_61,sm_61</CodeGeneration>
       <FastMath>false</FastMath>
       <AdditionalOptions>-Wno-deprecated-gpu-targets %(AdditionalOptions)</AdditionalOptions>
-      <Include>$(CudaSamplesInclude)</Include>
+      <Include>
+      </Include>
       <GenerateRelocatableDeviceCode>false</GenerateRelocatableDeviceCode>
       <PtxAsOptionV>true</PtxAsOptionV>
       <GPUDebugInfo>true</GPUDebugInfo>
@@ -276,7 +277,7 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
       <WarningLevel>Level3</WarningLevel>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;WIN64;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>c:\dev\thirdparty\glfw\include;c:\dev\thirdparty\glew\include;c:\dev\thirdparty\glm;c:\dev\thirdparty\glm_obj\include;c:\dev\thirdparty\fbx\include;$(SolutionDir)$(ProjectName)\header;$(SolutionDir)$(ProjectName)\cuda;$(SolutionDir)$(ProjectName)\external;$(CudaSamplesInclude);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>c:\dev\thirdparty\fbx\include;c:\dev\thirdparty\glfw\include;c:\dev\thirdparty\glew\include;c:\dev\thirdparty\glm;c:\dev\thirdparty\glm_obj\include;$(SolutionDir)$(ProjectName)\header;$(SolutionDir)$(ProjectName)\cuda;$(SolutionDir)$(ProjectName)\external;$(CudaSamplesInclude);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -315,7 +316,8 @@ copy "shader\*.gs" "$(OutDir)\shader\"</Command>
       <TargetMachinePlatform>64</TargetMachinePlatform>
       <FastMath>true</FastMath>
       <AdditionalOptions>-Wno-deprecated-gpu-targets %(AdditionalOptions)</AdditionalOptions>
-      <Include>$(CudaSamplesInclude)</Include>
+      <Include>
+      </Include>
       <PtxAsOptionV>true</PtxAsOptionV>
       <Runtime>InheritFromHost</Runtime>
       <CodeGeneration>compute_61,sm_61</CodeGeneration>

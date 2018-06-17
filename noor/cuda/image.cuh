@@ -44,7 +44,7 @@ float Lanczos( float x, float tau = 2.0f ) {
     if ( x < 1e-5f ) return 1.f;
     if ( x > 1.f ) return 0.f;
     x *= NOOR_PI;
-    const float s = sinf( x * tau ) / ( x * tau );
+    const float s = sinf( x / tau ) / ( x / tau );
     const float lanczos = sinf( x ) / x;
     return s * lanczos;
 }

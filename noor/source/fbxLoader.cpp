@@ -598,6 +598,11 @@ glm::mat4 FBXLoader::getTransformation( const FbxLight* light ) const {
 void FBXLoader::getAreaLight( const FbxLight* light,
                               std::vector<CudaAreaLight>& area_light_data ) const {
     AreaMeshLightType type = QUAD;
+    FbxProperty lPropertyScale = light->GetNode()->FindProperty( "EmitterScale" );
+    float emitterScale = 1.0f;
+    if ( lPropertyScale.IsValid() ) {
+        emitterScale = static_cast<float>( lPropertyScale.Get<FbxDouble>() );
+    }
     FbxProperty lPropertyType = light->GetNode()->FindProperty( "Type" );
     if ( lPropertyType.IsValid() )
         type = static_cast<AreaMeshLightType>( lPropertyType.Get<FbxEnum>() );
@@ -626,7 +631,7 @@ void FBXLoader::getAreaLight( const FbxLight* light,
     Ke.z = static_cast<float>( color[2] );
 
     const float intensity = static_cast<float>( light->Intensity.Get() ) / 100.0f;
-    Ke *= intensity;
+    Ke *= intensity*emitterScale;
     area_light_data.emplace_back( shape, V2F3( Ke ), twoSided );
 }
 

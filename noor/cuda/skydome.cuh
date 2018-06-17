@@ -96,8 +96,6 @@ public:
         if ( constant ) return SKYDOME_COLOR;
         const float phi = NOOR::sphericalPhi( dir ) * NOOR_inv2PI;
         const float theta = NOOR::sphericalTheta( dir ) * NOOR_invPI;
-        //const float2 gradx{.005f,.005f};
-        //const float2 grady{.005f,.005f};
         return ( _type == PHYSICAL ) ?
             _constant_hosek_sky.querySkyModel( dir ) :
             make_float3( _tex.evaluate( phi, theta ) );
@@ -138,8 +136,7 @@ public:
         float sinTheta = 0.f;
         const float3 dir = NOOR::sphericalDirection( u, sinTheta );
         // PBRT page 850 3rd paragraph, sinTheta factor to uniform sample directions on sphere
-        pdf = ( sinTheta == 0 ) ? 0.0f : map_pdf /
-            ( 2.0f * NOOR_PI * NOOR_PI * sinTheta );
+        pdf = ( sinTheta == 0 ) ? 0.0f : map_pdf / ( 2.0f * NOOR_PI * NOOR_PI * sinTheta );
         return dir;
     }
 };

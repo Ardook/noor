@@ -52,11 +52,15 @@ public:
         _height( height ),
         _num_channels( num_channels ),
         _filter_mode( filter_mode ),
-        _address_mode( address_mode ) {
+        _address_mode( address_mode ),
+        _channel_desc( channel_desc ) 
+    {
         _num_channels = _num_channels == 3 ? 4 : _num_channels;
         int n = _width * _height * _num_channels;
         _size_bytes = sizeof( float ) * n;
         _data = new float[n];
+        _channel_desc = _num_channels == 4 ?  _float4_channelDesc :
+            ( _num_channels == 2 ? _float2_channelDesc : _float_channelDesc );
     }
 
     ~Texture() {
@@ -113,12 +117,10 @@ public:
                  cudaFilterModePoint,
                  cudaAddressModeClamp,
                  _float4_channelDesc
-        ) {
+        )
+    {
         memset( _data, 1, _size_bytes );
-        memcpy( _data, &c, sizeof(c) );
-        _channel_desc = _num_channels == 4 ?
-            _float4_channelDesc :
-            ( _num_channels == 2 ? _float2_channelDesc : _float_channelDesc );
+        memcpy( _data, &c, sizeof( c ) );
     }
 
     ImageTexture(

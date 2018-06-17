@@ -31,7 +31,7 @@ class HosekSky {
     float _turbidity{ 4.0f };
     float _sun_theta{ NOOR_PI_over_4 };
     float _sun_phi{ NOOR_PI_over_4 };
-    float3 _ground_albedo{ make_float3( .8f ) };
+    float3 _ground_albedo{ make_float3( 1.0f ) };
     float3 _solar_dir;
     bool _outofsync{ true };
 public:
@@ -44,7 +44,7 @@ public:
     HosekSky( const HosekSky& sky ) = default;
     HosekSky& operator=( const HosekSky& sky ) = default;
 
-    void update( float sun_theta, float sun_phi, float scale = 100.0f, float solar_radius = 2.f ) {
+    void update( float sun_theta, float sun_phi, float scale = 200.0f, float solar_radius = 2.f ) {
         _sun_theta = sun_theta;
         _sun_phi = sun_phi;
         const float elevation = NOOR_PI_over_2 - _sun_theta;
