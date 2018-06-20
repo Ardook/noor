@@ -1,6 +1,6 @@
 
 #### Noor
-Noor is an experimental GPU Monte-Carlo pathtracer.  It started (Noor 1.0) as part of a final class project (real-time Whitted raytracer) in 2009 and was recently resurrected as a pathtracer to assist me in learning and reinforcing the ideas and the topics covered in the PBRT book. 
+Noor is an experimental yet powerful GPU Monte-Carlo pathtracer (Multi-GPU support).  It started (Noor 1.0) as part of a final class project (real-time Whitted raytracer) in 2009 and was recently resurrected as a pathtracer to assist me in learning and reinforcing the ideas and the topics covered in the PBRT book. 
  
 #### Acceleration Data Structures:
 * BVH
@@ -46,7 +46,6 @@ Noor is an experimental GPU Monte-Carlo pathtracer.  It started (Noor 1.0) as pa
 * Environment (360 degrees)
 
 #### Work in Progress:
-* Multi-GPU
 * Bidirectional path tracing
 * Volume path tracing
 * Subsurface scattering
