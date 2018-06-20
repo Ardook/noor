@@ -27,17 +27,16 @@ SOFTWARE.
 __forceinline__ __device__
 float3 scatter(
     const CudaBSDF& bsdf
-    , const CudaIntersection& I
-    , float3& wi
+    , CudaIntersection& I
 ) {
     BxDFType bsdfFlags = BSDF_ALL;
     BxDFType sampledType;
     const float2 u = make_float2( I._rng(), I._rng() );
     float pdf = 0.0f;
-    const float3 f = bsdf.Sample_f( I, I._wo, wi, u, pdf, bsdfFlags, sampledType );
+    const float3 f = bsdf.Sample_f( I, I._wo, I._wi, pdf, bsdfFlags, sampledType );
     if ( pdf == 0.0f )
         return _constant_spec._black;
     else
-        return f * NOOR::absDot( wi, I._shading._n ) / pdf;
+        return f * NOOR::absDot( I._wi, I._shading._n ) / pdf;
 }
 #endif /* SCATTER_CUH */

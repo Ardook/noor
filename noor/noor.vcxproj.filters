@@ -211,6 +211,9 @@
     <ClInclude Include="cuda\cameraimp.cuh">
       <Filter>cuda</Filter>
     </ClInclude>
+    <ClInclude Include="cuda\moller_triangle.cuh">
+      <Filter>cuda</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\glRenderer.cpp">

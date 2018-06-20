@@ -25,20 +25,26 @@ SOFTWARE.
 #define ACCUMULATE_CUH
 
 __forceinline__ __device__
-void accumulate(
-    const CudaIntersection& I
-    , float3& wi
-    , float3& beta
-    , float3& L
-) {
-    CudaBSDF bsdf;
-    factoryBSDF( I, bsdf );
-    if ( _constant_spec.is_mis_enabled() )
-        L += beta * directMIS( bsdf, I );
-    else
-        L += beta * direct( bsdf, I );
-    beta *= scatter( bsdf, I, wi );
+bool rr_terminate( const CudaIntersection& I, int bounce, float3& beta ) {
+
+    // Russian Roulette 
+    if ( bounce >= _constant_spec._rr ) {
+        const float q = fmaxf( 0.05f, 1.0f - NOOR::maxcomp( beta ) );
+        if ( I._rng() < q ) {
+            beta /= 1.0f - q;
+            return true;
+        }
+    }
+    return false;
 }
+
+__forceinline__ __device__
+bool correct_sidedness( const CudaIntersection& I ) {
+    return ( !I.isTransparent() && ( dot( I._wi, I._geometry._n ) < 0 ) ) ?
+        false :
+        true;
+}
+
 /* Based on PBRT bump mapping */
 __forceinline__ __device__
 void bump( const CudaIntersection& I, CudaIntersection::ShadingFrame& frame ) {
@@ -60,7 +66,7 @@ void bump( const CudaIntersection& I, CudaIntersection::ShadingFrame& frame ) {
     frame._dpdu = NOOR::normalize( frame._dpdu - frame._n*dot( frame._n, frame._dpdu ) );
     // const float sign = dot( cross( n, I._shading._dpdu ), I._shading._dpdv ) < 0.0f ? -1.0f : 1.0f;
     frame._dpdv = NOOR::normalize( cross( frame._n, frame._dpdu ) );
-    frame._n = NOOR::faceforward( frame._n, I._n );
+    frame._n = NOOR::faceforward( frame._n, I._geometry._n );
 }
 
 /* Based on PBRT bump mapping */
@@ -68,5 +74,25 @@ __forceinline__ __device__
 void bump( CudaIntersection& I ) {
     bump( I, I.getShadingFrame() );
 }
+
+__forceinline__ __device__
+void accumulate(
+    CudaIntersection& I,
+    const CudaRay& ray,
+    float3& beta,
+    float3& L
+) {
+    if ( ray.isDifferential() && I.isBumped() ) {
+        bump( I );
+    }
+    CudaBSDF bsdf;
+    factoryBSDF( I, bsdf );
+    L += ( _constant_spec.is_mis_enabled() ) ?
+        beta * directMIS( bsdf, I ) :
+        beta * direct( bsdf, I );
+    beta *= scatter( bsdf, I );
+}
+
+
 
 #endif /* ACCUMULATE_CUH */

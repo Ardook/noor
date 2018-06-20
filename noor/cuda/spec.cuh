@@ -50,7 +50,7 @@ public:
     unsigned short _bounces;
     unsigned short _rr;
     unsigned short _bvh_height;
-    unsigned short _gpuID;
+    unsigned short _num_gpus;
     SkydomeType _skydome_type;
     bool _debug_sky;
     bool _mis;

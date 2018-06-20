@@ -35,6 +35,7 @@ protected:
     cudaArray_t _array;
     cudaTextureFilterMode _filter_mode;
     cudaTextureAddressMode _address_mode;
+    cudaChannelFormatDesc _channel_desc;
     cudaTextureObject_t _read_tex_obj;
     cudaSurfaceObject_t _write_surface_obj;
 public:
@@ -127,18 +128,22 @@ protected:
         void load( const ImageTexture& t ) {
         cudaMemcpy3DParms copyParams;
         memset( &copyParams, 0, sizeof( cudaMemcpy3DParms ) );
-        copyParams.srcPtr = make_cudaPitchedPtr( t._data, t._num_channels * t._width * sizeof( float ), t._width, t._height );
-        copyParams.extent = make_cudaExtent( t._width, t._height, 1 );
+        copyParams.srcPtr = make_cudaPitchedPtr( (void*)t.getData(), 
+                                                 t.getNumChannels() * t.getWidth() * sizeof( float ), 
+                                                 t.getWidth(), 
+                                                 t.getHeight() );
+        copyParams.extent = make_cudaExtent( t.getWidth(), t.getHeight(), 1 );
         copyParams.kind = cudaMemcpyHostToDevice;
-        if ( width() == t._width && height() == t._height ) {
+        if ( width() == t.getWidth()&& height() == t.getHeight() ) {
             copyParams.dstArray = _array;
             checkNoorErrors( cudaMemcpy3D( &copyParams ) );
         } else {
             cudaArray_t src_array;
-            checkNoorErrors( NOOR::malloc_array( &src_array, &t._channel_desc, t._width, t._height ) );
+            cudaChannelFormatDesc channel_desc = t.getChannelDesc();
+            checkNoorErrors( NOOR::malloc_array( &src_array, &channel_desc, t.getWidth(), t.getHeight() ) );
             copyParams.dstArray = src_array;
             checkNoorErrors( cudaMemcpy3D( &copyParams ) );
-            resize( src_array, make_cudaExtent( t._width, t._height, 0 ), _extent );
+            resize( src_array, make_cudaExtent( t.getWidth(), t.getHeight(), 0 ), _extent );
         }
     }
     __host__
@@ -216,14 +221,15 @@ public:
 
     __host__
         CudaMipMap( const ImageTexture& t ) :
-        CudaTexture( make_cudaExtent( nearestPow2( t._width ), nearestPow2( t._height ), 0 ),
-                     t._num_channels,
-                     t._filter_mode,
-                     t._address_mode
+        CudaTexture( make_cudaExtent( nearestPow2( t.getWidth() ), nearestPow2( t.getHeight() ), 0 ),
+                     t.getNumChannels(),
+                     t.getFilterMode(),
+                     t.getAddressMode()
         ) {
         // how many mipmaps we need
         int levels = getMipMapLevels( _extent );
-        checkNoorErrors( cudaMallocMipmappedArray( &_mipmapArray, &t._channel_desc, _extent, levels ) );
+        cudaChannelFormatDesc channel_desc = t.getChannelDesc();
+        checkNoorErrors( cudaMallocMipmappedArray( &_mipmapArray, &channel_desc, _extent, levels ) );
         checkNoorErrors( cudaGetMipmappedArrayLevel( &_array, _mipmapArray, 0 ) );
         // upload level 0, resize the source if it's not power of 2
         load( t );
@@ -347,10 +353,11 @@ public:
     Cuda2DTexture() = default;
     __host__
         Cuda2DTexture( const ImageTexture& t ) :
-        CudaTexture( make_cudaExtent( t._width, t._height, 0 ), t._num_channels ) {
-        checkNoorErrors( NOOR::malloc_array( &_array, &t._channel_desc, width(), height() ) );
+        CudaTexture( make_cudaExtent( t.getWidth(), t.getHeight(), 0 ), t.getNumChannels() ) {
+        cudaChannelFormatDesc channel_desc = t.getChannelDesc();
+        checkNoorErrors( NOOR::malloc_array( &_array, &channel_desc, width(), height() ) );
         load( t );
-        checkNoorErrors( NOOR::create_2d_texobj( &_read_tex_obj, _array, t._filter_mode, t._address_mode ) );
+        checkNoorErrors( NOOR::create_2d_texobj( &_read_tex_obj, _array, t.getFilterMode(), t.getAddressMode() ) );
         checkNoorErrors( NOOR::create_surfaceobj( &_write_surface_obj, _array ) );
     }
 

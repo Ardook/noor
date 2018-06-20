@@ -23,7 +23,8 @@ SOFTWARE.
 */
 #ifndef CUDABVH_CUH
 #define CUDABVH_CUH
-
+//#include "moller_triangle.cuh"
+#include "triangle.cuh"
 
 class CudaBVHNode {
 public:
@@ -118,6 +119,7 @@ public:
         bool hit = false;
         for ( uint tri_idx = start; tri_idx < count; ++tri_idx ) {
             if ( tri.intersect( ray, intersection, tri_idx ) )
+            //if ( intersect( ray, intersection, tri_idx ) )
                 hit = true;
         }
         return hit;
@@ -129,6 +131,7 @@ public:
         CudaTriangle tri;
         for ( uint tri_idx = start; tri_idx < count; ++tri_idx ) {
             if ( tri.intersect( ray, tri_idx ) ) {
+            //if ( intersect( ray, tri_idx ) ) {
                 return true;
             }
         }
@@ -187,7 +190,6 @@ bool intersect( const CudaRay& ray, CudaIntersection& I ) {
         }
     }
     if ( hit ) {
-        I._p = ray.pointAtParameter( ray.getTmax() );
         I.updateIntersection( ray );
         I._eta = _material_manager.getIorDielectric( I ).x;
     }

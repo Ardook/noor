@@ -57,7 +57,15 @@ public:
 };
 
 class  CudaIntersection {
+public:
     struct GeometryFrame {
+        float3 _dpdu{ 0.0f, 0.0f, 0.0f };
+        float3 _dpdv{ 0.0f, 0.0f, 0.0f };
+        float3 _n{ 0.0f, 0.0f, 0.0f };
+        float3 _p{ 0.0f, 0.0f, 0.0f };
+    };
+    struct ShadingFrame {
+        float3 _n{ 0.0f, 0.0f, 0.0f };
         float3 _dpdu{ 0.0f, 0.0f, 0.0f };
         float3 _dpdv{ 0.0f, 0.0f, 0.0f };
     };
@@ -72,34 +80,29 @@ class  CudaIntersection {
 
         float3 _dndu{ 0.0f, 0.0f, 0.0f };
         float3 _dndv{ 0.0f, 0.0f, 0.0f };
+
         __device__
             void reset() {
             _dudx = _dudy = _dvdx = _dvdy = 0;
         }
     };
     
-    MaterialType _material_type{ DIFFUSE };
-    int _tid;
-public:
-    struct ShadingFrame {
-        float3 _n{ 0.0f, 0.0f, 0.0f };
-        float3 _dpdu{ 0.0f, 0.0f, 0.0f };
-        float3 _dpdv{ 0.0f, 0.0f, 0.0f };
-    };
+    
     const CudaRNG& _rng;
     GeometryFrame _geometry;
     ShadingFrame _shading;
     DifferentialFrame _differential;
-    float3 _n{ 0.0f, 0.0f, 0.0f };
-    float3 _p{ 0.0f, 0.0f, 0.0f };
     float3 _wo{ 0.0f, 0.0f, 0.0f };
+    float3 _wi{ 0.0f, 0.0f, 0.0f };
     float2 _uv{ 0.0f, 0.0f };
     float _u{ 0.0f };
     float _v{ 0.0f };
+    float _eta{ 1.0f };
     uint _tri_idx{ 0u };
     uint _mat_idx{ 0u };
     uint _ins_idx{ 0u };
-    float _eta{ 1.0f };
+    int _tid{ 0 };
+    MaterialType _material_type{ DIFFUSE };
 
     __device__
         CudaIntersection( const CudaRNG& rng, int tid ) :
@@ -107,12 +110,12 @@ public:
         _tid( tid ) {}
 
     __device__
-        CudaRay spawnRay( const CudaRay& ray, const float3& wi ) const {
+        CudaRay spawnRay( const CudaRay& ray ) const {
         const bool isDifferential = isGlossy() && ray.isDifferential();
         if ( isDifferential ) {
-            if ( dot( wi, _n ) >= 0.0f ) {
-                const float3& origin = _p +_constant_spec._reflection_bias * _n;
-                const float3& dir = wi;
+            if ( dot( _wi, _geometry._n ) >= 0.0f ) {
+                const float3& origin = _geometry._p +_constant_spec._reflection_bias * _geometry._n;
+                const float3& dir = _wi;
                 const float3 origin_dx = ( origin + _differential._dpdx );
                 const float3 origin_dy = ( origin + _differential._dpdy );
 
@@ -125,12 +128,12 @@ public:
                 const float dDNdx = dot( dwodx, _shading._n ) + dot( _wo, dndx );
                 const float dDNdy = dot( dwody, _shading._n ) + dot( _wo, dndy );
 
-                const float3 dir_dx = wi - dwodx + 2.f *( dot( _wo, _shading._n ) * dndx + dDNdx * _shading._n );
-                const float3 dir_dy = wi - dwody + 2.f *( dot( _wo, _shading._n ) * dndy + dDNdy * _shading._n );
+                const float3 dir_dx = _wi - dwodx + 2.f *( dot( _wo, _shading._n ) * dndx + dDNdx * _shading._n );
+                const float3 dir_dy = _wi - dwody + 2.f *( dot( _wo, _shading._n ) * dndy + dDNdy * _shading._n );
                 return CudaRay( origin, dir, origin_dx, origin_dy, dir_dx, dir_dy );
             } else {
-                const float3& origin = _p-_constant_spec._reflection_bias * _n;
-                const float3& dir = wi;
+                const float3& origin = _geometry._p-_constant_spec._reflection_bias * _geometry._n;
+                const float3& dir = _wi;
                 const float3 origin_dx = ( origin + _differential._dpdx );
                 const float3 origin_dy = ( origin + _differential._dpdy );
 
@@ -147,35 +150,35 @@ public:
                 const float3 dwody = -( ray.getDirDy() + _wo );
                 const float dDNdx = dot( dwodx, _shading._n ) + dot( _wo, dndx );
                 const float dDNdy = dot( dwody, _shading._n ) + dot( _wo, dndy );
-                const float mu = eta * dot( w, _shading._n ) - dot( wi, _shading._n );
+                const float mu = eta * dot( w, _shading._n ) - dot( _wi, _shading._n );
                 const float dmudx =
-                    ( eta - ( eta * eta * dot( w, _shading._n ) ) / dot( wi, _shading._n ) ) * dDNdx;
+                    ( eta - ( eta * eta * dot( w, _shading._n ) ) / dot( _wi, _shading._n ) ) * dDNdx;
                 const float dmudy =
-                    ( eta - ( eta * eta * dot( w, _shading._n ) ) / dot( wi, _shading._n ) ) * dDNdy;
+                    ( eta - ( eta * eta * dot( w, _shading._n ) ) / dot( _wi, _shading._n ) ) * dDNdy;
 
-                const float3 dir_dx = wi + eta * dwodx - ( mu * dndx + dmudx *_shading._n );
-                const float3 dir_dy = wi + eta * dwody - ( mu * dndy + dmudy *_shading._n );
+                const float3 dir_dx = _wi + eta * dwodx - ( mu * dndx + dmudx *_shading._n );
+                const float3 dir_dy = _wi + eta * dwody - ( mu * dndy + dmudy *_shading._n );
                 return CudaRay( origin, dir, origin_dx, origin_dy, dir_dx, dir_dy );
             }
         } else {
-            return dot( wi, _n ) >= 0.0f ?
-                CudaRay( _p + _constant_spec._reflection_bias * _n, wi ) :
-                CudaRay( _p - _constant_spec._reflection_bias * _n, wi );
+            return dot( _wi, _geometry._n ) >= 0.0f ?
+                CudaRay( _geometry._p + _constant_spec._reflection_bias * _geometry._n, _wi ) :
+                CudaRay( _geometry._p - _constant_spec._reflection_bias * _geometry._n, _wi );
         }
     }
 
     __device__
         CudaRay spawnShadowRay( const float3& dir, float tmax = NOOR_INF ) const {
-        return dot( dir, _n ) >= 0.0f ?
-            CudaRay( _p + _constant_spec._reflection_bias * _n, dir, tmax ) :
-            CudaRay( _p - _constant_spec._reflection_bias * _n, dir, tmax );
+        return dot( dir, _geometry._n ) >= 0.0f ?
+            CudaRay( _geometry._p + _constant_spec._reflection_bias * _geometry._n, dir, tmax ) :
+            CudaRay( _geometry._p - _constant_spec._reflection_bias * _geometry._n, dir, tmax );
     }
 
     __device__
         CudaRay spawnShadowRay( const CudaVisibility& v ) const {
-        const float3 p = dot( v._wi, _n ) >= 0.0f ?
-            v._from + _constant_spec._reflection_bias * _n :
-            v._from - _constant_spec._reflection_bias * _n;
+        const float3 p = dot( v._wi, _geometry._n ) >= 0.0f ?
+            v._from + _constant_spec._reflection_bias * _geometry._n :
+            v._from - _constant_spec._reflection_bias * _geometry._n;
         float dist = length( p - v._to );
         dist -= dist * _constant_spec._shadow_bias;
         return CudaRay( p, v._wi, dist );
@@ -240,6 +243,7 @@ public:
     }
     __device__
         void updateIntersection( const CudaRay& ray ) {
+        _geometry._p = ray.pointAtParameter( ray.getTmax() );
         if ( _material_type & MESHLIGHT ) return;
         const uint4 attr_idx = _mesh_manager.getAttrIndex( _tri_idx );
         _mat_idx = attr_idx.w;
@@ -274,7 +278,7 @@ public:
         const CudaTransform S = _transform_manager.getObjectToWorldTransformation( _ins_idx );
         const float3 dp01 = S.transformVector( v1 - v0 );
         const float3 dp02 = S.transformVector( v2 - v0 );
-        _n = NOOR::normalize( cross( dp01, dp02 ) );
+        _geometry._n = NOOR::normalize( cross( dp01, dp02 ) );
 
         const float2 duv01 = uv1 - uv0;
         const float2 duv02 = uv2 - uv0;
@@ -286,14 +290,15 @@ public:
             _geometry._dpdu = ( A[0][0] * dp01 + A[0][1] * dp02 );
             _geometry._dpdv = ( A[1][0] * dp01 + A[1][1] * dp02 );
             if ( NOOR::length2( cross( _geometry._dpdu, _geometry._dpdv ) ) == 0.0f ) {
-                NOOR::coordinateSystem( _n, _geometry._dpdu, _geometry._dpdv );
+                NOOR::coordinateSystem( _geometry._n, _geometry._dpdu, _geometry._dpdv );
             }
         } else {
-            NOOR::coordinateSystem( _n, _geometry._dpdu, _geometry._dpdv );
+            NOOR::coordinateSystem( _geometry._n, _geometry._dpdu, _geometry._dpdv );
         }
         const float3& n = _shading._n;
         _shading._dpdu = _geometry._dpdu;
         _shading._dpdv = _geometry._dpdv;
+
         // Gram-Schmidt
         _shading._dpdu = NOOR::normalize( _shading._dpdu - n*dot( n, _shading._dpdu ) );
         const float sign = dot( cross( n, _shading._dpdu ), _shading._dpdv ) < 0.0f ? -1.0f : 1.0f;
@@ -321,34 +326,33 @@ public:
         if ( !ray.isDifferential() ) {
             return;
         }
-        const float d = dot( _n, _p );
-        const float tx = -( dot( _n, ray.getOriginDx() ) - d ) / dot( _n, ray.getDirDx() );
+        const float d = dot( _geometry._n, _geometry._p );
+        const float tx = -( dot( _geometry._n, ray.getOriginDx() ) - d ) / dot( _geometry._n, ray.getDirDx() );
         if ( isinf( tx ) || isnan( tx ) ) {
             return;
         }
         const float3 px = ray.getOriginDx() + tx * ray.getDirDx();
 
-        const float ty = -( dot( _n, ray.getOriginDy() ) - d ) / dot( _n, ray.getDirDy() );
+        const float ty = -( dot( _geometry._n, ray.getOriginDy() ) - d ) / dot( _geometry._n, ray.getDirDy() );
         if ( isinf( ty ) || isnan( ty ) ) {
             return;
         }
         const float3 py = ray.getOriginDy() + ty * ray.getDirDy();
 
-        _differential._dpdx = px - _p;
-        _differential._dpdy = py - _p;
+        _differential._dpdx = px - _geometry._p;
+        _differential._dpdy = py - _geometry._p;
 
         int2 dim;
-        if ( fabsf( _n.x ) > fabsf( _n.y ) && fabsf( _n.x ) > fabsf( _n.z ) ) {
+        if ( fabsf( _geometry._n.x ) > fabsf( _geometry._n.y ) && fabsf( _geometry._n.x ) > fabsf( _geometry._n.z ) ) {
             dim.x = 1;
             dim.y = 2;
-        } else if ( fabsf( _n.y ) > fabsf( _n.z ) ) {
+        } else if ( fabsf( _geometry._n.y ) > fabsf( _geometry._n.z ) ) {
             dim.x = 0;
             dim.y = 2;
         } else {
             dim.x = 0;
             dim.y = 1;
         }
-
         const NOOR::noor_float3 dpdu( _geometry._dpdu );
         const NOOR::noor_float3 dpdv( _geometry._dpdv );
 

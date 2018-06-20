@@ -62,7 +62,7 @@ float Pdf(
     const float3 &wo,
     const float3 &wi
 ) {
-    switch ( bxdf->_index ) {
+    switch ( bxdf->getIndex() ) {
         // reflections
         case ShadowCatcher:
             return ( (CudaShadowCatcher*) bxdf )->Pdf( I, wo, wi );
@@ -102,7 +102,7 @@ float3 f(
     const float3 &wo,
     const float3 &wi
 ) {
-    switch ( bxdf->_index ) {
+    switch ( bxdf->getIndex() ) {
         // reflections
         case ShadowCatcher:
             return ( (CudaShadowCatcher*) bxdf )->f( I, wo, wi );
@@ -145,7 +145,7 @@ float3 Sample_f(
     float &pdf,
     BxDFType &sampledType
 ) {
-    switch ( bxdf->_index ) {
+    switch ( bxdf->getIndex() ) {
         // reflections
         case ShadowCatcher:
             return ( (CudaShadowCatcher*) bxdf )->Sample_f( I, wo, wi, u, pdf, sampledType );
@@ -207,7 +207,6 @@ struct BxDFs {
 class CudaBSDF {
 public:
     CudaBxDF* _bxdfs[8];
-    //BxDFs _bxdfs;
     int _nbxdfs;
 
     __device__
@@ -258,12 +257,12 @@ public:
         const CudaONB onb( I._shading._n, I._shading._dpdu, I._shading._dpdv );
         const float3 wo = onb.toLocal( woWorld );
         const float3 wi = onb.toLocal( wiWorld );
-        const bool reflect = dot( wiWorld, I._n ) * dot( woWorld, I._n ) > 0;
+        const bool reflect = dot( wiWorld, I._geometry._n ) * dot( woWorld, I._geometry._n ) > 0;
         float3 f = _constant_spec._black;
         for ( int i = 0; i < _nbxdfs; ++i )
             if ( _bxdfs[i]->MatchesFlags( flags ) &&
-                ( ( reflect && ( _bxdfs[i]->_type & BSDF_REFLECTION ) ) ||
-                 ( !reflect && ( _bxdfs[i]->_type & BSDF_TRANSMISSION ) ) ) ) {
+                ( ( reflect && ( _bxdfs[i]->getType() & BSDF_REFLECTION ) ) ||
+                 ( !reflect && ( _bxdfs[i]->getType() & BSDF_TRANSMISSION ) ) ) ) {
                 f += ::f( _bxdfs[i], I, wo, wi );
             }
         return f;
@@ -274,7 +273,6 @@ public:
         const CudaIntersection& I,
         const float3 &woWorld,
         float3 &wiWorld,
-        const float2 &u,
         float &pdf,
         BxDFType type,
         BxDFType &sampledType
@@ -285,6 +283,7 @@ public:
             sampledType = BxDFType( 0 );
             return _constant_spec._black;
         }
+        const float2 u = make_float2( I._rng(), I._rng() );
         const int comp = min( (int) floorf( u.x * matchingComps ), matchingComps - 1 );
         const float2 uRemapped = make_float2( fminf( u.x * matchingComps - comp, NOOR_ONE_MINUS_EPSILON ), u.y );
         CudaBxDF *bxdf = nullptr;
@@ -302,7 +301,7 @@ public:
             return _constant_spec._black;
         }
         pdf = 0;
-        sampledType = bxdf->_type;
+        sampledType = bxdf->getType();
         float3 wi;
         float3 f = ::Sample_f( bxdf, I, wo, wi, uRemapped, pdf, sampledType );
         if ( pdf == 0 ) {
@@ -312,20 +311,20 @@ public:
         wiWorld = onb.toWorld( wi );
 
         // Compute overall PDF with all matching _BxDF_s
-        if ( !( bxdf->_type & BSDF_SPECULAR ) && matchingComps > 1 )
+        if ( !bxdf->isSpecular() && matchingComps > 1 )
             for ( int i = 0; i < _nbxdfs; ++i )
                 if ( _bxdfs[i] != bxdf && _bxdfs[i]->MatchesFlags( type ) )
                     pdf += ::Pdf( _bxdfs[i], I, wo, wi );
         if ( matchingComps > 1 ) pdf /= matchingComps;
 
         // Compute value of BSDF for sampled direction
-        if ( !( bxdf->_type & BSDF_SPECULAR ) ) {
-            bool reflect = dot( wiWorld, I._n ) * dot( woWorld, I._n ) > 0;
+        if ( !bxdf->isSpecular() ) {
+            bool reflect = dot( wiWorld, I._geometry._n ) * dot( woWorld, I._geometry._n ) > 0;
             //f = _constant_spec._black;
             for ( int i = 0; i < _nbxdfs; ++i )
                 if ( _bxdfs[i] != bxdf && _bxdfs[i]->MatchesFlags( type ) &&
-                     ( ( reflect && ( _bxdfs[i]->_type & BSDF_REFLECTION ) ) ||
-                     ( !reflect && ( _bxdfs[i]->_type & BSDF_TRANSMISSION ) ) ) )
+                     ( ( reflect && ( _bxdfs[i]->getType() & BSDF_REFLECTION ) ) ||
+                     ( !reflect && ( _bxdfs[i]->getType() & BSDF_TRANSMISSION ) ) ) )
                     f += ::f( _bxdfs[i], I, wo, wi );
         }
         return f;

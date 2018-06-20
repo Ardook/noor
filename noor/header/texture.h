@@ -29,7 +29,7 @@ const cudaChannelFormatDesc _float2_channelDesc{ cudaCreateChannelDesc( 32, 32, 
 const cudaChannelFormatDesc _float_channelDesc{ cudaCreateChannelDesc( 32, 0, 0, 0, cudaChannelFormatKindFloat ) };
 
 class Texture {
-public:
+protected:
     float* _data{ nullptr };
     int _width;
     int _height;
@@ -39,6 +39,7 @@ public:
     cudaTextureAddressMode _address_mode;
     cudaChannelFormatDesc _channel_desc;
 
+public:
     Texture() = default;
     Texture(
         int width,
@@ -104,9 +105,31 @@ public:
         tex._data = nullptr;
         return *this;
     }
+    const float* getData() const {
+        return _data;
+    }
+    int getWidth()const {
+        return _width;
+    }
+    int getHeight()const {
+        return _height;
+    }
+    int getNumChannels()const {
+        return _num_channels;
+    }
+    cudaChannelFormatDesc getChannelDesc() const {
+        return _channel_desc;
+    }
+    cudaTextureAddressMode getAddressMode() const {
+        return _address_mode;
+    }
+    cudaTextureFilterMode getFilterMode() const {
+        return _filter_mode;
+    }
 };
 
 class ImageTexture : public Texture {
+    void load( const std::string& filename );
 public:
     ImageTexture() = default;
 
@@ -143,8 +166,5 @@ public:
     ) : Texture( w, h, num_channels, filter_mode, address_mode, channel_desc ) {
         memset( _data, 0, _size_bytes );
     }
-
-    void load( const std::string& filename );
-
 };
 #endif /* TEXTURE_H */

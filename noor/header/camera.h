@@ -184,8 +184,11 @@ public:
 
     void updateLookAt() {
         if ( _type == ENV || _type == ORTHO ) return;
-        const glm::vec4 lookAt = F2V4( get_lookAt() );
-        _lookAt = ( lookAt.w > 0.0f ) ? lookAt : _lookAt;
+        //const glm::vec4 lookAt = F2V4( get_lookAt() );
+        float4 tmp;
+        get_lookAt( tmp );
+        const glm::vec4 lookAt = F2V4( tmp );
+        _lookAt = ( tmp.w > 0.0f ) ? lookAt : _lookAt;
     }
 
     void motion( int x, int y ) {

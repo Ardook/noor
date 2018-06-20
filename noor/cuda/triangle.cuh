@@ -78,6 +78,7 @@ public:
         MaterialType materialType() const {
         return  (MaterialType)_cnu_cnv_deg_mat.w;
     }
+
     __device__
         bool intersect(
         const CudaRay& ray,
@@ -135,7 +136,7 @@ public:
             I._u = u;
             I._v = v;
             I._tri_idx = tri_idx;
-            I.setMaterialType(  materialType());
+            I.setMaterialType( materialType() );
             ray.setTmax( t );
         }
         return hit;

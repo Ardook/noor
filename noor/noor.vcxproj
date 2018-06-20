@@ -43,6 +43,7 @@
     <ClInclude Include="cuda\math.cuh" />
     <ClInclude Include="cuda\mesh.cuh" />
     <ClInclude Include="cuda\bsdf.cuh" />
+    <ClInclude Include="cuda\moller_triangle.cuh" />
     <ClInclude Include="cuda\render.cuh" />
     <ClInclude Include="cuda\scatter.cuh" />
     <ClInclude Include="cuda\shape.cuh" />
@@ -321,7 +322,7 @@ copy "shader\*.gs" "$(OutDir)\shader\"</Command>
       <PtxAsOptionV>true</PtxAsOptionV>
       <Runtime>InheritFromHost</Runtime>
       <CodeGeneration>compute_61,sm_61</CodeGeneration>
-      <MaxRegCount>90</MaxRegCount>
+      <MaxRegCount>75</MaxRegCount>
       <GPUDebugInfo>false</GPUDebugInfo>
       <GenerateLineInfo>false</GenerateLineInfo>
       <Warning>W3</Warning>

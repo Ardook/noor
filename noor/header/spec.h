@@ -99,17 +99,17 @@ public:
 
 class Spec {
 public:
-    int _gpu;
+    int _num_gpus;
     Spec(
         const BVHSpec& bvh_spec,
         const CameraSpec& camera_spec,
         const ModelSpec model_spec,
-        int gpu = 0
+        int num_gpu = 0
     ) :
         _bvh_spec( bvh_spec ),
         _camera_spec( camera_spec ),
         _model_spec( model_spec ),
-        _gpu( gpu ) {}
+        _num_gpus( num_gpu ) {}
 
     BVHSpec _bvh_spec;
     CameraSpec _camera_spec;

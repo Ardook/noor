@@ -129,7 +129,7 @@ extern "C" {
     void update_cuda_spec();
     void cuda_path_tracer( unsigned int& frameCount );
     void device_free_memory();
-    float4 get_lookAt();
+    void get_lookAt(float4& lookAt);
 }
 // This will output the proper CUDA error strings in the event that a CUDA host call returns an error
 #define checkNoorErrors(val) checkError ( (val), #val, __FILE__, __LINE__ )

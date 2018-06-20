@@ -63,7 +63,7 @@ void Scene::load() {
     _spec->_shadow_bias = 0.0001f * _scene_radius;
     _spec->_world_radius = _scene_radius;
     _spec->_bvh_root_node = _cuda_payload->_bvh_root_node;
-    _spec->_gpuID = _host_spec._gpu;
+    _spec->_num_gpus = _host_spec._num_gpus;
     _spec->_skydome_type = (SkydomeType) _host_spec._model_spec._skydome_type;
     _camera = std::make_unique<Camera>(
         *this

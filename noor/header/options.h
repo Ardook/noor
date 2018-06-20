@@ -123,7 +123,7 @@ std::unordered_map<std::string, float> options = {
 { "-samples",(float) 1 },
 { "-bounces",(float) 2 },
 { "-rr",(float) 1 },
-{ "-gpu",(float) 0 },
+{ "-num_gpus",(float) 2 },
 { "-bvh_num_bins",(float) 16 },
 { "-bvh_max_height",(float) 32 },
 { "-bvh_min_leaf_tris",(float) 2 },
@@ -263,7 +263,7 @@ inline bool parseOptions( int argc, char * argv[] ) {
     noor_spec._bvh_spec._max_leaf_tris = static_cast<glm::uint32>( options["-bvh_max_leaf_tris"] );
     noor_spec._bvh_spec._Ci = options["-bvh_ci"];
     noor_spec._bvh_spec._Ct = options["-bvh_ct"];
-    noor_spec._gpu = options["-gpu"];
+    noor_spec._num_gpus = options["-num_gpus"];
 
     return true;
 }
