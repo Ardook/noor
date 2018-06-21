@@ -31,6 +31,9 @@ public:
 
     CudaFrameBufferManager( int w, int h, bool managed = false )
     {
+        if (managed)
+        checkNoorErrors( cudaHostAlloc( (void **)&_buffer, w * h * sizeof( float4 ), cudaHostAllocMapped ) );
+        else
         checkNoorErrors( cudaMalloc( (void **)&_buffer, w * h * sizeof( float4 ) ) );
     }
 
