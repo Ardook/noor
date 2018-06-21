@@ -120,13 +120,13 @@ void cuda_path_tracer( unsigned int& frame_number ) {
     bool update_lookat = ( _render_manager->_num_gpus == 1 );
     checkNoorErrors( cudaFuncSetCacheConfig( path_tracer_kernel, cudaFuncCachePreferL1 ) );
     const size_t shmsize = _render_manager->_shmsize;
-    for ( int i = _render_manager->_num_gpus - 1; i >= 0; --i ) {
-    //for ( int i = 0; i< _render_manager->_num_gpus ; ++i ) {
+    //for ( int i = _render_manager->_num_gpus - 1; i >= 0; --i ) {
+    for ( int i = 0; i< _render_manager->_num_gpus ; ++i ) {
         checkNoorErrors( cudaSetDevice( i ) );
         path_tracer_kernel << <grid, block, shmsize >> > ( frame_number, i*h, update_lookat );
     }
-    checkNoorErrors( cudaPeekAtLastError() );
-    checkNoorErrors( cudaDeviceSynchronize() );
+    //checkNoorErrors( cudaPeekAtLastError() );
+    //checkNoorErrors( cudaDeviceSynchronize() );
     if ( update_lookat) _render_manager->_host_lookAt = _device_lookAt;
     _render_manager->update();
     ++frame_number;

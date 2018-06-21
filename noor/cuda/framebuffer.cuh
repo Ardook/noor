@@ -33,10 +33,10 @@ public:
     CudaFrameBufferManager( int w, int h, bool managed = false ): _managed(managed)
     {
         if (managed)
-            checkNoorErrors( cudaMallocManaged( (void **)&_buffer, w * h * sizeof( float4 ) ) );
+            //checkNoorErrors( cudaMallocManaged( (void **)&_buffer, w * h * sizeof( float4 ) ) );
             //checkNoorErrors( cudaHostAlloc( (void **)&_buffer, w * h * sizeof( float4 ), cudaHostAllocMapped ) );
             //checkNoorErrors( cudaHostAlloc( (void **)&_buffer, w * h * sizeof( float4 ), cudaHostAllocDefault ) );
-            //checkNoorErrors( cudaHostAlloc( (void **)&_buffer, w * h * sizeof( float4 ), cudaHostAllocPortable ) );
+            checkNoorErrors( cudaHostAlloc( (void **)&_buffer, w * h * sizeof( float4 ), cudaHostAllocPortable ) );
         else
             //checkNoorErrors( cudaMallocManaged( (void **)&_buffer, w * h * sizeof( float4 ) ) );
             checkNoorErrors( cudaMalloc( (void **)&_buffer, w * h * sizeof( float4 ) ) );
@@ -56,9 +56,9 @@ public:
         _buffer[index] = lerp( old_color, new_color, 1.0f / static_cast<float>( frame_number ) );
     }
     void free() {
-       /* if (_managed)
+        if (_managed)
         checkNoorErrors( cudaFreeHost( _buffer ) );
-        else*/
+        else
         checkNoorErrors( cudaFree( _buffer ) );
     }
 };

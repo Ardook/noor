@@ -76,7 +76,8 @@ public:
         const float cos_theta = cosf( theta );
         const float expM = expf( configuration[4] * gamma );
         const float rayM = cos_gamma_2;
-        const float mieM = ( 1.0f + cos_gamma_2 ) / powf( ( 1.0f + configuration[8] * configuration[8] - 2.0f*configuration[8] * cos_gamma ), 1.5 );
+        const float mieM = ( 1.0f + cos_gamma_2 ) / 
+            powf( ( 1.0f + configuration[8] * configuration[8] - 2.0f*configuration[8] * cos_gamma ), 1.5 );
         const float zenith = sqrtf( cos_theta );
 
         return ( 1.0f + configuration[0] * expf( configuration[1] / ( cos_theta + 0.01f ) ) ) *
@@ -84,7 +85,7 @@ public:
     }
     __device__
         float3 querySkyModel( const float3& v ) const {
-        if ( v.y < 0.f ) return make_float3( 0 );
+        if ( v.y < 0.f ) return make_float3( 0.0f );
         const float scale = .025f;
         const float theta = clamp( NOOR::sphericalTheta( v, RIGHT_HANDED ), 0.f, NOOR_PI_over_2 );
         const float gamma = acosf( clamp( dot( v, _solar_dir ), -1.f, 1.f ) );
@@ -95,7 +96,8 @@ public:
         if ( gamma < _solar_radius ) {
             return _solar_scale* rgb;
         }
-        return NOOR::inverseGammaCorrect( rgb * scale );
+        //return NOOR::inverseGammaCorrect( rgb * scale );
+        return rgb * scale;
     }
 };
 #ifdef __CUDACC__

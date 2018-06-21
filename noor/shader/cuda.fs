@@ -21,61 +21,58 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-#version 330 core
+#version 430 core
 
-// Interpolated values from the vertex shaders
+subroutine vec4 tonemapType( vec3 color );
+subroutine uniform tonemapType tonemap;
+
 in vec2 UV;
+layout( location = 0 ) out vec4 FragColor;
 
-// Values that stay constant for the whole mesh.
 uniform sampler2D sampler;
+const vec3 gamma = vec3( 1.0f/2.2f );
 
-const vec3 gamma = vec3( 0.45f );
-
-vec3 gammaCorrect( vec3 color ) {
-	return pow( color.rgb, gamma );
+subroutine( tonemapType )
+vec4 gammaCorrect( vec3 color ) {
+    return vec4( pow( color.rgb, gamma ), 1.0f );
 }
 
-vec4 gammaCorrect( vec4 color ) {
-	return vec4( pow( color.rgb, gamma ), 1.0 );
+subroutine( tonemapType )
+vec4 tonemapReinhard( vec3 color ) {
+    return gammaCorrect( color / ( color + vec3( 1.0f ) ) );
 }
 
-vec3 tonemapReinhard( vec3 color ) {
-	return gammaCorrect( color / ( color + vec3( 1.0 ) ) );
+subroutine( tonemapType )
+vec4 tonemapFilmic( vec3 color ) {
+    vec3 x = max( vec3( 0.0f ), color - 0.004f );
+    return vec4( ( x * ( 6.2f * x + 0.5f ) ) / ( x * ( 6.2f * x + 1.7f ) + 0.06f ), 1.0f );
 }
 
-vec3 tonemapFilmic( vec3 color ) {
-	vec3 x = max( vec3( 0.0 ), color - 0.004 );
-	return ( x * ( 6.2 * x + 0.5 ) ) / ( x * ( 6.2 * x + 1.7 ) + 0.06 );
-}
-
-float A = 0.15;
-float B = 0.50;
-float C = 0.10;
-float D = 0.20;
-float E = 0.02;
-float F = 0.30;
-float W = 11.2;
+float A = 0.15f;
+float B = 0.50f;
+float C = 0.10f;
+float D = 0.20f;
+float E = 0.02f;
+float F = 0.30f;
+float W = 11.2f;
 
 vec3 Uncharted2Tonemap( vec3 x ) {
-	return ( ( x * ( A * x + C * B ) + D * E ) / ( x * ( A * x + B ) + D * F ) ) - E / F;
+    return ( ( x * ( A * x + C * B ) + D * E ) / ( x * ( A * x + B ) + D * F ) ) - E / F;
 }
 
 //Based on Filmic Tonemapping Operators http://filmicgames.com/archives/75
-vec3 tonemapUncharted2( vec3 color ) {
-	float ExposureBias = 2.0;
-	vec3 curr = Uncharted2Tonemap( ExposureBias * color );
+subroutine( tonemapType )
+vec4 tonemapUncharted2( vec3 color ) {
+    float ExposureBias = 2.0f;
+    vec3 curr = Uncharted2Tonemap( ExposureBias * color );
 
-	vec3 whiteScale = 1.0 / Uncharted2Tonemap( vec3( W ) );
-	return gammaCorrect( curr * whiteScale );
+    vec3 whiteScale = 1.0f / Uncharted2Tonemap( vec3( W ) );
+    return gammaCorrect( curr * whiteScale );
 }
 
 
 void main() {
-	// output gamma corrected color
+    // output gamma corrected color
     vec3 color = vec3( texture( sampler, UV ) );
-	//vec3 color = clamp(vec3( texture( sampler, UV )),0.f,10.f);
-	//gl_FragColor = vec4(tonemapFilmic(vec3(color)), 1.f);
-	//gl_FragColor = vec4( tonemapReinhard( color ), 1.f );
-	//gl_FragColor = vec4( tonemapUncharted2(vec3(color)), 1.f);
-	gl_FragColor = vec4( gammaCorrect( color ), 1.f );
+    FragColor = tonemap( color );
 }

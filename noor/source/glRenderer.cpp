@@ -48,6 +48,10 @@ namespace {
         SUN_DOWN = GLFW_KEY_DOWN,
         SCREEN_SHOT_FLIP = GLFW_KEY_F1,
         SCREEN_SHOT_NO_FLIP = GLFW_KEY_F2,
+        TONEMAP_GAMMACORRECT = GLFW_KEY_F9,
+        TONEMAP_REINHARD = GLFW_KEY_F10,
+        TONEMAP_FILMIC = GLFW_KEY_F11,
+        TONEMAP_UNCHARTED = GLFW_KEY_F12,
         QUIT = GLFW_KEY_ESCAPE
     };
 
@@ -113,6 +117,8 @@ namespace {
         ,{ CUDA_ORTHO, false }			// 6
         ,{ CUDA_ENV, false }			// 7
     };
+
+    GLuint tonemapType;
 }
 
 void cleanup() {
@@ -233,9 +239,30 @@ void keyboard( GLFWwindow* window, int key, int scancode, int action, int mode )
                 if ( keymap[CUDA_MIS] ) scene->enableMIS();
                 else  scene->disableMIS();
                 break;
+            case TONEMAP_GAMMACORRECT:
+                tonemapType = glGetSubroutineIndex( render_cuda_program,
+                                                        GL_FRAGMENT_SHADER,
+                                                        "gammaCorrect" );
+                break;
+            case TONEMAP_REINHARD:
+                tonemapType = glGetSubroutineIndex( render_cuda_program,
+                                                        GL_FRAGMENT_SHADER,
+                                                        "tonemapReinhard" );
+                break;
+            case TONEMAP_FILMIC:
+                tonemapType = glGetSubroutineIndex( render_cuda_program,
+                                                        GL_FRAGMENT_SHADER,
+                                                        "tonemapFilmic" );
+                break;
+            case TONEMAP_UNCHARTED:
+                tonemapType = glGetSubroutineIndex( render_cuda_program,
+                                                        GL_FRAGMENT_SHADER,
+                                                        "tonemapUncharted2" );
+                break;
             default:
                 break;
         }
+        glUniformSubroutinesuiv( GL_FRAGMENT_SHADER, 1, &tonemapType );
         return;
     }
     if ( action == GLFW_REPEAT && keymap[CUDA_SKY_LIGHT] ) {
@@ -278,6 +305,7 @@ void renderCuda() {
     scene->updateCudaCamera();
     scene->updateCudaSky();
     scene->path_tracer();
+
     glDrawElements(
         GL_TRIANGLES,
         6,
@@ -366,6 +394,9 @@ void initGLBuffers() {
     glBindVertexArray( 0 );
 
     glUseProgram( render_cuda_program );
+    tonemapType = glGetSubroutineIndex( render_cuda_program,
+                                        GL_FRAGMENT_SHADER,
+                                        "gammaCorrect" );
     cudaSamplerID = glGetUniformLocation( render_cuda_program, "sampler" );
     mvp_uniform = glGetUniformLocation( render_cuda_program, "mvp" );
     mvp = glm::ortho( -1.0, 1.0, -1.0, 1.0, -1.0, 1.0 );

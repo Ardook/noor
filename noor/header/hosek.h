@@ -44,7 +44,7 @@ public:
     HosekSky( const HosekSky& sky ) = default;
     HosekSky& operator=( const HosekSky& sky ) = default;
 
-    void update( float sun_theta, float sun_phi, float scale = 200.0f, float solar_radius = 2.f ) {
+    void update( float sun_theta, float sun_phi, float scale = 250.0f, float solar_radius = 2.f ) {
         _sun_theta = sun_theta;
         _sun_phi = sun_phi;
         const float elevation = NOOR_PI_over_2 - _sun_theta;
