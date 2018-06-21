@@ -27,14 +27,19 @@ class CudaFrameBufferManager {
 public:
     // output frame buffer of the path tracer
     float4* _buffer;
+    bool _managed;
     CudaFrameBufferManager() = default;
 
-    CudaFrameBufferManager( int w, int h, bool managed = false )
+    CudaFrameBufferManager( int w, int h, bool managed = false ): _managed(managed)
     {
         if (managed)
-        checkNoorErrors( cudaHostAlloc( (void **)&_buffer, w * h * sizeof( float4 ), cudaHostAllocMapped ) );
+            checkNoorErrors( cudaMallocManaged( (void **)&_buffer, w * h * sizeof( float4 ) ) );
+            //checkNoorErrors( cudaHostAlloc( (void **)&_buffer, w * h * sizeof( float4 ), cudaHostAllocMapped ) );
+            //checkNoorErrors( cudaHostAlloc( (void **)&_buffer, w * h * sizeof( float4 ), cudaHostAllocDefault ) );
+            //checkNoorErrors( cudaHostAlloc( (void **)&_buffer, w * h * sizeof( float4 ), cudaHostAllocPortable ) );
         else
-        checkNoorErrors( cudaMalloc( (void **)&_buffer, w * h * sizeof( float4 ) ) );
+            //checkNoorErrors( cudaMallocManaged( (void **)&_buffer, w * h * sizeof( float4 ) ) );
+            checkNoorErrors( cudaMalloc( (void **)&_buffer, w * h * sizeof( float4 ) ) );
     }
 
     __device__
@@ -51,6 +56,9 @@ public:
         _buffer[index] = lerp( old_color, new_color, 1.0f / static_cast<float>( frame_number ) );
     }
     void free() {
+       /* if (_managed)
+        checkNoorErrors( cudaFreeHost( _buffer ) );
+        else*/
         checkNoorErrors( cudaFree( _buffer ) );
     }
 };

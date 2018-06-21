@@ -117,10 +117,11 @@ void cuda_path_tracer( unsigned int& frame_number ) {
     const int h = _render_manager->_h / _render_manager->_num_gpus;
     static const dim3 block( THREAD_W, THREAD_H, 1 );
     static const dim3 grid( w/ block.x, h / block.y, 1 );
-    bool update_lookat = (_render_manager->_num_gpus == 1);
+    bool update_lookat = ( _render_manager->_num_gpus == 1 );
     checkNoorErrors( cudaFuncSetCacheConfig( path_tracer_kernel, cudaFuncCachePreferL1 ) );
     const size_t shmsize = _render_manager->_shmsize;
     for ( int i = _render_manager->_num_gpus - 1; i >= 0; --i ) {
+    //for ( int i = 0; i< _render_manager->_num_gpus ; ++i ) {
         checkNoorErrors( cudaSetDevice( i ) );
         path_tracer_kernel << <grid, block, shmsize >> > ( frame_number, i*h, update_lookat );
     }

@@ -71,7 +71,8 @@ struct CudaRenderDevice {
         _host_camera( camera ),
         _host_spec( spec )
     {
-        bool managed = spec._num_gpus > 1;
+        //bool managed = spec._num_gpus > 1;
+        bool managed = gpuID == 1;
         printf( "GPU %d selected\n", _gpuID );
         checkNoorErrors( cudaSetDevice( _gpuID ) );
         _host_texture_manager = myunique_ptr<CudaTextureManager>( new CudaTextureManager( payload.get() ) );
@@ -176,7 +177,7 @@ public:
     }
 
     void update() {
-        checkNoorErrors( cudaSetDevice( 0 ) );
+        //checkNoorErrors( cudaSetDevice( 0 ) );
         checkNoorErrors( cudaGraphicsMapResources( 1, &_glResource, nullptr ) );
         checkNoorErrors( cudaGraphicsSubResourceGetMappedArray( &_buffer_array, _glResource, 0, 0 ) );
         for ( int i = 0; i < _num_gpus; ++i ) {
