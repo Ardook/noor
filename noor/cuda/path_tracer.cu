@@ -66,7 +66,7 @@ float4 pathtracer(
 }
 
 __global__
-void path_tracer_kernel( uint frame_number, uint gpu_offset, bool update_lookat ) {
+void path_tracer_kernel( uint frame_number, uint gpu_offset ) {
     const uint x = blockIdx.x * blockDim.x + threadIdx.x;
     const uint y = blockIdx.y * blockDim.y + threadIdx.y;
 
@@ -83,7 +83,7 @@ void path_tracer_kernel( uint frame_number, uint gpu_offset, bool update_lookat 
     const float4 new_color = pathtracer( ray, rng, lookAt, tid );
     _framebuffer_manager.set( new_color, gid, frame_number );
 
-    if ( update_lookat && tid == _constant_camera._center ) {
+    if (  gid + gpu_offset*_constant_camera._w == _constant_camera._center ) {
         _device_lookAt = lookAt;
     }
 }
@@ -122,23 +122,17 @@ void debug_skydome( uint frame_number ) {
 void cuda_path_tracer( uint& frame_number ) {
     const uint w = _render_manager->_w;
     const uint h = _render_manager->_h / _render_manager->_num_gpus;
+    const uint& gpu_offset = h;
 
     static const dim3 block( THREAD_W, THREAD_H, 1 );
     static const dim3 grid( w / block.x, h / block.y, 1 );
 
-    bool update_lookat = ( _render_manager->_num_gpus == 1 );
 
     checkNoorErrors( cudaFuncSetCacheConfig( path_tracer_kernel, cudaFuncCachePreferL1 ) );
-
-    for ( int i = _render_manager->_num_gpus - 1; i >= 0; --i ) {
     //for ( int i = 0; i< _render_manager->_num_gpus ; ++i ) {
-        checkNoorErrors( cudaSetDevice( i ) );
-        path_tracer_kernel << <grid, block, _render_manager->_shmsize >> > ( frame_number, i*h, update_lookat );
-    }
-    checkNoorErrors( cudaPeekAtLastError() );
-    checkNoorErrors( cudaDeviceSynchronize() );
-    if ( update_lookat ) {
-        _render_manager->_host_lookAt = _device_lookAt;
+    for ( int gpu_id = _render_manager->_num_gpus - 1; gpu_id >= 0; --gpu_id ) {
+        checkNoorErrors( cudaSetDevice( gpu_id ) );
+        path_tracer_kernel << <grid, block, _render_manager->_shmsize, _render_manager->getStream( gpu_id ) >> > ( frame_number, gpu_id*gpu_offset );
     }
     _render_manager->update();
     ++frame_number;

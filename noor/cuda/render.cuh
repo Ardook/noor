@@ -46,9 +46,11 @@ struct CudaRenderDevice {
     myunique_ptr<CudaSkyDomeManager> _host_skydome_manager;
     myunique_ptr<CudaBxDFManager> _host_bxdf_manager;
     myunique_ptr<CudaFrameBufferManager> _host_framebuffer_manager;
+    cudaStream_t _stream;
 
     void free() {
         checkNoorErrors( cudaSetDevice( _gpuID ) );
+        cudaStreamDestroy( _stream );
         _host_transform_manager.reset();
         _host_light_manager.reset();
         _host_mesh_manager.reset();
@@ -64,6 +66,7 @@ struct CudaRenderDevice {
         const CudaHosekSky& hosek,
         const CudaCamera& camera,
         const CudaSpec& spec,
+        int num_gpus,
         int gpuID
     ) :
         _gpuID( gpuID ),
@@ -71,10 +74,11 @@ struct CudaRenderDevice {
         _host_camera( camera ),
         _host_spec( spec )
     {
-        //bool managed = spec._num_gpus > 1;
+        int w = camera._w, h = camera._h/num_gpus;
         bool managed = gpuID == 1;
         printf( "GPU %d selected\n", _gpuID );
         checkNoorErrors( cudaSetDevice( _gpuID ) );
+        cudaStreamCreate( &_stream );
         _host_texture_manager = myunique_ptr<CudaTextureManager>( new CudaTextureManager( payload.get() ) );
         _host_mesh_manager = myunique_ptr<CudaMeshManager>( new CudaMeshManager( payload.get() ) );
         _host_material_manager = myunique_ptr<CudaMaterialManager>( new CudaMaterialManager( payload.get() ) );
@@ -82,7 +86,7 @@ struct CudaRenderDevice {
         _host_transform_manager = myunique_ptr<CudaTransformManager>( new CudaTransformManager( payload.get() ) );
         _host_skydome_manager = myunique_ptr<CudaSkyDomeManager>( new CudaSkyDomeManager( _host_texture_manager->getEnvTexture(), _host_spec._skydome_type ) );
         _host_bxdf_manager = myunique_ptr<CudaBxDFManager>( new CudaBxDFManager( 1 ) );
-        _host_framebuffer_manager = myunique_ptr<CudaFrameBufferManager>( new CudaFrameBufferManager( camera._w, camera._h, managed ) );
+        _host_framebuffer_manager = myunique_ptr<CudaFrameBufferManager>( new CudaFrameBufferManager( w, h, managed ) );
         update_spec();
         update_camera();
         update_hoseksky();
@@ -133,8 +137,8 @@ class CudaRenderManager {
     cudaGraphicsResource* _glResource;
     size_t _size_bytes;
     int _buffer_offset;
-    myunique_ptr<CudaRenderDevice> _gpu[2];
 public:
+    myunique_ptr<CudaRenderDevice> _gpu[2];
     int _w, _h;
     int _num_gpus;
     size_t _shmsize;
@@ -151,14 +155,15 @@ public:
         _shmsize = THREAD_N * spec._bvh_height * sizeof( uint );
         _size_bytes = _w * _h * sizeof( float4 ) / _num_gpus;
         _buffer_offset = _h / _num_gpus;
-        for ( int i = 0; i < _num_gpus; ++i ) {
-            checkNoorErrors( cudaSetDevice( i ) );
-            _gpu[i] = myunique_ptr<CudaRenderDevice>( new CudaRenderDevice(
+        for ( int gpu_id = 0; gpu_id < _num_gpus; ++gpu_id ) {
+            checkNoorErrors( cudaSetDevice( gpu_id ) );
+            _gpu[gpu_id] = myunique_ptr<CudaRenderDevice>( new CudaRenderDevice(
                 payload, hosek,
                 camera, spec,
-                i ) );
+                _num_gpus, gpu_id ) );
         }
         checkNoorErrors( cudaSetDevice( 0 ) );
+        cudaStreamAttachMemAsync( _gpu[0]->_stream, &_device_lookAt ),
         glGenTextures( 1, textureID );
         glBindTexture( GL_TEXTURE_2D, *textureID );
         glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
@@ -180,20 +185,29 @@ public:
         checkNoorErrors( cudaGraphicsMapResources( 1, &_glResource, nullptr ) );
         checkNoorErrors( cudaGraphicsSubResourceGetMappedArray( &_buffer_array, _glResource, 0, 0 ) );
         //for ( int i = 0; i < _num_gpus; ++i ) {
-        for ( int i = _num_gpus-1; i >= 0 ; --i ) {
+        for ( int gpu_id = _num_gpus-1; gpu_id >= 0 ; --gpu_id ) {
+        if ( gpu_id == 0 ) {
+            cudaStreamSynchronize( _gpu[gpu_id]->_stream );
+            _host_lookAt = _device_lookAt;
+        }
             checkNoorErrors( 
                 cudaMemcpyToArrayAsync( 
                 _buffer_array, 
                 0, 
-                i*_buffer_offset, 
-                _gpu[i]->getBuffer(), 
+                gpu_id*_buffer_offset, 
+                _gpu[gpu_id]->getBuffer(), 
                 _size_bytes, 
-                cudaMemcpyDefault
+                cudaMemcpyDefault,
+                _gpu[gpu_id]->_stream
                 ) 
             );
         }
-        checkNoorErrors( cudaSetDevice( 0 ) );
+        checkNoorErrors( cudaDeviceSynchronize() );
         checkNoorErrors( cudaGraphicsUnmapResources( 1, &_glResource ) );
+    }
+
+    cudaStream_t getStream( int gpu_id )const {
+        return _gpu[gpu_id]->_stream;
     }
 
     void update_spec() {

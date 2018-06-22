@@ -127,7 +127,7 @@ extern "C" {
     void update_cuda_camera();
     void update_cuda_hosek();
     void update_cuda_spec();
-    void cuda_path_tracer( unsigned int& frameCount );
+    void cuda_path_tracer( uint& frameCount );
     void device_free_memory();
     void get_lookAt(float4& lookAt);
 }
