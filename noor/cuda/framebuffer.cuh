@@ -34,9 +34,9 @@ public:
     {
         if (managed)
             //checkNoorErrors( cudaMallocManaged( (void **)&_buffer, w * h * sizeof( float4 ) ) );
-            //checkNoorErrors( cudaHostAlloc( (void **)&_buffer, w * h * sizeof( float4 ), cudaHostAllocMapped ) );
+            checkNoorErrors( cudaHostAlloc( (void **)&_buffer, w * h * sizeof( float4 ), cudaHostAllocMapped ) );
             //checkNoorErrors( cudaHostAlloc( (void **)&_buffer, w * h * sizeof( float4 ), cudaHostAllocDefault ) );
-            checkNoorErrors( cudaHostAlloc( (void **)&_buffer, w * h * sizeof( float4 ), cudaHostAllocPortable ) );
+            //checkNoorErrors( cudaHostAlloc( (void **)&_buffer, w * h * sizeof( float4 ), cudaHostAllocPortable ) );
         else
             //checkNoorErrors( cudaMallocManaged( (void **)&_buffer, w * h * sizeof( float4 ) ) );
             checkNoorErrors( cudaMalloc( (void **)&_buffer, w * h * sizeof( float4 ) ) );

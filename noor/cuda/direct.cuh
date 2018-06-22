@@ -26,7 +26,7 @@ SOFTWARE.
 
 __forceinline__ __device__
 bool occluded( const CudaIntersection& I, const CudaVisibility& v ) {
-    return ( intersectP( I.spawnShadowRay( v ), I ) );
+    return ( intersectP( I.spawnShadowRay( v ), I._tid ) );
 }
 
 

@@ -68,7 +68,7 @@ public:
     }
 
     __device__
-        CudaRay generateRay( int x, int y, const CudaRNG& rng ) const {
+        CudaRay generateRay( uint x, uint y, const CudaRNG& rng ) const {
         const float raster_x = (float) x + rng() - 0.5f;
         const float raster_y = (float) y + rng() - 0.5f;
         float3 origin, origin_dx, origin_dy;
@@ -94,7 +94,7 @@ public:
     CudaPerspCamera() = default;
 
     __device__
-        CudaRay generateRay( int x, int y, const CudaRNG& rng ) const {
+        CudaRay generateRay( uint x, uint y, const CudaRNG& rng ) const {
         const float raster_x = (float) x + rng() - 0.5f;
         const float raster_y = (float) y + rng() - 0.5f;
         const float3 pCamera = _rasterToCamera.transformPoint( make_float3( raster_x, raster_y, 0.0f ) );
@@ -147,7 +147,7 @@ public:
     CudaOrthoCamera() = default;
 
     __device__
-        CudaRay generateRay( int x, int y, const CudaRNG& rng ) const {
+        CudaRay generateRay( uint x, uint y, const CudaRNG& rng ) const {
         const float raster_x = (float) x + rng() - 0.5f;
         const float raster_y = (float) y + rng() - 0.5f;
         const float3 origin = _rasterToCamera.transformPoint( make_float3( raster_x, raster_y, 0.f ) );
@@ -172,7 +172,7 @@ CudaCamera _constant_camera;
 
 
 __forceinline__ __device__
-CudaRay generateRay( int x, int y, const CudaRNG& rng ) {
+CudaRay generateRay( uint x, uint y, const CudaRNG& rng ) {
     switch ( _constant_camera._type ) {
         case ORTHO:
             return ( (const CudaOrthoCamera&) _constant_camera ).generateRay( x, y, rng );

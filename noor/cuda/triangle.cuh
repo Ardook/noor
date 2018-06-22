@@ -82,7 +82,7 @@ public:
     __device__
         bool intersect(
         const CudaRay& ray,
-        CudaIntersection& I,
+        CudaBSDFSamplingRecord& rec,
         uint tri_idx
         ) {
         _ax_nu_nv_nd = _mesh_manager.getWaldAxNuNvNd( tri_idx );
@@ -121,24 +121,22 @@ public:
         const float u = hv*b_nu() + hu*b_nv();
         const float v = hu*c_nu() + hv*c_nv();
         bool hit = ( u >= 0.0f && v >= 0.0f && u + v <= 1.0f );
-        if ( hit ) {
-            if ( notOpaque() ) {
-                const uint4 attr_idx = _mesh_manager.getAttrIndex( tri_idx );
-                const float2 uv0 = _mesh_manager.getUV( attr_idx.x );
-                const float2 uv1 = _mesh_manager.getUV( attr_idx.y );
-                const float2 uv2 = _mesh_manager.getUV( attr_idx.z );
-                const float2 uv = ( 1.0f - u - v )*uv0 + u*uv1 + v*uv2;
-                const float alpha = _material_manager.getAlpha( uv, attr_idx.w );
-                if ( alpha <= 0.0001f ) {
-                    return false;
-                }
+        if ( !hit ) return false;
+        if ( notOpaque() ) {
+            const uint4 attr_idx = _mesh_manager.getAttrIndex( tri_idx );
+            const float2 uv0 = _mesh_manager.getUV( attr_idx.x );
+            const float2 uv1 = _mesh_manager.getUV( attr_idx.y );
+            const float2 uv2 = _mesh_manager.getUV( attr_idx.z );
+            const float2 uv = ( 1.0f - u - v )*uv0 + u*uv1 + v*uv2;
+            const float alpha = _material_manager.getAlpha( uv, attr_idx.w );
+            if ( alpha <= 0.0001f ) {
+                return false;
             }
-            I._u = u;
-            I._v = v;
-            I._tri_idx = tri_idx;
-            I.setMaterialType( materialType() );
-            ray.setTmax( t );
         }
+        rec._bc = make_float2( u, v );
+        rec._tri_idx = tri_idx;
+        rec._material_type = materialType();
+        ray.setTmax( t );
         return hit;
     }
 
@@ -184,17 +182,16 @@ public:
         const float u = hv*b_nu() + hu*b_nv();
         const float v = hu*c_nu() + hv*c_nv();
         bool hit = ( u >= 0.0f && v >= 0.0f && u + v <= 1.0f );
-        if ( hit ) {
-            if ( notOpaque() ) {
-                const uint4 attr_idx = _mesh_manager.getAttrIndex( tri_idx );
-                const float2 uv0 = _mesh_manager.getUV( attr_idx.x );
-                const float2 uv1 = _mesh_manager.getUV( attr_idx.y );
-                const float2 uv2 = _mesh_manager.getUV( attr_idx.z );
-                const float2 uv = ( 1.0f - u - v )*uv0 + u*uv1 + v*uv2;
-                const float alpha = _material_manager.getAlpha( uv, attr_idx.w );
-                if ( alpha <= 0.0001f ) {
-                    return false;
-                }
+        if ( !hit ) return false;
+        if ( notOpaque() ) {
+            const uint4 attr_idx = _mesh_manager.getAttrIndex( tri_idx );
+            const float2 uv0 = _mesh_manager.getUV( attr_idx.x );
+            const float2 uv1 = _mesh_manager.getUV( attr_idx.y );
+            const float2 uv2 = _mesh_manager.getUV( attr_idx.z );
+            const float2 uv = ( 1.0f - u - v )*uv0 + u*uv1 + v*uv2;
+            const float alpha = _material_manager.getAlpha( uv, attr_idx.w );
+            if ( alpha <= 0.0001f ) {
+                return false;
             }
         }
         return hit;

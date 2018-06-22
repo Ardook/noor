@@ -23,6 +23,25 @@ SOFTWARE.
 */
 #ifndef CUDAINTERSECTION_CUH
 #define CUDAINTERSECTION_CUH
+
+class CudaIntersection;
+struct CudaBSDFSamplingRecord {
+    float3 _p{ 0.0f, 0.0f, 0.0f };
+    float3 _wo{ 0.0f, 0.0f, 0.0f };
+    float3 _wi{ 0.0f, 0.0f, 0.0f };
+    float2 _bc{ 0.0f, 0.0f };
+    uint _tri_idx{ 0 };
+    uint _ins_idx{ 0 };
+    uint _tid{ 0 };
+    MaterialType _material_type{ DIFFUSE };
+    CudaIntersection* _I{ nullptr };
+
+    CudaBSDFSamplingRecord() = default;
+
+    __device__
+    CudaBSDFSamplingRecord( uint tid ) : _tid( tid ) {}
+};
+
 class CudaVisibility {
 public:
     float3 _from;
@@ -86,8 +105,7 @@ public:
             _dudx = _dudy = _dvdx = _dvdy = 0;
         }
     };
-    
-    
+
     const CudaRNG& _rng;
     GeometryFrame _geometry;
     ShadingFrame _shading;
@@ -95,26 +113,27 @@ public:
     float3 _wo{ 0.0f, 0.0f, 0.0f };
     float3 _wi{ 0.0f, 0.0f, 0.0f };
     float2 _uv{ 0.0f, 0.0f };
-    float _u{ 0.0f };
-    float _v{ 0.0f };
     float _eta{ 1.0f };
-    uint _tri_idx{ 0u };
     uint _mat_idx{ 0u };
-    uint _ins_idx{ 0u };
-    int _tid{ 0 };
+    uint _tid{ 0u };
     MaterialType _material_type{ DIFFUSE };
 
     __device__
-        CudaIntersection( const CudaRNG& rng, int tid ) :
+        CudaIntersection( const CudaRay& ray, 
+                          const CudaRNG& rng, 
+                          const CudaBSDFSamplingRecord& rec ) :
         _rng( rng ),
-        _tid( tid ) {}
+        _tid(rec._tid)
+    {
+        updateIntersection( ray, rec );
+    }
 
     __device__
         CudaRay spawnRay( const CudaRay& ray ) const {
         const bool isDifferential = isGlossy() && ray.isDifferential();
         if ( isDifferential ) {
             if ( dot( _wi, _geometry._n ) >= 0.0f ) {
-                const float3& origin = _geometry._p +_constant_spec._reflection_bias * _geometry._n;
+                const float3& origin = _geometry._p + _constant_spec._reflection_bias * _geometry._n;
                 const float3& dir = _wi;
                 const float3 origin_dx = ( origin + _differential._dpdx );
                 const float3 origin_dy = ( origin + _differential._dpdy );
@@ -132,7 +151,7 @@ public:
                 const float3 dir_dy = _wi - dwody + 2.f *( dot( _wo, _shading._n ) * dndy + dDNdy * _shading._n );
                 return CudaRay( origin, dir, origin_dx, origin_dy, dir_dx, dir_dy );
             } else {
-                const float3& origin = _geometry._p-_constant_spec._reflection_bias * _geometry._n;
+                const float3& origin = _geometry._p - _constant_spec._reflection_bias * _geometry._n;
                 const float3& dir = _wi;
                 const float3 origin_dx = ( origin + _differential._dpdx );
                 const float3 origin_dy = ( origin + _differential._dpdy );
@@ -188,7 +207,7 @@ public:
         return _shading;
     }
     __device__
-        int getTid() const {
+        uint getTid() const {
         return _tid;
     }
     __device__
@@ -197,7 +216,7 @@ public:
     }
     __device__
         MaterialType getMaterialType() const {
-        return (MaterialType) ( _material_type & NOOR_NO_BUMP_ALPHA );
+        return (MaterialType)( _material_type & NOOR_NO_BUMP_ALPHA );
     }
     __device__
         bool isBumped() const {
@@ -242,22 +261,19 @@ public:
         return _mesh_manager.getUV( attr_idx );
     }
     __device__
-        void updateIntersection( const CudaRay& ray ) {
+        void updateIntersection( const CudaRay& ray, 
+                                 const CudaBSDFSamplingRecord& rec ) {
         _geometry._p = ray.pointAtParameter( ray.getTmax() );
-        if ( _material_type & MESHLIGHT ) return;
-        const uint4 attr_idx = _mesh_manager.getAttrIndex( _tri_idx );
-        _mat_idx = attr_idx.w;
-        if ( _material_type & EMITTER ) return;
-        _wo = normalize( -1.0f*ray.getDir() );
-        computeTangentSpace( ray, attr_idx );
+        _material_type = rec._material_type;
+        computeTangentSpace( rec );
         computeDifferential( ray );
     }
 
     __device__
-        void computeTangentSpace(
-        const CudaRay& ray,
-        const uint4& attr_idx
-        ) {
+        void computeTangentSpace( const CudaBSDFSamplingRecord& rec ) {
+        const uint4 attr_idx = _mesh_manager.getAttrIndex( rec._tri_idx );
+        _mat_idx = attr_idx.w;
+        if ( _material_type & (MESHLIGHT|EMITTER) ) return;
         const float2 uv0 = getUV( attr_idx.x );
         const float2 uv1 = getUV( attr_idx.y );
         const float2 uv2 = getUV( attr_idx.z );
@@ -270,12 +286,12 @@ public:
         const float3 n1 = getVertexNormal( attr_idx.y );
         const float3 n2 = getVertexNormal( attr_idx.z );
 
-        const CudaTransform T = _transform_manager.getNormalTransformation( _ins_idx );
-        const float w = 1.0f - _u - _v;
-        _uv = w*uv0 + _u*uv1 + _v*uv2;
-        _shading._n = NOOR::normalize( T.transformNormal( w*n0 + _u*n1 + _v*n2 ) );
+        const CudaTransform T = _transform_manager.getNormalTransformation( rec._ins_idx );
+        const float w = 1.0f - rec._bc.x - rec._bc.y;
+        _uv = w*uv0 + rec._bc.x*uv1 + rec._bc.y*uv2;
+        _shading._n = NOOR::normalize( T.transformNormal( w*n0 + rec._bc.x*n1 + rec._bc.y*n2 ) );
 
-        const CudaTransform S = _transform_manager.getObjectToWorldTransformation( _ins_idx );
+        const CudaTransform S = _transform_manager.getObjectToWorldTransformation( rec._ins_idx );
         const float3 dp01 = S.transformVector( v1 - v0 );
         const float3 dp02 = S.transformVector( v2 - v0 );
         _geometry._n = NOOR::normalize( cross( dp01, dp02 ) );
@@ -322,7 +338,8 @@ public:
 
     __device__
         void computeDifferential( const CudaRay& ray ) {
-        _differential.reset();
+        _wo = normalize( -1.0f*ray.getDir() );
+        //_differential.reset();
         if ( !ray.isDifferential() ) {
             return;
         }

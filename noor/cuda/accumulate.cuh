@@ -26,7 +26,6 @@ SOFTWARE.
 
 __forceinline__ __device__
 bool rr_terminate( const CudaIntersection& I, int bounce, float3& beta ) {
-
     // Russian Roulette 
     if ( bounce >= _constant_spec._rr ) {
         const float q = fmaxf( 0.05f, 1.0f - NOOR::maxcomp( beta ) );

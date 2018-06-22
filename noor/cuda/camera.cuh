@@ -67,8 +67,8 @@ public:
         void update(
         const glm::mat4& cameraToWorld,
         const glm::mat4& rasterToCamera,
-        int w,
-        int h,
+        uint w,
+        uint h,
         float lens_radius,
         float focal_length,
         CameraType camera_type
@@ -88,8 +88,8 @@ public:
     CudaTransform _rasterToCamera;
     float3 _dxCamera, _dyCamera;
     float _lens_radius, _focal_length;
-    int _w, _h;
-    int _center;
+    uint _w, _h;
+    uint _center;
     CameraType _type;
 };
 #endif /* CUDACAMERA_CUH */

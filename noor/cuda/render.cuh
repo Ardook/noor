@@ -177,11 +177,10 @@ public:
     }
 
     void update() {
-        checkNoorErrors( cudaSetDevice( 0 ) );
         checkNoorErrors( cudaGraphicsMapResources( 1, &_glResource, nullptr ) );
         checkNoorErrors( cudaGraphicsSubResourceGetMappedArray( &_buffer_array, _glResource, 0, 0 ) );
-        for ( int i = 0; i < _num_gpus; ++i ) {
-        //for ( int i = _num_gpus-1; i >= 0 ; --i ) {
+        //for ( int i = 0; i < _num_gpus; ++i ) {
+        for ( int i = _num_gpus-1; i >= 0 ; --i ) {
             checkNoorErrors( 
                 cudaMemcpyToArrayAsync( 
                 _buffer_array, 
@@ -189,13 +188,14 @@ public:
                 i*_buffer_offset, 
                 _gpu[i]->getBuffer(), 
                 _size_bytes, 
-                cudaMemcpyDeviceToDevice 
+                cudaMemcpyDefault
                 ) 
             );
         }
-        checkNoorErrors( cudaDeviceSynchronize() );
-        checkNoorErrors( cudaGraphicsUnmapResources( 1, &_glResource, nullptr ) );
+        checkNoorErrors( cudaSetDevice( 0 ) );
+        checkNoorErrors( cudaGraphicsUnmapResources( 1, &_glResource ) );
     }
+
     void update_spec() {
         for ( int i = _num_gpus - 1; i >= 0; --i ) {
             _gpu[i]->update_spec();

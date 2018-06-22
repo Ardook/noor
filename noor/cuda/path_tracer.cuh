@@ -142,6 +142,7 @@ static void checkError( T result, char const *const func, const char *const file
         exit( EXIT_FAILURE );
     }
 }
+using uchar = unsigned char;
 // hybrid cuda and host headers
 #include "math.cuh"
 #include "utils.cuh"

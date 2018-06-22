@@ -111,19 +111,19 @@ public:
     __device__
         bool intersectLeaf(
         const CudaRay& ray,
-        CudaIntersection& intersection
+        CudaBSDFSamplingRecord& rec
         ) {
         const uint start = get_start();
         const uint count = start + get_tri_count();
         CudaTriangle tri;
         bool hit = false;
         for ( uint tri_idx = start; tri_idx < count; ++tri_idx ) {
-            if ( tri.intersect( ray, intersection, tri_idx ) )
-            //if ( intersect( ray, intersection, tri_idx ) )
+            if ( tri.intersect( ray, rec, tri_idx ) )
                 hit = true;
         }
         return hit;
     }
+
     __device__
         bool intersectLeaf( const CudaRay& ray ) {
         const uint start = get_start();
@@ -131,7 +131,6 @@ public:
         CudaTriangle tri;
         for ( uint tri_idx = start; tri_idx < count; ++tri_idx ) {
             if ( tri.intersect( ray, tri_idx ) ) {
-            //if ( intersect( ray, tri_idx ) ) {
                 return true;
             }
         }
@@ -142,11 +141,11 @@ public:
 };
 
 __device__ __forceinline__
-bool intersect( const CudaRay& ray, CudaIntersection& I ) {
+bool intersect( const CudaRay& ray, CudaBSDFSamplingRecord& rec ) {
     bool hit = false;
     uint currentNodeIndex;
     CudaBVHNode current_node;
-    CudaStack<uint> stack( &shstack[_constant_spec._bvh_height * I.getTid()] );
+    CudaStack<uint> stack( &shstack[_constant_spec._bvh_height * rec._tid] );
     CudaRay lray = ray;
     uint ins_idx = 0;
     stack.push( _constant_spec._bvh_root_node );
@@ -161,8 +160,8 @@ bool intersect( const CudaRay& ray, CudaIntersection& I ) {
             const int light_idx = current_node.get_light_idx();
             if ( _light_manager.intersect( ray, light_idx ) ) {
                 hit = true;
-                I._ins_idx = light_idx;
-                I.setMaterialType( MaterialType( MESHLIGHT | EMITTER) );
+                rec._ins_idx = light_idx;
+                rec._material_type = MaterialType( MESHLIGHT | EMITTER );
             }
             continue;
         } else if ( current_node.is_mesh_instance() ) {
@@ -174,10 +173,10 @@ bool intersect( const CudaRay& ray, CudaIntersection& I ) {
                 stack.push( currentNodeIndex + i );
             }
         } else if ( current_node.is_tri_leaf() ) {
-            if ( current_node.intersectLeaf( lray, I ) ) {
+            if ( current_node.intersectLeaf( lray, rec ) ) {
                 hit = true;
                 ray.setTmax( lray.getTmax() );
-                I._ins_idx = ins_idx;
+                rec._ins_idx = ins_idx;
             }
         } else {
             if ( lray.getPosneg()[current_node.get_axis()] ) {
@@ -189,18 +188,18 @@ bool intersect( const CudaRay& ray, CudaIntersection& I ) {
             }
         }
     }
-    if ( hit ) {
-        I.updateIntersection( ray );
-        I._eta = _material_manager.getIorDielectric( I ).x;
-    }
+    //if ( hit ) {
+        //I.updateIntersection( ray );
+        //I._eta = _material_manager.getIorDielectric( I ).x;
+    //}
     return hit;
 }
 
 __device__ __forceinline__
-bool intersectP( const CudaRay& ray, const CudaIntersection& I ) {
+bool intersectP( const CudaRay& ray, uint tid ) {
     uint currentNodeIndex;
     CudaBVHNode current_node;
-    CudaStack<uint> stack( &shstack[_constant_spec._bvh_height * I.getTid()] );
+    CudaStack<uint> stack( &shstack[_constant_spec._bvh_height * tid] );
     CudaRay lray = ray;
     stack.push( _constant_spec._bvh_root_node );
     while ( !stack.isEmpty() ) {
@@ -209,31 +208,30 @@ bool intersectP( const CudaRay& ray, const CudaIntersection& I ) {
         if ( current_node.is_mesh_node() ) {
             lray = ray;
         }
-        if ( current_node.intersectBBox( lray ) ) {
-            if ( current_node.is_light_node() ) {
-                const int index = current_node.get_light_idx();
-                if ( _light_manager.intersect( ray, index ) ) {
-                    return true;
-                }
-            } else if ( current_node.is_mesh_instance() ) {
-                lray = ray.transformToObject( current_node.get_instance_id() );
+        if ( !current_node.intersectBBox( lray ) ) continue;
+        if ( current_node.is_light_node() ) {
+            const int index = current_node.get_light_idx();
+            if ( _light_manager.intersect( ray, index ) ) {
+                return true;
+            }
+        } else if ( current_node.is_mesh_instance() ) {
+            lray = ray.transformToObject( current_node.get_instance_id() );
+            stack.push( current_node.get_right() );
+        } else if ( current_node.is_mesh_leaf() ) {
+            for ( uint i = 1; i <= current_node.get_count(); ++i ) {
+                stack.push( currentNodeIndex + i );
+            }
+        } else if ( current_node.is_tri_leaf() ) {
+            if ( current_node.intersectLeaf( lray ) ) {
+                return true;
+            }
+        } else {
+            if ( lray.getPosneg()[current_node.get_axis()] ) {
+                stack.push( currentNodeIndex + 1 );
                 stack.push( current_node.get_right() );
-            } else if ( current_node.is_mesh_leaf() ) {
-                for ( uint i = 1; i <= current_node.get_count(); ++i ) {
-                    stack.push( currentNodeIndex + i );
-                }
-            } else if ( current_node.is_tri_leaf() ) {
-                if ( current_node.intersectLeaf( lray ) ) {
-                    return true;
-                }
             } else {
-                if ( lray.getPosneg()[current_node.get_axis()] ) {
-                    stack.push( currentNodeIndex + 1 );
-                    stack.push( current_node.get_right() );
-                } else {
-                    stack.push( current_node.get_right() );
-                    stack.push( currentNodeIndex + 1 );
-                }
+                stack.push( current_node.get_right() );
+                stack.push( currentNodeIndex + 1 );
             }
         }
     }

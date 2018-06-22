@@ -22,26 +22,26 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 #include "path_tracer_data.cuh"
-
 __forceinline__ __device__
 float4 pathtracer(
     CudaRay& ray,
     const CudaRNG& rng,
     float4& lookAt,
-    int tid
+    uint tid
 ) {
     float3 L = _constant_spec._black;
     float3 beta = _constant_spec._white;
     bool specular_bounce = false;
-    for ( unsigned char bounce = 0; bounce < _constant_spec._bounces; ++bounce ) {
-        CudaIntersection I( rng, tid );
-        if ( intersect( ray, I ) ) {
+    for ( uchar bounce = 0; bounce < _constant_spec._bounces; ++bounce ) {
+        CudaBSDFSamplingRecord rec( tid );
+        if ( intersect( ray, rec ) ) {
+            CudaIntersection I( ray, rng, rec );
             if ( bounce == 0 ) {
                 lookAt = make_float4( I._geometry._p, 1.f );
             }
             if ( I.isEmitter() && ( bounce == 0 || specular_bounce ) ) {
                 L += beta * ( I.isMeshLight() ?
-                              _light_manager.Le( ray.getDir(), I._ins_idx ) :
+                              _light_manager.Le( ray.getDir(), rec._ins_idx ) :
                               _material_manager.getEmmitance( I )
                               );
                 break;
@@ -66,17 +66,24 @@ float4 pathtracer(
 }
 
 __global__
-void path_tracer_kernel( uint frame_number, int h, bool update_lookat ) {
-    const int x = blockIdx.x * blockDim.x + threadIdx.x;
-    const int y = blockIdx.y * blockDim.y + threadIdx.y;
-    int id = y * _constant_camera._w + x;
+void path_tracer_kernel( uint frame_number, uint gpu_offset, bool update_lookat ) {
+    const uint x = blockIdx.x * blockDim.x + threadIdx.x;
+    const uint y = blockIdx.y * blockDim.y + threadIdx.y;
+
+    // grid id of the thread
+    const uint gid = y * _constant_camera._w + x;
+    // block id of the thread
+    const uint tid = threadIdx.y * blockDim.x + threadIdx.x;
+
     float4 lookAt = make_float4( 0.f );
-    CudaRNG rng( id, frame_number + clock64() );
-    CudaRay ray = generateRay( x, y + h, rng );
-    int tid = threadIdx.y * blockDim.x + threadIdx.x;
+
+    const CudaRNG rng( gid, frame_number + clock64() );
+    CudaRay ray = generateRay( x, y + gpu_offset, rng );
+
     const float4 new_color = pathtracer( ray, rng, lookAt, tid );
-    _framebuffer_manager.set( new_color, id, frame_number );
-    if ( update_lookat && id == _constant_camera._center ) {
+    _framebuffer_manager.set( new_color, gid, frame_number );
+
+    if ( update_lookat && tid == _constant_camera._center ) {
         _device_lookAt = lookAt;
     }
 }
@@ -87,9 +94,9 @@ void debug_skydome_kernel(
     , int width
     , int height
 ) {
-    int x = blockIdx.x * blockDim.x + threadIdx.x;
-    int y = blockIdx.y * blockDim.y + threadIdx.y;
-    int id = y * _constant_camera._w + x;
+    uint x = blockIdx.x * blockDim.x + threadIdx.x;
+    uint y = blockIdx.y * blockDim.y + threadIdx.y;
+    uint id = y * _constant_camera._w + x;
     float2 u = make_float2( x / (float)( _constant_camera._w ), y / (float)( _constant_camera._h ) );
     _framebuffer_manager.set( _skydome_manager.evaluate( u ), id );
     if ( _constant_spec.is_mis_enabled() ) {
@@ -112,22 +119,27 @@ void debug_skydome( uint frame_number ) {
     checkNoorErrors( cudaDeviceSynchronize() );
 }
 
-void cuda_path_tracer( unsigned int& frame_number ) {
-    const int w = _render_manager->_w;
-    const int h = _render_manager->_h / _render_manager->_num_gpus;
+void cuda_path_tracer( uint& frame_number ) {
+    const uint w = _render_manager->_w;
+    const uint h = _render_manager->_h / _render_manager->_num_gpus;
+
     static const dim3 block( THREAD_W, THREAD_H, 1 );
-    static const dim3 grid( w/ block.x, h / block.y, 1 );
+    static const dim3 grid( w / block.x, h / block.y, 1 );
+
     bool update_lookat = ( _render_manager->_num_gpus == 1 );
+
     checkNoorErrors( cudaFuncSetCacheConfig( path_tracer_kernel, cudaFuncCachePreferL1 ) );
-    const size_t shmsize = _render_manager->_shmsize;
-    //for ( int i = _render_manager->_num_gpus - 1; i >= 0; --i ) {
-    for ( int i = 0; i< _render_manager->_num_gpus ; ++i ) {
+
+    for ( int i = _render_manager->_num_gpus - 1; i >= 0; --i ) {
+    //for ( int i = 0; i< _render_manager->_num_gpus ; ++i ) {
         checkNoorErrors( cudaSetDevice( i ) );
-        path_tracer_kernel << <grid, block, shmsize >> > ( frame_number, i*h, update_lookat );
+        path_tracer_kernel << <grid, block, _render_manager->_shmsize >> > ( frame_number, i*h, update_lookat );
     }
-    //checkNoorErrors( cudaPeekAtLastError() );
-    //checkNoorErrors( cudaDeviceSynchronize() );
-    if ( update_lookat) _render_manager->_host_lookAt = _device_lookAt;
+    checkNoorErrors( cudaPeekAtLastError() );
+    checkNoorErrors( cudaDeviceSynchronize() );
+    if ( update_lookat ) {
+        _render_manager->_host_lookAt = _device_lookAt;
+    }
     _render_manager->update();
     ++frame_number;
 }
