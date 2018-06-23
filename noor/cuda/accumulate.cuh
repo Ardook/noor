@@ -30,9 +30,9 @@ bool rr_terminate( const CudaIntersection& I, int bounce, float3& beta ) {
     if ( bounce >= _constant_spec._rr ) {
         const float q = fmaxf( 0.05f, 1.0f - NOOR::maxcomp( beta ) );
         if ( I._rng() < q ) {
-            beta /= 1.0f - q;
             return true;
         }
+        beta /= 1.0f - q;
     }
     return false;
 }

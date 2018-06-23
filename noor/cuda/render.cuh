@@ -75,7 +75,7 @@ struct CudaRenderDevice {
         _host_spec( spec )
     {
         int w = camera._w, h = camera._h/num_gpus;
-        bool managed = gpuID == 1;
+        bool managed = gpuID != 0;
         printf( "GPU %d selected\n", _gpuID );
         checkNoorErrors( cudaSetDevice( _gpuID ) );
         cudaStreamCreate( &_stream );

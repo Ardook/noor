@@ -188,10 +188,6 @@ bool intersect( const CudaRay& ray, CudaBSDFSamplingRecord& rec ) {
             }
         }
     }
-    //if ( hit ) {
-        //I.updateIntersection( ray );
-        //I._eta = _material_manager.getIorDielectric( I ).x;
-    //}
     return hit;
 }
 

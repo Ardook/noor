@@ -29,7 +29,6 @@ bool occluded( const CudaIntersection& I, const CudaVisibility& v ) {
     return ( intersectP( I.spawnShadowRay( v ), I._tid ) );
 }
 
-
 __forceinline__ __device__
 float3 sampleLight( const CudaBSDF& bsdf,
                     const CudaIntersection& I,

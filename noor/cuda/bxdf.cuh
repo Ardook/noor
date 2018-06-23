@@ -205,6 +205,7 @@ public:
         const float3 etaI = make_float3( 1.f );
         if ( isDielectric() ) {
             const float3 etaT = _material_manager.getIorDielectric( I );
+            I.setEta( etaT.x );
             return CudaFresnel( etaI, etaT );
         } else if ( isConductor() ) {
             return CudaFresnel( etaI, _material_manager.getIorConductor( I ), _material_manager.getK( I ) );
@@ -360,8 +361,6 @@ public:
     }
 
 };
-
-
 
 class CudaSpecularReflection : public CudaBxDF {
 public:
@@ -717,7 +716,6 @@ public:
             lu.x = fminf( 2.f * lu.x, NOOR_ONE_MINUS_EPSILON );
             // Cosine-sample the hemisphere, flipping the direction if necessary
             wi = NOOR::cosineSampleHemisphere( lu );
-            //if ( wo.z < 0 ) wi.z *= -1.f;
             wi.z *= NOOR::sign( wi.z );
         } else {
             lu.x = fminf( 2.f * ( lu.x - .5f ), NOOR_ONE_MINUS_EPSILON );

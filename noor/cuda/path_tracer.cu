@@ -52,7 +52,7 @@ float4 pathtracer(
             // Russian Roulette 
             if ( rr_terminate( I, bounce, beta ) ) break;
             specular_bounce = I.isSpecular();
-            ray = I.spawnRay( ray );
+            I.spawnRay( ray );
         } else { // no intersection 
             if ( _constant_spec.is_sky_light_enabled() &&
                 ( bounce == 0 || specular_bounce ) ) {

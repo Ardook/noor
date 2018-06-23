@@ -108,7 +108,6 @@ public:
             float2 pLens = _lens_radius * NOOR::concentricSampleDisk( u );
             // Compute point on plane of focus
             float ft = -_focal_length / dir.z;
-            //float3 pFocus = ray.pointAtParameter( ft );
             float3 pFocus = origin + ft*dir;
             // Update ray for effect of lens
             origin = make_float3( pLens.x, pLens.y, 0 );

@@ -30,6 +30,7 @@ struct CudaBSDFSamplingRecord {
     float3 _wo{ 0.0f, 0.0f, 0.0f };
     float3 _wi{ 0.0f, 0.0f, 0.0f };
     float2 _bc{ 0.0f, 0.0f };
+    float _eta{ 1.f };
     uint _tri_idx{ 0 };
     uint _ins_idx{ 0 };
     uint _tid{ 0 };
@@ -100,10 +101,10 @@ public:
         float3 _dndu{ 0.0f, 0.0f, 0.0f };
         float3 _dndv{ 0.0f, 0.0f, 0.0f };
 
-        __device__
+       /* __device__
             void reset() {
             _dudx = _dudy = _dvdx = _dvdy = 0;
-        }
+        }*/
     };
 
     const CudaRNG& _rng;
@@ -113,10 +114,10 @@ public:
     float3 _wo{ 0.0f, 0.0f, 0.0f };
     float3 _wi{ 0.0f, 0.0f, 0.0f };
     float2 _uv{ 0.0f, 0.0f };
-    float _eta{ 1.0f };
     uint _mat_idx{ 0u };
     uint _tid{ 0u };
     MaterialType _material_type{ DIFFUSE };
+    mutable float _eta{ 1.0f };
 
     __device__
         CudaIntersection( const CudaRay& ray, 
@@ -129,7 +130,7 @@ public:
     }
 
     __device__
-        CudaRay spawnRay( const CudaRay& ray ) const {
+        void spawnRay( CudaRay& ray ) const {
         const bool isDifferential = isGlossy() && ray.isDifferential();
         if ( isDifferential ) {
             if ( dot( _wi, _geometry._n ) >= 0.0f ) {
@@ -149,7 +150,7 @@ public:
 
                 const float3 dir_dx = _wi - dwodx + 2.f *( dot( _wo, _shading._n ) * dndx + dDNdx * _shading._n );
                 const float3 dir_dy = _wi - dwody + 2.f *( dot( _wo, _shading._n ) * dndy + dDNdy * _shading._n );
-                return CudaRay( origin, dir, origin_dx, origin_dy, dir_dx, dir_dy );
+                ray = CudaRay( origin, dir, origin_dx, origin_dy, dir_dx, dir_dy );
             } else {
                 const float3& origin = _geometry._p - _constant_spec._reflection_bias * _geometry._n;
                 const float3& dir = _wi;
@@ -177,10 +178,11 @@ public:
 
                 const float3 dir_dx = _wi + eta * dwodx - ( mu * dndx + dmudx *_shading._n );
                 const float3 dir_dy = _wi + eta * dwody - ( mu * dndy + dmudy *_shading._n );
-                return CudaRay( origin, dir, origin_dx, origin_dy, dir_dx, dir_dy );
+                ray = CudaRay( origin, dir, origin_dx, origin_dy, dir_dx, dir_dy );
             }
+            ray.scaleDifferentials( .25f );
         } else {
-            return dot( _wi, _geometry._n ) >= 0.0f ?
+            ray = dot( _wi, _geometry._n ) >= 0.0f ?
                 CudaRay( _geometry._p + _constant_spec._reflection_bias * _geometry._n, _wi ) :
                 CudaRay( _geometry._p - _constant_spec._reflection_bias * _geometry._n, _wi );
         }
@@ -211,6 +213,10 @@ public:
         return _tid;
     }
     __device__
+        void setEta(float eta) const {
+        _eta = eta;
+    }
+    __device__
         void setMaterialType( MaterialType material_type ) {
         _material_type = material_type;
     }
@@ -225,6 +231,10 @@ public:
     __device__
         bool isEmitter() const {
         return ( _material_type & NOOR_EMITTER );
+    }
+    __device__
+        bool isGlass() const {
+        return ( _material_type & NOOR_GLASS );
     }
     __device__
         bool isMeshLight() const {

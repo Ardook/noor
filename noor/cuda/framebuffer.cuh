@@ -30,9 +30,9 @@ public:
     bool _managed;
     CudaFrameBufferManager() = default;
 
-    CudaFrameBufferManager( int w, int h, bool managed = false ): _managed(managed)
+    CudaFrameBufferManager( int w, int h, bool managed = false ) : _managed( managed )
     {
-        if (managed)
+        if ( managed )
             checkNoorErrors( cudaMallocManaged( (void **)&_buffer, w * h * sizeof( float4 ) ) );
             //checkNoorErrors( cudaMallocManaged( (void **)&_buffer, w * h * sizeof( float4 ) ) );
             //checkNoorErrors( cudaHostAlloc( (void **)&_buffer, w * h * sizeof( float4 ), cudaHostAllocMapped ) );
@@ -56,9 +56,6 @@ public:
         _buffer[index] = lerp( old_color, new_color, 1.0f / static_cast<float>( frame_number ) );
     }
     void free() {
-        if (_managed)
-        checkNoorErrors( cudaFreeHost( _buffer ) );
-        else
         checkNoorErrors( cudaFree( _buffer ) );
     }
 };

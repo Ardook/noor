@@ -141,8 +141,8 @@ public:
     }
 };
 
-//using CudaSkyDomeManager = CudaSkyDomeManagerTemplate<Cuda2DTexture>;
-using CudaSkyDomeManager = CudaSkyDomeManagerTemplate<CudaMipMap>;
+using CudaSkyDomeManager = CudaSkyDomeManagerTemplate<Cuda2DTexture>;
+//using CudaSkyDomeManager = CudaSkyDomeManagerTemplate<CudaMipMap>;
 __constant__
 CudaSkyDomeManager _skydome_manager;
 #endif /* CUDASKYDOME_CUH */

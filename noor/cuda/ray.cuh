@@ -39,6 +39,7 @@ class CudaRay {
 protected:
     bool _isDifferential{ false };
 public:
+    CudaRay() = default;
     __device__
         CudaRay(
         const float3& origin,

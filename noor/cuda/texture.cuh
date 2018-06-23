@@ -250,7 +250,7 @@ public:
         texDescr.addressMode[1] = cudaAddressModeWrap;
         texDescr.addressMode[2] = cudaAddressModeClamp;
         texDescr.maxMipmapLevelClamp = float( levels - 1 );
-        texDescr.maxAnisotropy = 32;
+        texDescr.maxAnisotropy = 64;
         texDescr.readMode = cudaReadModeElementType;
         checkNoorErrors( cudaCreateTextureObject( &_read_tex_obj, &resDescr, &texDescr, NULL ) );
         checkNoorErrors( NOOR::create_surfaceobj( &_write_surface_obj, _array ) );
@@ -422,8 +422,8 @@ public:
     }
 };
 
-//using CudaTextureManager = CudaTextureManagerTemplate<Cuda2DTexture>;
-using CudaTextureManager = CudaTextureManagerTemplate<CudaMipMap>;
+using CudaTextureManager = CudaTextureManagerTemplate<Cuda2DTexture>;
+//using CudaTextureManager = CudaTextureManagerTemplate<CudaMipMap>;
 __constant__
 CudaTextureManager _texture_manager;
 #endif /* CUDATEXTURE_CUH */
