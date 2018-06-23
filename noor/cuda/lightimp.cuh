@@ -55,7 +55,7 @@ float3 CudaAreaLight::sample_Li(
     float3 p;
     _shape.sample( I, p, pdf );
     if ( pdf == 0.f ) return _constant_spec._black;
-    Lr._vis = CudaVisibility( I._geometry._p, p );
+    Lr._vis = CudaVisibility( I.getP(), p );
     return  Le( Lr._vis._wi );
 }
 
@@ -89,7 +89,7 @@ float3 CudaInfiniteLight::sample_Li(
 ) const {
     Lr._vis._wi = _skydome_manager.importance_sample_dir( I._rng, pdf );
     if ( isinf( pdf ) || isnan( pdf ) ) pdf = 0.f;
-    Lr._vis = CudaVisibility( I._geometry._p, I._geometry._p + 2.f*_world_radius * Lr._vis._wi );
+    Lr._vis = CudaVisibility( I.getP(), I.getP() + 2.f*_world_radius * Lr._vis._wi );
     return Le( Lr._vis._wi );
 }
 
@@ -102,7 +102,7 @@ float3 CudaPointLight::sample_Li(
     float& pdf
 ) const {
     pdf = 1.0f;
-    Lr._vis = CudaVisibility( I._geometry._p, _position );
+    Lr._vis = CudaVisibility( I.getP(), _position );
     const float dist2 = NOOR::length2( Lr._vis._to - Lr._vis._from );
     if ( dist2 == 0.0f ) {
         pdf = 0.0f;
@@ -119,7 +119,7 @@ float3 CudaSpotLight::sample_Li(
     float& pdf
 ) const {
     pdf = 1.0f;
-    Lr._vis = CudaVisibility( I._geometry._p, _position );
+    Lr._vis = CudaVisibility( I.getP(), _position );
     const float dist2 = NOOR::length2( Lr._vis._to - Lr._vis._from );
     if ( dist2 == 0.0f ) {
         pdf = 0.0f;
@@ -142,7 +142,7 @@ float3 CudaDistantLight::sample_Li(
     float& pdf
 ) const {
     pdf = 1.0f;
-    Lr._vis = CudaVisibility( I._geometry._p, I._geometry._p + 2.f*_world_radius * _direction );
+    Lr._vis = CudaVisibility( I.getP(), I.getP() + 2.f*_world_radius * _direction );
     return _ke;
 }
 

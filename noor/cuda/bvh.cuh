@@ -111,7 +111,7 @@ public:
     __device__
         bool intersectLeaf(
         const CudaRay& ray,
-        CudaBSDFSamplingRecord& rec
+        CudaIntersectionRecord& rec
         ) {
         const uint start = get_start();
         const uint count = start + get_tri_count();
@@ -141,7 +141,7 @@ public:
 };
 
 __device__ __forceinline__
-bool intersect( const CudaRay& ray, CudaBSDFSamplingRecord& rec ) {
+bool intersect( const CudaRay& ray, CudaIntersectionRecord& rec ) {
     bool hit = false;
     uint currentNodeIndex;
     CudaBVHNode current_node;

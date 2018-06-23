@@ -111,7 +111,7 @@ public:
         float3 cosine_sample_dir( const CudaIntersection& I,
                                   float& pdf ) const {
         const float2 u = make_float2( I._rng(), I._rng() );
-        CudaONB onb( I._shading._n, I._shading._dpdu, I._shading._dpdv );
+        CudaONB onb( I.getSn(), I.getSdpdu(), I.getSdpdv() );
         const float3 dir = onb.toWorld( NOOR::cosineSampleHemisphere( u, RIGHT_HANDED ) );
         pdf = dot( dir, onb._w ) * NOOR_invPI;
         return dir;
@@ -124,7 +124,7 @@ public:
         const float2 u = make_float2( rng(), rng() );
         float map_pdf = NOOR::uniformHemiSpherePdf();
         pdf = map_pdf / ( 2.0f * NOOR_PI * NOOR_PI );
-        CudaONB onb( I._shading._n, I._shading._dpdu, I._shading._dpdv );
+        CudaONB onb( I.getSn(), I.getSdpdu(), I.getSdpdv() );
         return onb.toWorld( NOOR::uniformSampleHemisphere( u ) );
     }
 
@@ -141,8 +141,8 @@ public:
     }
 };
 
-using CudaSkyDomeManager = CudaSkyDomeManagerTemplate<Cuda2DTexture>;
-//using CudaSkyDomeManager = CudaSkyDomeManagerTemplate<CudaMipMap>;
+//using CudaSkyDomeManager = CudaSkyDomeManagerTemplate<Cuda2DTexture>;
+using CudaSkyDomeManager = CudaSkyDomeManagerTemplate<CudaMipMap>;
 __constant__
 CudaSkyDomeManager _skydome_manager;
 #endif /* CUDASKYDOME_CUH */

@@ -23,6 +23,20 @@ SOFTWARE.
 */
 #ifndef CUDAFRAMEBUFFER_CUH
 #define CUDAFRAMEBUFFER_CUH
+struct CudaRenderTask {
+    int _w;
+    int _h;
+    int _gpu_id;
+    size_t _size;
+
+    CudaRenderTask() = default;
+    CudaRenderTask( int w, int h, int gpu_id ) :
+        _w( w ),
+        _h( h ),
+        _gpu_id( gpu_id ),
+        _size( _w*_h * sizeof( float4 ) )
+    {}
+};
 class CudaFrameBufferManager {
 public:
     // output frame buffer of the path tracer
@@ -30,16 +44,16 @@ public:
     bool _managed;
     CudaFrameBufferManager() = default;
 
-    CudaFrameBufferManager( int w, int h, bool managed = false ) : _managed( managed )
+    CudaFrameBufferManager( const CudaRenderTask& task ) : _managed( task._gpu_id != 0 )
     {
-        if ( managed )
-            checkNoorErrors( cudaMallocManaged( (void **)&_buffer, w * h * sizeof( float4 ) ) );
+        if ( _managed )
+            checkNoorErrors( cudaMallocManaged( (void **)&_buffer, task._size ) );
             //checkNoorErrors( cudaMallocManaged( (void **)&_buffer, w * h * sizeof( float4 ) ) );
             //checkNoorErrors( cudaHostAlloc( (void **)&_buffer, w * h * sizeof( float4 ), cudaHostAllocMapped ) );
             //checkNoorErrors( cudaHostAlloc( (void **)&_buffer, w * h * sizeof( float4 ), cudaHostAllocDefault ) );
             //checkNoorErrors( cudaHostAlloc( (void **)&_buffer, w * h * sizeof( float4 ), cudaHostAllocPortable ) );
         else
-            checkNoorErrors( cudaMalloc( (void **)&_buffer, w * h * sizeof( float4 ) ) );
+            checkNoorErrors( cudaMalloc( (void **)&_buffer, task._size ) );
     }
 
     __device__

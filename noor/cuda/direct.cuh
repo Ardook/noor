@@ -26,7 +26,7 @@ SOFTWARE.
 
 __forceinline__ __device__
 bool occluded( const CudaIntersection& I, const CudaVisibility& v ) {
-    return ( intersectP( I.spawnShadowRay( v ), I._tid ) );
+    return ( intersectP( I.spawnShadowRay( v ), I.getTid() ) );
 }
 
 __forceinline__ __device__
@@ -44,15 +44,15 @@ float3 sampleLight( const CudaBSDF& bsdf,
         return _constant_spec._black;
     }
     light_idx = Lr._light_idx;
-    float3 f = bsdf.f( I, I._wo, Lr._vis._wi, bsdf_flags );
+    float3 f = bsdf.f( I, I.getWo(), Lr._vis._wi, bsdf_flags );
     if ( NOOR::isBlack( f ) ) return _constant_spec._black;
-    f *= NOOR::absDot( Lr._vis._wi, I._shading._n );
+    f *= NOOR::absDot( Lr._vis._wi, I.getSn() );
     if ( !occluded( I, Lr._vis ) ) {
         if ( I.isShadowCatcher() ) return f;
         if ( _light_manager.isDeltaLight( light_idx ) || !MIS ) {
             return Li * f / light_pdf;
         } else {
-            const float scatter_pdf = bsdf.Pdf( I, I._wo, Lr._vis._wi, bsdf_flags );
+            const float scatter_pdf = bsdf.Pdf( I, I.getWo(), Lr._vis._wi, bsdf_flags );
             const float light_weight = NOOR::powerHeuristic( 1.f, light_pdf, 1.f, scatter_pdf );
             return Li * f * light_weight / light_pdf;
         }
@@ -72,9 +72,9 @@ float3 sampleBSDF( const CudaBSDF& bsdf,
     const float2 u = make_float2( I._rng(), I._rng() );
     float scatter_pdf, light_pdf;
     float3 wi;
-    float3 f = bsdf.Sample_f( I, I._wo, wi, scatter_pdf, bsdf_flags, sampled_type );
+    float3 f = bsdf.Sample_f( I, I.getWo(), wi, scatter_pdf, bsdf_flags, sampled_type );
     if ( NOOR::isBlack( f ) || scatter_pdf == 0 ) return Ld;
-    f *= NOOR::absDot( wi, I._shading._n );
+    f *= NOOR::absDot( wi, I.getSn() );
     float sampledSpecular = ( sampled_type & BSDF_SPECULAR ) != 0;
     float scatter_weight = 1.f;
     if ( !sampledSpecular ) {
@@ -86,7 +86,7 @@ float3 sampleBSDF( const CudaBSDF& bsdf,
     }
     const CudaRay shadow_ray = I.spawnShadowRay( wi, 2.f*_constant_spec._world_radius );
     if ( _light_manager.intersect( shadow_ray, light_idx ) ) {
-        const CudaVisibility vis( I._geometry._p, shadow_ray.pointAtParameter( shadow_ray.getTmax() ) );
+        const CudaVisibility vis( I.getP(), shadow_ray.pointAtParameter( shadow_ray.getTmax() ) );
         if ( !occluded( I, vis ) ) {
             Ld += _light_manager.Le( wi, light_idx ) * f * scatter_weight / scatter_pdf;
         }

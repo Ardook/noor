@@ -33,15 +33,15 @@ float CudaShape::pdf(
     float pdf = 0.f;
     if ( _type == QUAD || _type == DISK ) {
         float3 p, n;
-        const CudaRay ray( I._geometry._p, wi );
+        const CudaRay ray( I.getP(), wi );
         if ( !intersect( ray, p, n ) ) {
             return 0.f;
         }
         // Convert light sample weight to solid angle measure
-        pdf = NOOR::length2( I._geometry._p - p ) / ( NOOR::absDot( n, -1.0f*ray.getDir() ) * _area );
+        pdf = NOOR::length2( I.getP() - p ) / ( NOOR::absDot( n, -1.0f*ray.getDir() ) * _area );
     } else if ( _type == SPHERE ) {
         // Compute general sphere PDF
-        float sinThetaMax2 = _radius2 / NOOR::length2( I._geometry._p - _center );
+        float sinThetaMax2 = _radius2 / NOOR::length2( I.getP() - _center );
         float cosThetaMax = sqrtf( fmaxf( 0.f, 1.f - sinThetaMax2 ) );
         pdf = NOOR::uniformConePdf( cosThetaMax );
     }

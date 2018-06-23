@@ -226,7 +226,7 @@ public:
         float3 f( const CudaIntersection& I,
                   const float3 &wo,
                   const float3 &wi ) const {
-        const CudaONB onb( I._shading._n, I._shading._dpdu, I._shading._dpdv );
+        const CudaONB onb( I.getSn(), I.getSdpdu(), I.getSdpdv() );
         return _skydome_manager.evaluate( -onb.toWorld( wo ), false ) / AbsCosTheta( wi );
     }
 
@@ -252,7 +252,7 @@ public:
     }
     __device__
         void Sample_f(
-        const CudaIntersection& I,
+        CudaIntersectionRecord& rec,
         const float3 &wo,
         float3 &wi,
         const float2 &u
@@ -474,7 +474,7 @@ public:
 
         // Compute ray direction for specular transmission
         if ( !Refract( wo, NOOR::faceforward( make_float3( 0, 0, 1 ), wo ), etaI / etaT, wi ) ) {
-            wi = make_float3( -wo.x, -wo.y, -wo.z );
+            wi = Reflect( wo, NOOR::faceforward( make_float3( 0, 0, 1 ), wo ));
         }
     }
 };

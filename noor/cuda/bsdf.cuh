@@ -177,32 +177,6 @@ float3 Sample_f(
             return _constant_spec._black;
     }
 }
-struct BxDFs {
-    CudaBxDF* _bxdf0{nullptr};
-    CudaBxDF* _bxdf1{nullptr};
-    CudaBxDF* _bxdf2{nullptr};
-    CudaBxDF* _bxdf3{nullptr};
-    CudaBxDF* _bxdf4{nullptr};
-    CudaBxDF* _bxdf5{nullptr};
-    CudaBxDF* _bxdf6{nullptr};
-    CudaBxDF* _bxdf7{nullptr};
-    int _nbxdfs{ 0 };
-
-    __device__
-        void Add( CudaBxDF *b ) {
-        *(&_bxdf0 + _nbxdfs * sizeof( CudaBxDF* )) = b;
-        ++_nbxdfs;
-    }
-    __device__
-        CudaBxDF*& operator[]( int i ) {
-        return (CudaBxDF*) *( &_bxdf0 + i * sizeof( CudaBxDF* ) );
-    }
-
-    __device__
-        CudaBxDF* operator[]( int i ) const {
-        return ( CudaBxDF* ) *( &_bxdf0 + i * sizeof( CudaBxDF* ) );
-    }
-};
 
 class CudaBSDF {
 public:
@@ -232,7 +206,7 @@ public:
         BxDFType flags
         ) const {
         if ( _nbxdfs == 0.f ) return 0.f;
-        const CudaONB onb( I._shading._n, I._shading._dpdu, I._shading._dpdv );
+        const CudaONB onb( I.getSn(), I.getSdpdu(), I.getSdpdv() );
         const float3 wo = onb.toLocal( woWorld );
         const float3 wi = onb.toLocal( wiWorld );
         if ( wo.z == 0.0f ) { return 0.0f; }
@@ -254,10 +228,10 @@ public:
         const float3 &wiWorld,
         BxDFType flags
         ) const {
-        const CudaONB onb( I._shading._n, I._shading._dpdu, I._shading._dpdv );
+        const CudaONB onb( I.getSn(), I.getSdpdu(), I.getSdpdv() );
         const float3 wo = onb.toLocal( woWorld );
         const float3 wi = onb.toLocal( wiWorld );
-        const bool reflect = dot( wiWorld, I._geometry._n ) * dot( woWorld, I._geometry._n ) > 0;
+        const bool reflect = dot( wiWorld, I.getGn() ) * dot( woWorld, I.getGn() ) > 0;
         float3 f = _constant_spec._black;
         for ( int i = 0; i < _nbxdfs; ++i )
             if ( _bxdfs[i]->MatchesFlags( flags ) &&
@@ -295,7 +269,7 @@ public:
             }
         }
 
-        const CudaONB onb( I._shading._n, I._shading._dpdu, I._shading._dpdv );
+        const CudaONB onb( I.getSn(), I.getSdpdu(), I.getSdpdv() );
         const float3 wo = onb.toLocal( woWorld );
         if ( wo.z == 0.0f ) {
             return _constant_spec._black;
@@ -319,7 +293,7 @@ public:
 
         // Compute value of BSDF for sampled direction
         if ( !bxdf->isSpecular() ) {
-            bool reflect = dot( wiWorld, I._geometry._n ) * dot( woWorld, I._geometry._n ) > 0;
+            bool reflect = dot( wiWorld, I.getGn() ) * dot( woWorld, I.getGn() ) > 0;
             //f = _constant_spec._black;
             for ( int i = 0; i < _nbxdfs; ++i )
                 if ( _bxdfs[i] != bxdf && _bxdfs[i]->MatchesFlags( type ) &&

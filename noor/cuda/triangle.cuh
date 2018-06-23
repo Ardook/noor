@@ -82,7 +82,7 @@ public:
     __device__
         bool intersect(
         const CudaRay& ray,
-        CudaBSDFSamplingRecord& rec,
+        CudaIntersectionRecord& rec,
         uint tri_idx
         ) {
         _ax_nu_nv_nd = _mesh_manager.getWaldAxNuNvNd( tri_idx );

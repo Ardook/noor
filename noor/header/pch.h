@@ -38,11 +38,8 @@ SOFTWARE.
 #include <memory>
 #include <cmath>
 #include <chrono>
-#include <ctime>
-
 #include <thread>
-
-#include <omp.h>
+#include <experimental/filesystem>
 
 #define GLEW_STATIC 
 #include <GL/glew.h>
@@ -55,7 +52,6 @@ SOFTWARE.
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
 #include <glm/gtx/polar_coordinates.hpp>
-#include <experimental/filesystem>
 
 enum {
     CUDA_VBO_VERTEX = 0

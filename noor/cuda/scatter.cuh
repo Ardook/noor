@@ -33,10 +33,10 @@ float3 scatter(
     BxDFType sampledType;
     const float2 u = make_float2( I._rng(), I._rng() );
     float pdf = 0.0f;
-    const float3 f = bsdf.Sample_f( I, I._wo, I._wi, pdf, bsdfFlags, sampledType );
+    const float3 f = bsdf.Sample_f( I, I.getWo(), I.getWi(), pdf, bsdfFlags, sampledType );
     if ( pdf == 0.0f )
         return _constant_spec._black;
     else
-        return f * NOOR::absDot( I._wi, I._shading._n ) / pdf;
+        return f * NOOR::absDot( I.getWi(), I.getSn() ) / pdf;
 }
 #endif /* SCATTER_CUH */

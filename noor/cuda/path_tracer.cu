@@ -33,33 +33,32 @@ float4 pathtracer(
     float3 beta = _constant_spec._white;
     bool specular_bounce = false;
     for ( uchar bounce = 0; bounce < _constant_spec._bounces; ++bounce ) {
-        CudaBSDFSamplingRecord rec( tid );
-        if ( intersect( ray, rec ) ) {
-            CudaIntersection I( ray, rng, rec );
-            if ( bounce == 0 ) {
-                lookAt = make_float4( I._geometry._p, 1.f );
-            }
-            if ( I.isEmitter() && ( bounce == 0 || specular_bounce ) ) {
-                L += beta * ( I.isMeshLight() ?
-                              _light_manager.Le( ray.getDir(), rec._ins_idx ) :
-                              _material_manager.getEmmitance( I )
-                              );
-                break;
-            }
-            accumulate( I, ray, beta, L );
-            // check the outgoing direction is on correct side
-            if ( !correct_sidedness( I ) ) break;
-            // Russian Roulette 
-            if ( rr_terminate( I, bounce, beta ) ) break;
-            specular_bounce = I.isSpecular();
-            I.spawnRay( ray );
-        } else { // no intersection 
+        CudaIntersectionRecord rec( tid );
+        if ( !intersect( ray, rec ) ) {
             if ( _constant_spec.is_sky_light_enabled() &&
                 ( bounce == 0 || specular_bounce ) ) {
                 L += beta*_skydome_manager.evaluate( normalize( ray.getDir() ), false );
             }
             break;
         }
+        CudaIntersection I( ray, rng, &rec );
+        if ( bounce == 0 ) {
+            lookAt = make_float4( I.getP(), 1.f );
+        }
+        if ( I.isEmitter() && ( bounce == 0 || specular_bounce ) ) {
+            L += beta * ( I.isMeshLight() ?
+                          _light_manager.Le( ray.getDir(), I.getInsIdx() ) :
+                          _material_manager.getEmmitance( I )
+                          );
+            break;
+        }
+        accumulate( I, ray, beta, L );
+        // check the outgoing direction is on the correct side
+        if ( !correct_sidedness( I ) ) break;
+        // Russian Roulette 
+        if ( rr_terminate( I, bounce, beta ) ) break;
+        specular_bounce = I.isSpecular();
+        I.spawnRay( ray );
     }
     L = clamp( L, 0, 100.f );
     return make_float4( L, 1.f );
@@ -83,7 +82,7 @@ void path_tracer_kernel( uint frame_number, uint gpu_offset ) {
     const float4 new_color = pathtracer( ray, rng, lookAt, tid );
     _framebuffer_manager.set( new_color, gid, frame_number );
 
-    if (  gid + gpu_offset*_constant_camera._w == _constant_camera._center ) {
+    if ( gid + gpu_offset*_constant_camera._w == _constant_camera._center ) {
         _device_lookAt = lookAt;
     }
 }
@@ -97,7 +96,8 @@ void debug_skydome_kernel(
     uint x = blockIdx.x * blockDim.x + threadIdx.x;
     uint y = blockIdx.y * blockDim.y + threadIdx.y;
     uint id = y * _constant_camera._w + x;
-    float2 u = make_float2( x / (float)( _constant_camera._w ), y / (float)( _constant_camera._h ) );
+    float2 u = make_float2( x / (float)( _constant_camera._w ), y / 
+        (float)( _constant_camera._h ) );
     _framebuffer_manager.set( _skydome_manager.evaluate( u ), id );
     if ( _constant_spec.is_mis_enabled() ) {
         CudaRNG rng( id, frame_number + clock64() );
@@ -109,30 +109,34 @@ void debug_skydome_kernel(
     }
 }
 
-void debug_skydome( uint frame_number ) {
-    static const int width = _render_manager->_w;
-    static const int height = _render_manager->_h;
-    static const dim3 block( THREAD_W, THREAD_H, 1 );
-    static const dim3 grid( width / block.x, height / block.y, 1 );
-    debug_skydome_kernel << < grid, block >> > ( frame_number, width, height );
-    checkNoorErrors( cudaPeekAtLastError() );
-    checkNoorErrors( cudaDeviceSynchronize() );
-}
+//void debug_skydome( uint frame_number ) {
+//    static const int width = _render_manager->_w;
+//    static const int height = _render_manager->_h;
+//    static const dim3 block( THREAD_W, THREAD_H, 1 );
+//    static const dim3 grid( width / block.x, height / block.y, 1 );
+//    debug_skydome_kernel << < grid, block >> > ( frame_number, width, height );
+//    checkNoorErrors( cudaPeekAtLastError() );
+//    checkNoorErrors( cudaDeviceSynchronize() );
+//}
 
 void cuda_path_tracer( uint& frame_number ) {
-    const uint w = _render_manager->_w;
-    const uint h = _render_manager->_h / _render_manager->_num_gpus;
-    const uint& gpu_offset = h;
-
     static const dim3 block( THREAD_W, THREAD_H, 1 );
-    static const dim3 grid( w / block.x, h / block.y, 1 );
+    static const dim3 grid[] = {
+        dim3( _render_manager->_gpu[0]->_task._w / block.x,
+        _render_manager->_gpu[0]->_task._h / block.y, 1 ),
+        _render_manager->_num_gpus > 1 ?
+        dim3( _render_manager->_gpu[1]->_task._w / block.x,
+        _render_manager->_gpu[1]->_task._h / block.y, 1 )
+        : dim3( 0 )
+    };
+    static const size_t shmsize = _render_manager->_shmsize;
+    static const int offset = _render_manager->_gpu[0]->_task._h;
 
-
-    checkNoorErrors( cudaFuncSetCacheConfig( path_tracer_kernel, cudaFuncCachePreferL1 ) );
+    //checkNoorErrors( cudaFuncSetCacheConfig( path_tracer_kernel, cudaFuncCachePreferL1 ) );
     //for ( int i = 0; i< _render_manager->_num_gpus ; ++i ) {
-    for ( int gpu_id = _render_manager->_num_gpus - 1; gpu_id >= 0; --gpu_id ) {
-        checkNoorErrors( cudaSetDevice( gpu_id ) );
-        path_tracer_kernel << <grid, block, _render_manager->_shmsize, _render_manager->getStream( gpu_id ) >> > ( frame_number, gpu_id*gpu_offset );
+    for ( int i = _render_manager->_num_gpus - 1; i >= 0; --i ) {
+        checkNoorErrors( cudaSetDevice( i ) );
+        path_tracer_kernel << <grid[i], block, shmsize, _render_manager->getStream( i ) >> > ( frame_number, i*offset );
     }
     _render_manager->update();
     ++frame_number;
