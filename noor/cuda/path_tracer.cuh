@@ -102,6 +102,7 @@ enum MaterialType {
     BUMP = 1 << 13,
     MESHLIGHT = 1 << 14
 };
+
 constexpr uint NOOR_NO_BUMP_ALPHA = ~(BUMP | ALPHA);
 constexpr uint NOOR_EMITTER = EMITTER | MESHLIGHT;
 constexpr uint NOOR_GLASS = GLASS | ROUGHGLASS;

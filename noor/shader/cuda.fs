@@ -30,7 +30,8 @@ in vec2 UV;
 layout( location = 0 ) out vec4 FragColor;
 
 uniform sampler2D sampler;
-const vec3 gamma = vec3( 1.0f/2.2f );
+uniform float exposure = 1.0f;
+const vec3 gamma = vec3( 1.0f / 2.2f );
 
 subroutine( tonemapType )
 vec4 gammaCorrect( vec3 color ) {
@@ -63,16 +64,15 @@ vec3 Uncharted2Tonemap( vec3 x ) {
 //Based on Filmic Tonemapping Operators http://filmicgames.com/archives/75
 subroutine( tonemapType )
 vec4 tonemapUncharted2( vec3 color ) {
-    float ExposureBias = 2.0f;
+    float ExposureBias = 4.0f;
     vec3 curr = Uncharted2Tonemap( ExposureBias * color );
 
     vec3 whiteScale = 1.0f / Uncharted2Tonemap( vec3( W ) );
     return gammaCorrect( curr * whiteScale );
 }
 
-
 void main() {
     // output gamma corrected color
-    vec3 color = vec3( texture( sampler, UV ) );
+    vec3 color = exposure *  texture( sampler, UV ).rgb;
     FragColor = tonemap( color );
 }

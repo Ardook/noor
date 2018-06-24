@@ -52,6 +52,8 @@ namespace {
         TONEMAP_REINHARD = GLFW_KEY_F10,
         TONEMAP_FILMIC = GLFW_KEY_F11,
         TONEMAP_UNCHARTED = GLFW_KEY_F12,
+        EXPOSURE_INC = GLFW_KEY_KP_ADD,
+        EXPOSURE_DEC = GLFW_KEY_KP_SUBTRACT,
         QUIT = GLFW_KEY_ESCAPE
     };
 
@@ -82,6 +84,7 @@ namespace {
     GLuint render_cuda_program;
 
     GLuint mvp_uniform;
+    GLuint exposure_uniform;
 
     GLuint vaos[NUM_VAOS];
     GLuint vbos[NUM_VBOS];
@@ -92,6 +95,9 @@ namespace {
     glm::mat4 projection;
     glm::mat4 modelview;
     glm::mat4 mvp;
+
+    float exposure = 1.0f;
+    const float delta_exposure = .25f;
 
     const float scene_near = 0.001f;
     const float scene_far = 1000.0f;
@@ -236,8 +242,10 @@ void keyboard( GLFWwindow* window, int key, int scancode, int action, int mode )
                 scene->setCameraType( ENV );
                 break;
             case CUDA_MIS:
-                if ( keymap[CUDA_MIS] ) scene->enableMIS();
-                else  scene->disableMIS();
+                if ( keymap[CUDA_MIS] ) 
+                    scene->enableMIS();
+                else  
+                    scene->disableMIS();
                 break;
             case TONEMAP_GAMMACORRECT:
                 tonemapType = glGetSubroutineIndex( render_cuda_program,
@@ -258,6 +266,14 @@ void keyboard( GLFWwindow* window, int key, int scancode, int action, int mode )
                 tonemapType = glGetSubroutineIndex( render_cuda_program,
                                                         GL_FRAGMENT_SHADER,
                                                         "tonemapUncharted2" );
+                break;
+            case EXPOSURE_INC:
+                exposure += delta_exposure;
+                glUniform1f( exposure_uniform, exposure );
+                break;
+            case EXPOSURE_DEC:
+                exposure -= delta_exposure;
+                glUniform1f( exposure_uniform, exposure );
                 break;
             default:
                 break;
@@ -398,9 +414,14 @@ void initGLBuffers() {
                                         GL_FRAGMENT_SHADER,
                                         "gammaCorrect" );
     cudaSamplerID = glGetUniformLocation( render_cuda_program, "sampler" );
+
+    exposure_uniform = glGetUniformLocation( render_cuda_program, "exposure" );
+    glUniform1f( exposure_uniform, exposure );
+
     mvp_uniform = glGetUniformLocation( render_cuda_program, "mvp" );
     mvp = glm::ortho( -1.0, 1.0, -1.0, 1.0, -1.0, 1.0 );
     glUniformMatrix4fv( mvp_uniform, 1, GL_FALSE, &mvp[0][0] );
+
     glBindTexture( GL_TEXTURE_2D, cudaTextureID );
     glEnable( GL_TEXTURE_2D );
     glUniform1i( cudaSamplerID, 0 );

@@ -101,11 +101,11 @@ class  CudaIntersection {
 
 public:
     const CudaRNG& _rng;
-    CudaIntersectionRecord* _rec;
     DifferentialFrame _differential;
     float2 _uv{ 0.0f, 0.0f };
     uint _mat_idx{ 0u };
     mutable float _eta{ 1.0f };
+    mutable CudaIntersectionRecord* _rec;
 
     __device__
         CudaIntersection( const CudaRay& ray,

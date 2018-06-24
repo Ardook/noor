@@ -44,7 +44,7 @@ float3 sampleLight( const CudaBSDF& bsdf,
         return _constant_spec._black;
     }
     light_idx = Lr._light_idx;
-    float3 f = bsdf.f( I, I.getWo(), Lr._vis._wi, bsdf_flags );
+    float3 f = bsdf.Eval( I, I.getWo(), Lr._vis._wi, bsdf_flags );
     if ( NOOR::isBlack( f ) ) return _constant_spec._black;
     f *= NOOR::absDot( Lr._vis._wi, I.getSn() );
     if ( !occluded( I, Lr._vis ) ) {

@@ -96,7 +96,7 @@ float Pdf(
 }
 
 __forceinline__ __device__
-float3 f(
+float3 Eval(
     CudaBxDF* bxdf,
     const CudaIntersection& I,
     const float3 &wo,
@@ -105,31 +105,31 @@ float3 f(
     switch ( bxdf->getIndex() ) {
         // reflections
         case ShadowCatcher:
-            return ( (CudaShadowCatcher*) bxdf )->f( I, wo, wi );
+            return ( (CudaShadowCatcher*) bxdf )->Eval( I, wo, wi );
         case LambertReflection:
-            return ( (CudaLambertianReflection*) bxdf )->f( I, wo, wi );
+            return ( (CudaLambertianReflection*) bxdf )->Eval( I, wo, wi );
         case SpecularReflectionNoOp:
         case SpecularReflectionDielectric:
-            return ( (CudaSpecularReflection*) bxdf )->f( I, wo, wi );
+            return ( (CudaSpecularReflection*) bxdf )->Eval( I, wo, wi );
         case MicrofacetReflectionDielectric:
         case MicrofacetReflectionConductor:
-            return ( (CudaMicrofacetReflection*) bxdf )->f( I, wo, wi );
+            return ( (CudaMicrofacetReflection*) bxdf )->Eval( I, wo, wi );
 
         // transmissions
         case LambertTransmission:
-            return ( (CudaLambertianTransmission*) bxdf )->f( I, wo, wi );
+            return ( (CudaLambertianTransmission*) bxdf )->Eval( I, wo, wi );
         case SpecularTransmission:
-            return ( (CudaSpecularTransmission*) bxdf )->f( I, wo, wi );
+            return ( (CudaSpecularTransmission*) bxdf )->Eval( I, wo, wi );
         case MicrofacetTransmission:
-            return ( (CudaMicrofacetTransmission*) bxdf )->f( I, wo, wi );
+            return ( (CudaMicrofacetTransmission*) bxdf )->Eval( I, wo, wi );
 
         // multi-lobes
         case FresnelBlend:
-            return ( (CudaFresnelBlend*) bxdf )->f( I, wo, wi );
+            return ( (CudaFresnelBlend*) bxdf )->Eval( I, wo, wi );
         case FresnelSpecular:
-            return ( (CudaFresnelSpecular*) bxdf )->f( I, wo, wi );
+            return ( (CudaFresnelSpecular*) bxdf )->Eval( I, wo, wi );
         case ClearCoat:
-            return ( (CudaClearCoat*) bxdf )->f( I, wo, wi );
+            return ( (CudaClearCoat*) bxdf )->Eval( I, wo, wi );
         default:
             return _constant_spec._black;
     }
@@ -222,7 +222,7 @@ public:
     }
 
     __device__
-        float3 f(
+        float3 Eval(
         const CudaIntersection& I,
         const float3 &woWorld,
         const float3 &wiWorld,
@@ -237,7 +237,7 @@ public:
             if ( _bxdfs[i]->MatchesFlags( flags ) &&
                 ( ( reflect && ( _bxdfs[i]->getType() & BSDF_REFLECTION ) ) ||
                  ( !reflect && ( _bxdfs[i]->getType() & BSDF_TRANSMISSION ) ) ) ) {
-                f += ::f( _bxdfs[i], I, wo, wi );
+                f += ::Eval( _bxdfs[i], I, wo, wi );
             }
         return f;
     }
@@ -299,10 +299,11 @@ public:
                 if ( _bxdfs[i] != bxdf && _bxdfs[i]->MatchesFlags( type ) &&
                      ( ( reflect && ( _bxdfs[i]->getType() & BSDF_REFLECTION ) ) ||
                      ( !reflect && ( _bxdfs[i]->getType() & BSDF_TRANSMISSION ) ) ) )
-                    f += ::f( _bxdfs[i], I, wo, wi );
+                    f += ::Eval( _bxdfs[i], I, wo, wi );
         }
         return f;
     }
+
 };
 
 __forceinline__ __device__

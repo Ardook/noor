@@ -223,7 +223,7 @@ public:
 
 
     __device__
-        float3 f( const CudaIntersection& I,
+        float3 Eval( const CudaIntersection& I,
                   const float3 &wo,
                   const float3 &wi ) const {
         const CudaONB onb( I.getSn(), I.getSdpdu(), I.getSdpdv() );
@@ -246,18 +246,10 @@ public:
         float &pdf,
         BxDFType &sampledType
         ) const {
+        sampledType = _type;
         pdf = 1.f;
         wi = NOOR::uniformSampleHemisphere( u, LEFT_HANDED );
-        return f( I, wo, wi );
-    }
-    __device__
-        void Sample_f(
-        CudaIntersectionRecord& rec,
-        const float3 &wo,
-        float3 &wi,
-        const float2 &u
-        ) const {
-        wi = NOOR::uniformSampleHemisphere( u, LEFT_HANDED );
+        return Eval( I, wo, wi );
     }
 };
 
@@ -268,7 +260,7 @@ public:
         CudaBxDF( BxDFType( BSDF_REFLECTION | BSDF_DIFFUSE | BSDF_DIELECTRIC ),
                   LambertReflection ) {}
     __device__
-        float3 f( const CudaIntersection& I,
+        float3 Eval( const CudaIntersection& I,
                   const float3 &wo,
                   const float3 &wi ) const {
         return R( I )*NOOR_invPI;
@@ -293,21 +285,8 @@ public:
         wi = NOOR::cosineSampleHemisphere( u );
         if ( wo.z < 0 ) wi.z *= -1.0f;
         pdf = Pdf( I, wo, wi );
-        return f( I, wo, wi );
+        return Eval( I, wo, wi );
     }
-    __device__
-        void Sample_f(
-        const CudaIntersection& I,
-        const float3 &wo,
-        float3 &wi,
-        const float2 &u
-        ) const {
-        // Cosine-sample the hemisphere, flipping the direction if necessary
-        // default left handed since we are in bxdf coordinate system
-        wi = NOOR::cosineSampleHemisphere( u );
-        if ( wo.z < 0 ) wi.z *= -1.0f;
-    }
-
 };
 
 class CudaLambertianTransmission : public CudaBxDF {
@@ -317,7 +296,7 @@ public:
         CudaBxDF( BxDFType( BSDF_TRANSMISSION | BSDF_DIFFUSE | BSDF_DIELECTRIC ),
                   LambertTransmission ) {}
     __device__
-        float3 f( const CudaIntersection& I,
+        float3 Eval( const CudaIntersection& I,
                   const float3 &wo,
                   const float3 &wi ) const {
         return T( I )*NOOR_invPI;
@@ -344,20 +323,7 @@ public:
         wi = NOOR::cosineSampleHemisphere( u );
         if ( wo.z > 0.0f ) wi.z *= -1.0f;
         pdf = Pdf( I, wo, wi );
-        return f( I, wo, wi );
-    }
-
-    __device__
-        void Sample_f(
-        const CudaIntersection& I,
-        const float3 &wo,
-        float3 &wi,
-        const float2 &u
-        ) const {
-        // Cosine-sample the hemisphere, flipping the direction if necessary
-        // default left handed since we are in bxdf coordinate system
-        wi = NOOR::cosineSampleHemisphere( u );
-        if ( wo.z > 0.0f ) wi.z *= -1.0f;
+        return Eval( I, wo, wi );
     }
 
 };
@@ -372,7 +338,7 @@ public:
                   SpecularReflectionDielectric
         ) {}
     __device__
-        float3 f( const CudaIntersection& I,
+        float3 Eval( const CudaIntersection& I,
                   const float3 &wo,
                   const float3 &wi ) const {
         return make_float3( 0.f );
@@ -400,18 +366,6 @@ public:
         const CudaFresnel fresnel = factoryFresnel( I );
         return fresnel.evaluate( CosTheta( wi ) ) * R( I ) / AbsCosTheta( wi );
     }
-
-    __device__
-        void Sample_f(
-        const CudaIntersection& I,
-        const float3 &wo,
-        float3 &wi,
-        const float2 &u
-        ) const {
-        // Compute perfect specular reflection direction
-        wi = make_float3( -wo.x, -wo.y, wo.z );
-    }
-
 };
 
 class CudaSpecularTransmission : public CudaBxDF {
@@ -421,7 +375,7 @@ public:
         CudaBxDF( BxDFType( BSDF_TRANSMISSION | BSDF_SPECULAR |
                   BSDF_DIELECTRIC ), SpecularTransmission ) {}
     __device__
-        float3 f( const CudaIntersection& I,
+        float3 Eval( const CudaIntersection& I,
                   const float3 &wo,
                   const float3 &wi ) const {
         return make_float3( 0.f );
@@ -432,7 +386,6 @@ public:
                    const float3 &wo, const float3 &wi ) const {
         return 0;
     }
-
 
     __device__
         float3 Sample_f(
@@ -459,24 +412,7 @@ public:
         ft *= ( etaI * etaI ) / ( etaT * etaT );
         return ft / AbsCosTheta( wi );
     }
-
-    __device__
-        void Sample_f(
-        const CudaIntersection& I,
-        const float3 &wo,
-        float3 &wi,
-        const float2 &u
-        ) const {
-        const CudaFresnel fresnel = factoryFresnel( I );
-        const bool entering = CosTheta( wo ) > 0.0f;
-        const float etaI = entering ? fresnel._etaI.x : fresnel._etaT.x;
-        const float etaT = entering ? fresnel._etaT.x : fresnel._etaI.x;
-
-        // Compute ray direction for specular transmission
-        if ( !Refract( wo, NOOR::faceforward( make_float3( 0, 0, 1 ), wo ), etaI / etaT, wi ) ) {
-            wi = Reflect( wo, NOOR::faceforward( make_float3( 0, 0, 1 ), wo ));
-        }
-    }
+   
 };
 
 class CudaMicrofacetReflection : public CudaBxDF {
@@ -490,7 +426,7 @@ public:
         ) {}
 
     __device__
-        float3 f( const CudaIntersection& I,
+        float3 Eval( const CudaIntersection& I,
                   const float3 &wo,
                   const float3 &wi ) const {
         if ( !SameHemisphere( wo, wi ) ) {
@@ -545,20 +481,9 @@ public:
             return _constant_spec._black;
         }
         pdf = _distribution.Pdf( wo, wh ) / ( 4.0f * dot( wo, wh ) );
-        return f( I, wo, wi );
+        return Eval( I, wo, wi );
     }
 
-    __device__
-        void Sample_f(
-        const CudaIntersection& I,
-        const float3 &wo,
-        float3 &wi,
-        const float2 &u
-        ) const {
-        const CudaTrowbridgeReitz _distribution = factoryDistribution( I );
-        const float3 wh = _distribution.Sample_wh( wo, u );
-        wi = Reflect( wo, wh );
-    }
 };
 
 class CudaMicrofacetTransmission : public CudaBxDF {
@@ -569,7 +494,7 @@ public:
                   MicrofacetTransmission ) {}
 
     __device__
-        float3 f( const CudaIntersection& I,
+        float3 Eval( const CudaIntersection& I,
                   const float3 &wo,
                   const float3 &wi ) const {
         if ( SameHemisphere( wo, wi ) ) return _constant_spec._black;
@@ -638,26 +563,8 @@ public:
             return result;
         }
         pdf = Pdf( I, wo, wi );
-        return f( I, wo, wi );
+        return Eval( I, wo, wi );
     }
-
-    __device__
-        void Sample_f(
-        const CudaIntersection& I,
-        const float3 &wo,
-        float3 &wi,
-        const float2 &u
-        ) const {
-        const CudaTrowbridgeReitz _distribution = factoryDistribution( I );
-        float3 wh = _distribution.Sample_wh( wo, u );
-        const CudaFresnel fresnel = factoryFresnel( I );
-        const float eta = CosTheta( wo ) > 0 ? ( fresnel._etaI / fresnel._etaT ).x :
-            ( fresnel._etaT / fresnel._etaI ).x;
-        if ( !Refract( wo, wh, eta, wi ) ) {
-            wi = reflect( wo, wh );
-        }
-    }
-
 };
 
 class CudaFresnelBlend : public CudaBxDF {
@@ -670,8 +577,9 @@ public:
         float3 SchlickFresnel( const CudaIntersection& I, float cosTheta ) const {
         return S( I ) + NOOR::pow5f( 1.f - cosTheta ) * ( make_float3( 1.f ) - S( I ) );
     }
+
     __device__
-        float3 f( const CudaIntersection& I,
+        float3 Eval( const CudaIntersection& I,
                   const float3 &wo,
                   const float3 &wi ) const {
         const float3 diffuse = ( 28.f / ( 23.f * NOOR_PI ) ) * R( I ) *
@@ -727,32 +635,7 @@ public:
             if ( !SameHemisphere( wo, wi ) ) return make_float3( 0.f );
         }
         pdf = Pdf( I, wo, wi );
-        return f( I, wo, wi );
-    }
-
-
-    __device__
-        void Sample_f(
-        const CudaIntersection& I,
-        const float3 &wo,
-        float3 &wi,
-        const float2 &u
-        ) const {
-        float2 lu = u;
-        if ( lu.x < .5f ) {
-            lu.x = fminf( 2.f * lu.x, NOOR_ONE_MINUS_EPSILON );
-            // Cosine-sample the hemisphere, flipping the direction if necessary
-            wi = NOOR::cosineSampleHemisphere( lu );
-            //if ( wo.z < 0 ) wi.z *= -1.f;
-            wi.z *= NOOR::sign( wi.z );
-        } else {
-            lu.x = fminf( 2.f * ( lu.x - .5f ), NOOR_ONE_MINUS_EPSILON );
-            const CudaTrowbridgeReitz _distribution = factoryDistribution( I );
-
-            // Sample microfacet orientation $\wh$ and reflected direction $\wi$
-            const float3 wh = _distribution.Sample_wh( wo, lu );
-            wi = Reflect( wo, wh );
-        }
+        return Eval( I, wo, wi );
     }
 };
 
@@ -764,7 +647,7 @@ public:
                   BSDF_SPECULAR | BSDF_DIELECTRIC ), FresnelSpecular ) {}
 
     __device__
-        float3 f( const CudaIntersection& I,
+        float3 Eval( const CudaIntersection& I,
                   const float3 &wo,
                   const float3 &wi ) const {
         return make_float3( 0.f );
@@ -812,33 +695,6 @@ public:
             return T( I ) * eta * eta * ( 1.0f - F ) / AbsCosTheta( wi );
         }
     }
-
-    __device__
-        void Sample_f(
-        const CudaIntersection& I,
-        const float3 &wo,
-        float3 &wi,
-        const float2 &u
-        ) const {
-        const CudaFresnel fresnel = factoryFresnel( I );
-        float F = fresnel.evaluate( CosTheta( wo ) ).x;
-        if ( u.x < F ) {
-            // Compute specular reflection for FresnelSpecular
-            // Compute perfect specular reflection direction
-            wi = make_float3( -wo.x, -wo.y, wo.z );
-        } else {
-            // Compute specular transmission for FresnelSpecular
-            // Figure out which eta is incident and which is transmitted
-            const bool entering = CosTheta( wo ) > 0.0f;
-            const float eta = entering ? ( fresnel._etaI / fresnel._etaT ).x :
-                ( fresnel._etaT / fresnel._etaI ).x;
-
-            // Compute ray direction for specular transmission
-            if ( !Refract( wo, NOOR::faceforward( make_float3( 0, 0, 1 ), wo ), eta, wi ) ) {
-                wi = make_float3( -wo.x, -wo.y, wo.z );
-            }
-        }
-    }
 };
 
 
@@ -865,7 +721,7 @@ public:
         return 1.f;
     }
     __device__
-        float3 f(
+        float3 Eval(
         const CudaIntersection& I
         , const float3 &wo
         , const float3 &wi
@@ -880,7 +736,7 @@ public:
         Refract( wi, n, eta, wi_c );
         wo_c *= -1;
         wi_c *= -1;
-        const float3 result = _substrate.f( I, wo_c, wi_c ) * ( 1.f - F0 ) * ( 1.f - F1 );
+        const float3 result = _substrate.Eval( I, wo_c, wi_c ) * ( 1.f - F0 ) * ( 1.f - F1 );
         return result * absorption( I, wo_c, wi_c );
     }
 
@@ -956,41 +812,6 @@ public:
             pdf *= probSubstrate;
         }
         return result;
-    }
-
-    __device__
-        void Sample_f(
-        const CudaIntersection& I,
-        const float3 &wo,
-        float3 &wi,
-        const float2 &u
-        ) const {
-        const CudaFresnel fresnel = _coat.factoryFresnel( I );
-        const float eta = ( fresnel._etaI / fresnel._etaT ).x;
-        const float F0 = fresnel.evaluate( CosTheta( wo ) ).x;
-        const float w = _material_manager.getCoatWeight( I );
-        const float probSpecular = F0*w / ( F0*w + ( 1 - F0 ) * ( 1 - w ) );
-        bool choseSpecular = false;
-        float2 sample( u );
-        if ( sample.y < probSpecular ) {
-            sample.y /= probSpecular;
-            choseSpecular = true;
-        } else {
-            sample.y = ( sample.y - probSpecular ) / ( 1.f - probSpecular );
-            choseSpecular = false;
-        }
-        if ( choseSpecular ) {
-            _coat.Sample_f( I, wo, wi, sample );
-        } else {
-            float3 wi_c, wo_c;
-            float3 n = make_float3( 0, 0, 1 );
-            // refract in
-            Refract( wo, n, eta, wo_c );
-            _substrate.Sample_f( I, -wo_c, wi_c, sample );
-            // refract out
-            if ( !Refract( -wi_c, -n, 1.f / eta, wi ) )
-                _coat.Sample_f( I, wo, wi, sample );
-        }
     }
 };
 
