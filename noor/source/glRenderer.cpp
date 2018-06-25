@@ -422,10 +422,11 @@ void initGLBuffers() {
     mvp = glm::ortho( -1.0, 1.0, -1.0, 1.0, -1.0, 1.0 );
     glUniformMatrix4fv( mvp_uniform, 1, GL_FALSE, &mvp[0][0] );
 
-    glBindTexture( GL_TEXTURE_2D, cudaTextureID );
-    glEnable( GL_TEXTURE_2D );
     glUniform1i( cudaSamplerID, 0 );
     glBindVertexArray( vaos[CUDA_VAO] );
+
+    glBindTexture( GL_TEXTURE_2D, cudaTextureID );
+    glEnable( GL_TEXTURE_2D );
 }
 
 void initGLShaders() {

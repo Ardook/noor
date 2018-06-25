@@ -90,13 +90,13 @@ class  CudaIntersection {
         float3 _dpdx{ 0.0f, 0.0f, 0.0f };
         float3 _dpdy{ 0.0f, 0.0f, 0.0f };
 
+        float3 _dndu{ 0.0f, 0.0f, 0.0f };
+        float3 _dndv{ 0.0f, 0.0f, 0.0f };
+
         float _dudx{ 0.0f };
         float _dudy{ 0.0f };
         float _dvdx{ 0.0f };
         float _dvdy{ 0.0f };
-
-        float3 _dndu{ 0.0f, 0.0f, 0.0f };
-        float3 _dndv{ 0.0f, 0.0f, 0.0f };
     };
 
 public:

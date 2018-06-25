@@ -41,24 +41,25 @@ class CudaFrameBufferManager {
 public:
     // output frame buffer of the path tracer
     float4* _buffer;
-    bool _managed;
     CudaFrameBufferManager() = default;
 
-    CudaFrameBufferManager( const CudaRenderTask& task ) : _managed( task._gpu_id != 0 )
-    {
-        if ( _managed )
-            checkNoorErrors( cudaMallocManaged( (void **)&_buffer, task._size ) );
+    CudaFrameBufferManager( const CudaRenderTask& task ) {
+       // if ( _managed )
+            //checkNoorErrors( cudaMallocManaged( (void **)&_buffer, task._size ) );
+            checkNoorErrors( cudaMalloc( (void **)&_buffer, task._size ) );
             //checkNoorErrors( cudaMallocManaged( (void **)&_buffer, w * h * sizeof( float4 ) ) );
             //checkNoorErrors( cudaHostAlloc( (void **)&_buffer, w * h * sizeof( float4 ), cudaHostAllocMapped ) );
             //checkNoorErrors( cudaHostAlloc( (void **)&_buffer, w * h * sizeof( float4 ), cudaHostAllocDefault ) );
-            //checkNoorErrors( cudaHostAlloc( (void **)&_buffer, w * h * sizeof( float4 ), cudaHostAllocPortable ) );
-        else
-            checkNoorErrors( cudaMalloc( (void **)&_buffer, task._size ) );
+            //checkNoorErrors( cudaHostAlloc( (void **)&_buffer, task._size, cudaHostAllocWriteCombined ) );
+        //else
+         //   checkNoorErrors( cudaMalloc( (void **)&_buffer, task._size ) );
     }
 
     __device__
         float4 get( int index, uint frame_number )const {
-        return frame_number > 1 ? _buffer[index] : make_float4( 0.0f, 0.0f, 0.0f, 1.0f );
+        return frame_number > 1 ? 
+            _buffer[index] : 
+            make_float4( 0.0f, 0.0f, 0.0f, 1.0f );
     }
     __device__
         void set( const float4& new_color, int index ) {
@@ -67,7 +68,8 @@ public:
     __device__
         void set( const float4& new_color, int index, uint frame_number ) {
         const float4 old_color = get( index, frame_number );
-        _buffer[index] = lerp( old_color, new_color, 1.0f / static_cast<float>( frame_number ) );
+        _buffer[index] = lerp( old_color, new_color, 1.0f / 
+                               static_cast<float>( frame_number ) );
     }
     void free() {
         checkNoorErrors( cudaFree( _buffer ) );
