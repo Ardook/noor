@@ -185,7 +185,7 @@ public:
         }
 
         checkNoorErrors( cudaSetDevice( 0 ) );
-        cudaStreamAttachMemAsync( _gpu[0]->_stream, &_device_lookAt );
+        cudaStreamAttachMemAsync( _gpu[0]->_stream, &_device_lookAt ),
         glGenTextures( 1, textureID );
         glBindTexture( GL_TEXTURE_2D, *textureID );
         glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
@@ -219,10 +219,11 @@ public:
                 cudaMemcpyToArrayAsync(
                     _buffer_array,
                     0,
-                    offset,
+                    _gpu[0]->_task._h * gpu_id,
                     _gpu[gpu_id]->getBuffer(),
                     _gpu[gpu_id]->_task._size,
                     cudaMemcpyDeviceToDevice,
+                    //cudaMemcpyDefault,
                     _gpu[gpu_id]->_stream
                 )
             );

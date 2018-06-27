@@ -34,31 +34,32 @@ float4 pathtracer(
     bool specular_bounce = false;
     for ( uchar bounce = 0; bounce < _constant_spec._bounces; ++bounce ) {
         CudaIntersectionRecord rec( tid );
-        if ( !intersect( ray, rec ) ) {
+        if ( intersect( ray, rec ) ) {
+            CudaIntersection I( ray, rng, &rec );
+            if ( bounce == 0 ) {
+                lookAt = make_float4( I.getP(), 1.f );
+            }
+            if ( I.isEmitter() && ( bounce == 0 || specular_bounce ) ) {
+                L += beta * ( I.isMeshLight() ?
+                              _light_manager.Le( ray.getDir(), I.getInsIdx() ) :
+                              _material_manager.getEmmitance( I )
+                              );
+                break;
+            }
+            accumulate( I, ray, beta, L );
+            // check the outgoing direction is on the correct side
+            if ( !correct_sidedness( I ) ) break;
+            // Russian Roulette 
+            if ( rr_terminate( I, bounce, beta ) ) break;
+            specular_bounce = I.isSpecular();
+            I.spawnRay( ray );
+        } else {
             if ( _constant_spec.is_sky_light_enabled() &&
                 ( bounce == 0 || specular_bounce ) ) {
                 L += beta*_skydome_manager.evaluate( normalize( ray.getDir() ), false );
             }
             break;
         }
-        CudaIntersection I( ray, rng, &rec );
-        if ( bounce == 0 ) {
-            lookAt = make_float4( I.getP(), 1.f );
-        }
-        if ( I.isEmitter() && ( bounce == 0 || specular_bounce ) ) {
-            L += beta * ( I.isMeshLight() ?
-                          _light_manager.Le( ray.getDir(), I.getInsIdx() ) :
-                          _material_manager.getEmmitance( I )
-                          );
-            break;
-        }
-        accumulate( I, ray, beta, L );
-        // check the outgoing direction is on the correct side
-        if ( !correct_sidedness( I ) ) break;
-        // Russian Roulette 
-        if ( rr_terminate( I, bounce, beta ) ) break;
-        specular_bounce = I.isSpecular();
-        I.spawnRay( ray );
     }
     L = clamp( L, 0, 100.f );
     return make_float4( L, 1.f );
@@ -87,27 +88,27 @@ void path_tracer_kernel( uint frame_number, uint gpu_offset ) {
     }
 }
 
-__global__
-void debug_skydome_kernel(
-    uint frame_number
-    , int width
-    , int height
-) {
-    uint x = blockIdx.x * blockDim.x + threadIdx.x;
-    uint y = blockIdx.y * blockDim.y + threadIdx.y;
-    uint id = y * _constant_camera._w + x;
-    float2 u = make_float2( x / (float)( _constant_camera._w ), y / 
-        (float)( _constant_camera._h ) );
-    _framebuffer_manager.set( _skydome_manager.evaluate( u ), id );
-    if ( _constant_spec.is_mis_enabled() ) {
-        CudaRNG rng( id, frame_number + clock64() );
-        u = _skydome_manager.importance_sample_uv( make_float2( rng(), rng() ) );
-        u.x *= _constant_camera._w;
-        u.y *= _constant_camera._h;
-        id = int( u.y ) * ( _constant_camera._w ) + int( u.x );
-        _framebuffer_manager.set( make_float4( 1.f, 0, 0, 1 ), id );
-    }
-}
+//__global__
+//void debug_skydome_kernel(
+//    uint frame_number
+//    , int width
+//    , int height
+//) {
+//    uint x = blockIdx.x * blockDim.x + threadIdx.x;
+//    uint y = blockIdx.y * blockDim.y + threadIdx.y;
+//    uint id = y * _constant_camera._w + x;
+//    float2 u = make_float2( x / (float)( _constant_camera._w ), y / 
+//        (float)( _constant_camera._h ) );
+//    _framebuffer_manager.set( _skydome_manager.evaluate( u ), id );
+//    if ( _constant_spec.is_mis_enabled() ) {
+//        CudaRNG rng( id, frame_number + clock64() );
+//        u = _skydome_manager.importance_sample_uv( make_float2( rng(), rng() ) );
+//        u.x *= _constant_camera._w;
+//        u.y *= _constant_camera._h;
+//        id = int( u.y ) * ( _constant_camera._w ) + int( u.x );
+//        _framebuffer_manager.set( make_float4( 1.f, 0, 0, 1 ), id );
+//    }
+//}
 
 //void debug_skydome( uint frame_number ) {
 //    static const int width = _render_manager->_w;

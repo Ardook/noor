@@ -328,7 +328,6 @@ copy "shader\*.gs" "$(OutDir)\shader\"</Command>
       <GenerateLineInfo>false</GenerateLineInfo>
       <Warning>W3</Warning>
       <UseHostDefines>true</UseHostDefines>
-      <Keep>true</Keep>
       <AdditionalCompilerOptions>
       </AdditionalCompilerOptions>
       <NvccCompilation>compile</NvccCompilation>
