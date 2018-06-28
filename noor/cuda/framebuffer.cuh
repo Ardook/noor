@@ -41,10 +41,13 @@ class CudaFrameBufferManager {
 public:
     // output frame buffer of the path tracer
     float4* _buffer;
+    bool _managed;
     CudaFrameBufferManager() = default;
 
-    CudaFrameBufferManager( const CudaRenderTask& task ) {
-       // if ( _managed )
+    CudaFrameBufferManager( const CudaRenderTask& task ):
+        _managed(task._gpu_id != 0) 
+    {
+        //if ( !_managed )
             //checkNoorErrors( cudaMallocManaged( (void **)&_buffer, task._size ) );
             checkNoorErrors( cudaMalloc( (void **)&_buffer, task._size ) );
             //checkNoorErrors( cudaMallocManaged( (void **)&_buffer, w * h * sizeof( float4 ) ) );
@@ -52,7 +55,8 @@ public:
             //checkNoorErrors( cudaHostAlloc( (void **)&_buffer, w * h * sizeof( float4 ), cudaHostAllocDefault ) );
             //checkNoorErrors( cudaHostAlloc( (void **)&_buffer, task._size, cudaHostAllocWriteCombined ) );
         //else
-         //   checkNoorErrors( cudaMalloc( (void **)&_buffer, task._size ) );
+            //checkNoorErrors( cudaMallocManaged( (void **)&_buffer, task._size ) );
+          //  checkNoorErrors( cudaHostAlloc( (void **)&_buffer, task._size, cudaHostAllocMapped ) );
     }
 
     __device__

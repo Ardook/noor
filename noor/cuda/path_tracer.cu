@@ -133,10 +133,10 @@ void cuda_path_tracer( uint& frame_number ) {
     static const size_t shmsize = _render_manager->_shmsize;
     static const int offset = _render_manager->_gpu[0]->_task._h;
 
-    checkNoorErrors( cudaFuncSetCacheConfig( path_tracer_kernel, cudaFuncCachePreferL1 ) );
     //for ( int i = 0; i< _render_manager->_num_gpus ; ++i ) {
     for ( int i = _render_manager->_num_gpus - 1; i >= 0; --i ) {
         checkNoorErrors( cudaSetDevice( i ) );
+        //checkNoorErrors( cudaFuncSetCacheConfig( path_tracer_kernel, cudaFuncCachePreferL1 ) );
         path_tracer_kernel << <grid[i], block, shmsize, _render_manager->getStream( i ) >> > ( frame_number, i*offset );
     }
     _render_manager->update();

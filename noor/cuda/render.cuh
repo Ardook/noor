@@ -80,43 +80,43 @@ struct CudaRenderDevice {
         printf( "GPU %d selected\n", _gpu_id );
         checkNoorErrors( cudaSetDevice( _gpu_id ) );
         checkNoorErrors( cudaStreamCreate( &_stream ) );
-        _host_texture_manager = myunique_ptr<CudaTextureManager>( 
+        _host_texture_manager = myunique_ptr<CudaTextureManager>(
             new CudaTextureManager( payload.get() ) );
-        _host_mesh_manager = myunique_ptr<CudaMeshManager>( 
+        _host_mesh_manager = myunique_ptr<CudaMeshManager>(
             new CudaMeshManager( payload.get() ) );
-        _host_material_manager = myunique_ptr<CudaMaterialManager>( 
+        _host_material_manager = myunique_ptr<CudaMaterialManager>(
             new CudaMaterialManager( payload.get() ) );
-        _host_light_manager = myunique_ptr<CudaLightManager>( 
+        _host_light_manager = myunique_ptr<CudaLightManager>(
             new CudaLightManager( payload.get() ) );
-        _host_transform_manager = myunique_ptr<CudaTransformManager>( 
+        _host_transform_manager = myunique_ptr<CudaTransformManager>(
             new CudaTransformManager( payload.get() ) );
-        _host_skydome_manager = myunique_ptr<CudaSkyDomeManager>( 
-            new CudaSkyDomeManager( _host_texture_manager->getEnvTexture(), 
-                                    _host_spec._skydome_type ) );
-        _host_bxdf_manager = myunique_ptr<CudaBxDFManager>( 
+        _host_skydome_manager = myunique_ptr<CudaSkyDomeManager>(
+            new CudaSkyDomeManager( _host_texture_manager->getEnvTexture(),
+            _host_spec._skydome_type ) );
+        _host_bxdf_manager = myunique_ptr<CudaBxDFManager>(
             new CudaBxDFManager( 1 ) );
-        _host_framebuffer_manager = myunique_ptr<CudaFrameBufferManager>( 
+        _host_framebuffer_manager = myunique_ptr<CudaFrameBufferManager>(
             new CudaFrameBufferManager( _task ) );
         update_spec();
         update_camera();
         update_hoseksky();
 
-        checkNoorErrors( NOOR::memcopy_symbol( &_mesh_manager, 
-                                               _host_mesh_manager.get() ) );
-        checkNoorErrors( NOOR::memcopy_symbol( &_material_manager, 
-                                               _host_material_manager.get() ) );
-        checkNoorErrors( NOOR::memcopy_symbol( &_texture_manager, 
-                                               _host_texture_manager.get() ) );
-        checkNoorErrors( NOOR::memcopy_symbol( &_light_manager, 
-                                               _host_light_manager.get() ) );
-        checkNoorErrors( NOOR::memcopy_symbol( &_transform_manager, 
-                                               _host_transform_manager.get() ) );
-        checkNoorErrors( NOOR::memcopy_symbol( &_skydome_manager, 
-                                               _host_skydome_manager.get() ) );
-        checkNoorErrors( NOOR::memcopy_symbol( &_bxdf_manager, 
-                                               _host_bxdf_manager.get() ) );
-        checkNoorErrors( NOOR::memcopy_symbol( &_framebuffer_manager, 
-                                               _host_framebuffer_manager.get() ) );
+        checkNoorErrors( NOOR::memcopy_symbol( &_mesh_manager,
+                         _host_mesh_manager.get() ) );
+        checkNoorErrors( NOOR::memcopy_symbol( &_material_manager,
+                         _host_material_manager.get() ) );
+        checkNoorErrors( NOOR::memcopy_symbol( &_texture_manager,
+                         _host_texture_manager.get() ) );
+        checkNoorErrors( NOOR::memcopy_symbol( &_light_manager,
+                         _host_light_manager.get() ) );
+        checkNoorErrors( NOOR::memcopy_symbol( &_transform_manager,
+                         _host_transform_manager.get() ) );
+        checkNoorErrors( NOOR::memcopy_symbol( &_skydome_manager,
+                         _host_skydome_manager.get() ) );
+        checkNoorErrors( NOOR::memcopy_symbol( &_bxdf_manager,
+                         _host_bxdf_manager.get() ) );
+        checkNoorErrors( NOOR::memcopy_symbol( &_framebuffer_manager,
+                         _host_framebuffer_manager.get() ) );
     }
 
     const float4* getBuffer() const {
@@ -125,26 +125,26 @@ struct CudaRenderDevice {
 
     void update_spec() {
         checkNoorErrors( cudaSetDevice( _gpu_id ) );
-        checkNoorErrors( NOOR::memcopy_symbol_async( &_constant_spec, 
-                                                     &_host_spec ) );
+        checkNoorErrors( NOOR::memcopy_symbol_async( &_constant_spec,
+                         &_host_spec ) );
     }
 
     void update_camera() {
         checkNoorErrors( cudaSetDevice( _gpu_id ) );
-        checkNoorErrors( NOOR::memcopy_symbol_async( &_constant_camera, 
-                                                     &_host_camera ) );
+        checkNoorErrors( NOOR::memcopy_symbol_async( &_constant_camera,
+                         &_host_camera ) );
     }
 
     void update_hoseksky() {
         checkNoorErrors( cudaSetDevice( _gpu_id ) );
-        checkNoorErrors( NOOR::memcopy_symbol_async( &_constant_hosek_sky, 
-                                                     &_host_hosek ) );
+        checkNoorErrors( NOOR::memcopy_symbol_async( &_constant_hosek_sky,
+                         &_host_hosek ) );
         update_skydome();
     }
 
     void update_skydome() {
         checkNoorErrors( cudaSetDevice( _gpu_id ) );
-        if ( _host_spec._skydome_type == PHYSICAL ) 
+        if ( _host_spec._skydome_type == PHYSICAL )
             _host_skydome_manager->update();
     }
 };
@@ -177,15 +177,15 @@ public:
             checkNoorErrors( cudaSetDevice( gpu_id ) );
             _gpu[gpu_id] = myunique_ptr<CudaRenderDevice>(
                 new CudaRenderDevice(
-                    payload, hosek,
-                    camera, spec,
-                    CudaRenderTask( camera._w, job_size[gpu_id], gpu_id )
-                ) 
+                payload, hosek,
+                camera, spec,
+                CudaRenderTask( camera._w, job_size[gpu_id], gpu_id )
+                )
                 );
         }
 
         checkNoorErrors( cudaSetDevice( 0 ) );
-        cudaStreamAttachMemAsync( _gpu[0]->_stream, &_device_lookAt ),
+        cudaStreamAttachMemAsync( _gpu[0]->_stream, &_device_lookAt );
         glGenTextures( 1, textureID );
         glBindTexture( GL_TEXTURE_2D, *textureID );
         glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
@@ -195,8 +195,8 @@ public:
         glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA32F, camera._w, camera._h, 0,
                       GL_RGBA, GL_FLOAT, nullptr );
         checkNoorErrors( cudaGraphicsGLRegisterImage( &_glResource, *textureID,
-                                                      GL_TEXTURE_2D, 
-                                                      cudaGraphicsMapFlagsWriteDiscard ) );
+                         GL_TEXTURE_2D,
+                         cudaGraphicsMapFlagsWriteDiscard ) );
     }
 
     ~CudaRenderManager() {
@@ -206,30 +206,26 @@ public:
     }
 
     void update() {
+        checkNoorErrors( cudaDeviceSynchronize() );
         checkNoorErrors( cudaGraphicsMapResources( 1, &_glResource, nullptr ) );
         checkNoorErrors( cudaGraphicsSubResourceGetMappedArray( &_buffer_array,
-                                                                _glResource, 0, 0 ) );
+                         _glResource, 0, 0 ) );
         for ( int gpu_id = _num_gpus - 1; gpu_id >= 0; --gpu_id ) {
-            if ( gpu_id == 0 ) {
-                cudaStreamSynchronize( _gpu[gpu_id]->_stream );
-                _host_lookAt = _device_lookAt;
-            }
             int offset = gpu_id*_gpu[0]->_task._h;
             checkNoorErrors(
                 cudaMemcpyToArrayAsync(
-                    _buffer_array,
-                    0,
-                    _gpu[0]->_task._h * gpu_id,
-                    _gpu[gpu_id]->getBuffer(),
-                    _gpu[gpu_id]->_task._size,
-                    cudaMemcpyDeviceToDevice,
-                    //cudaMemcpyDefault,
-                    _gpu[gpu_id]->_stream
-                )
+                _buffer_array,
+                0,
+                _gpu[0]->_task._h * gpu_id,
+                _gpu[gpu_id]->getBuffer(),
+                _gpu[gpu_id]->_task._size,
+                cudaMemcpyDeviceToDevice,
+                _gpu[gpu_id]->_stream
+            )
             );
         }
-        checkNoorErrors( cudaDeviceSynchronize() );
         checkNoorErrors( cudaGraphicsUnmapResources( 1, &_glResource ) );
+        _host_lookAt = _device_lookAt;
     }
 
     cudaStream_t getStream( int gpu_id )const {
