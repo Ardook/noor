@@ -287,7 +287,7 @@
     <None Include="mel\shelf_NOOR.mel">
       <Filter>mel</Filter>
     </None>
-    <None Include="..\docs\screenshots.html">
+    <None Include="..\docs\_includes\screenshots.html">
       <Filter>pages</Filter>
     </None>
   </ItemGroup>
