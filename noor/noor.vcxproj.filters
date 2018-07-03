@@ -287,6 +287,9 @@
     <None Include="mel\shelf_NOOR.mel">
       <Filter>mel</Filter>
     </None>
+    <None Include="..\docs\screenshots.html">
+      <Filter>pages</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="shader">

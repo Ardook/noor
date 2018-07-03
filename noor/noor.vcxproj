@@ -116,6 +116,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\docs\index.md" />
+    <None Include="..\docs\screenshots.html" />
     <None Include="mel\shelf_NOOR.mel" />
     <None Include="scene\MEL\uber.mel" />
     <None Include="shader\bvhvis.fs" />
