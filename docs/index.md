@@ -80,7 +80,7 @@ Noor is an experimental yet powerful CUDA pathtracer (with support for multiple 
    * [textures.com](https://textures.com)
    * [source allegorithmic](https://source.allegorithmic.com/)
 * All the rest of the assets are created by me using Autodesk Maya
-{% raw %}{% screenshots.html %}{% endraw %}
+{% include screenshots.html %}
 #### ScreenShots:
 [![metals](screenshots/50percent/metals.jpg "metals")](screenshots/100percent/metal.jpg)
 [![infinite mirrors](screenshots/50percent/screenshot-13-06-2018-15-34-01.jpg "infinite mirrors")](screenshots/100percent/screenshot-13-06-2018-15-34-01.jpg)
