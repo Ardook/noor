@@ -197,6 +197,10 @@ public:
         checkNoorErrors( cudaGraphicsGLRegisterImage( &_glResource, *textureID,
                          GL_TEXTURE_2D,
                          cudaGraphicsMapFlagsWriteDiscard ) );
+        checkNoorErrors( cudaGraphicsMapResources( 1, &_glResource, nullptr ) );
+        checkNoorErrors( cudaGraphicsSubResourceGetMappedArray( &_buffer_array,
+                         _glResource, 0, 0 ) );
+        checkNoorErrors( cudaGraphicsUnmapResources( 1, &_glResource ) );
     }
 
     ~CudaRenderManager() {
@@ -207,9 +211,6 @@ public:
 
     void update() {
         checkNoorErrors( cudaDeviceSynchronize() );
-        checkNoorErrors( cudaGraphicsMapResources( 1, &_glResource, nullptr ) );
-        checkNoorErrors( cudaGraphicsSubResourceGetMappedArray( &_buffer_array,
-                         _glResource, 0, 0 ) );
         for ( int gpu_id = _num_gpus - 1; gpu_id >= 0; --gpu_id ) {
             int offset = gpu_id*_gpu[0]->_task._h;
             checkNoorErrors(
@@ -219,12 +220,12 @@ public:
                 _gpu[0]->_task._h * gpu_id,
                 _gpu[gpu_id]->getBuffer(),
                 _gpu[gpu_id]->_task._size,
-                cudaMemcpyDeviceToDevice,
+                //cudaMemcpyDeviceToDevice,
+                cudaMemcpyDefault,
                 _gpu[gpu_id]->_stream
             )
             );
         }
-        checkNoorErrors( cudaGraphicsUnmapResources( 1, &_glResource ) );
         _host_lookAt = _device_lookAt;
     }
 
