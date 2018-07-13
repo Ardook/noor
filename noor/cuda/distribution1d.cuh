@@ -117,26 +117,24 @@ public:
         int findInterval( float x ) const {
         int m;
         int l = 0;
-        int r = _n + 1;
+        int r = _n;
         int interval = -1;
-        float cdf;
         while ( l <= r ) {
             m = l + ( r - l ) / 2;
-            cdf = getCdf( m );
-
-            if ( cdf == x )
-                return m;
-            if ( cdf < x ) {
+            if ( getCdf( m ) <= x ) {
                 l = m + 1;
                 interval = m;
-            } else
+            } else {
                 r = m - 1;
+            }
         }
         return clamp( interval, 0, _n - 1 );
     }
 
     __device__
-        int sampleDiscrete1D( float u, float *pdf = nullptr, float *uRemapped = nullptr ) const {
+        int sampleDiscrete1D( float u, 
+                              float *pdf = nullptr, 
+                              float *uRemapped = nullptr ) const {
         // Find surrounding CDF segments and _offset_
         const int offset = findInterval( u );
 
@@ -151,7 +149,9 @@ public:
     }
 
     __device__
-        float sampleContinuous1D( float u, float *pdf, int *off = nullptr ) const {
+        float sampleContinuous1D( float u, 
+                                  float *pdf = nullptr, 
+                                  int *off = nullptr ) const {
         // Find surrounding CDF segments and _offset_
         int offset = findInterval( u );
 

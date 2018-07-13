@@ -91,7 +91,7 @@ class FBXLoader : public AssetLoader {
     void getLights();
     void getAreaLight( const FbxLight* light, std::vector<CudaAreaLight>& area_lights ) const;
     void getPointLight( const FbxLight* light, std::vector<CudaPointLight>& point_lights ) const;
-    void getDistantLight( const FbxLight* light, std::vector<CudaDistantLight>& distant_light, float world_radius ) const;
+    void getDistantLight( const FbxLight* light, std::vector<CudaDistantLight>& distant_light ) const;
     void getSpotLight( const FbxLight* light, std::vector<CudaSpotLight>& spot_lights ) const;
 
     std::string getMaterialName( int mat_index ) const;
@@ -169,8 +169,7 @@ public:
     void getLights( std::vector<CudaAreaLight>& area_lights
                     , std::vector<CudaPointLight>& point_lights
                     , std::vector<CudaSpotLight>& spot_lights
-                    , std::vector<CudaDistantLight>& distant_lights
-                    , float world_radius = 0 ) const override;
+                    , std::vector<CudaDistantLight>& distant_lights ) const override;
 
     glm::vec3 getMaterialDiffuse( int mat_idx ) const override;
     glm::vec3 getMaterialSpecular( int mat_idx ) const override;

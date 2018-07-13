@@ -94,10 +94,97 @@ public:
     CudaPerspCamera() = default;
 
     __device__
+        float3 We( const CudaRay& ray, float2* raster2 )const {
+        const float cosTheta = dot( ray.getDir(), 
+                              _cameraToWorld.transformVector( make_float3( 0, 0, -1 ) ) );
+        if ( cosTheta <= 0 ) return make_float3(0);
+
+        // Map ray $(\p{}, \w{})$ onto the raster grid
+        const float t = ( _lens_radius > 0 ? _focal_length : 1 ) / cosTheta;
+        const float3 focus = ray.pointAtParameter( t );
+        const float3 raster3 = _worldToRaster.transformPoint(focus);
+
+        // Return raster position if requested
+        if (raster2) *raster2 = make_float2( raster3.x, raster3.y );
+
+        // Return zero importance for out of bounds points
+        if ( raster3.x < 0 || raster3.x >= _w ||
+             raster3.y < 0 || raster3.y >= _h )
+            return make_float3(0);
+
+        // Compute lens area of perspective camera
+        const float lensArea = _lens_radius != 0 ? 
+            ( NOOR_PI * _lens_radius * _lens_radius ) : 1;
+
+        // Return importance for point on image plane
+        const float cos2Theta = cosTheta * cosTheta;
+        return make_float3( 1 / ( _image_area * lensArea * cos2Theta * cos2Theta ) );
+    }
+
+    __device__
+    void Pdf_We( const CudaRay &ray, float *pdfPos, float *pdfDir ) const {
+        // Interpolate camera matrix and fail if $\w{}$ is not forward-facing
+        const float cosTheta = dot( ray.getDir(), 
+                              _cameraToWorld.transformVector( make_float3( 0, 0, -1 ) ) );
+        if ( cosTheta <= 0 ) {
+            *pdfPos = *pdfDir = 0;
+            return;
+        }
+        // Map ray $(\p{}, \w{})$ onto the raster grid
+        const float t = ( _lens_radius > 0 ? _focal_length : 1 ) / cosTheta;
+        const float3 focus = ray.pointAtParameter( t );
+        const float3 raster3 = _worldToRaster.transformPoint( focus );
+
+        // Return zero importance for out of bounds points
+        if ( raster3.x < 0 || raster3.x >= _w ||
+             raster3.y < 0 || raster3.y >= _h ) {
+            *pdfPos = *pdfDir = 0;
+            return;
+        }
+
+        // Compute lens area of perspective camera
+        const float lensArea = _lens_radius != 0 ?
+            ( NOOR_PI * _lens_radius * _lens_radius ) : 1;
+
+        // Return importance for point on image plane
+        *pdfPos = 1 / lensArea;
+        *pdfDir = 1 / ( _image_area * cosTheta * cosTheta * cosTheta );
+    }
+
+    __device__
+    float3 Sample_Wi( const CudaIntersection &I, 
+                      const float2 &u,
+                      float3 &wi, 
+                      float &pdf,
+                      float2 &raster2,
+                      CudaVisibility &vis ) const {
+        // Uniformly sample a lens interaction _lensIntr_
+        const float2 lens = _lens_radius * NOOR::concentricSampleDisk( u );
+        const float3 lensWorld = 
+            _cameraToWorld.transformPoint( make_float3( lens.x, lens.y, 0 ) );
+        const float3 n = 
+            _cameraToWorld.transformVector( make_float3( 0, 0, -1 ) ) ;
+
+        // Populate arguments and compute the importance value
+        vis = CudaVisibility( I.getP(), lensWorld );
+        wi = lensWorld - I.getP();
+        const float dist = length( wi );
+        wi /= dist;
+        // Compute PDF for importance arriving at _ref_
+        // Compute lens area of perspective camera
+        const float lensArea = _lens_radius != 0 ?
+            ( NOOR_PI * _lens_radius * _lens_radius ) : 1;
+        pdf = ( dist * dist ) / ( NOOR::absDot( n, wi ) * lensArea );
+        const CudaRay ray( lensWorld, wi );
+        return We( ray, &raster2 );
+    }
+
+    __device__
         CudaRay generateRay( uint x, uint y, const CudaRNG& rng ) const {
         const float raster_x = (float) x + rng() - 0.5f;
         const float raster_y = (float) y + rng() - 0.5f;
-        const float3 pCamera = _rasterToCamera.transformPoint( make_float3( raster_x, raster_y, 0.0f ) );
+        const float3 pCamera = _rasterToCamera.transformPoint( 
+            make_float3( raster_x, raster_y, 0.0f ) );
         float3 origin = make_float3( 0.f );
         float3 dir = normalize( pCamera );
         float3 origin_dx, origin_dy;

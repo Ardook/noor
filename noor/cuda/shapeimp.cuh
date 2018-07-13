@@ -38,11 +38,11 @@ float CudaShape::pdf(
             return 0.f;
         }
         // Convert light sample weight to solid angle measure
-        pdf = NOOR::length2( I.getP() - p ) / ( NOOR::absDot( n, -1.0f*ray.getDir() ) * _area );
+        pdf = NOOR::length2( p - I.getP() ) / ( NOOR::absDot( n, -1.0f*ray.getDir() ) * _area );
     } else if ( _type == SPHERE ) {
         // Compute general sphere PDF
-        float sinThetaMax2 = _radius2 / NOOR::length2( I.getP() - _center );
-        float cosThetaMax = sqrtf( fmaxf( 0.f, 1.f - sinThetaMax2 ) );
+        const float sinThetaMax2 = _radius2 / NOOR::length2( I.getP() - _center );
+        const float cosThetaMax = sqrtf( fmaxf( 0.f, 1.f - sinThetaMax2 ) );
         pdf = NOOR::uniformConePdf( cosThetaMax );
     }
     if ( isinf( pdf ) ) {
@@ -54,17 +54,18 @@ float CudaShape::pdf(
 __forceinline__ __device__
 void CudaShape::sample( const CudaIntersection& I,
                         float3& p,
-                        float& pdf
+                        float& pdf,
+                        float3* n
 ) const {
     switch ( _type ) {
         case QUAD:
-            sampleQuad( *this, I, p, pdf );
+            sampleQuad( *this, I, p, pdf, n );
             break;
         case SPHERE:
-            sampleSphere( *this, I, p, pdf );
+            sampleSphere( *this, I, p, pdf, n );
             break;
         case DISK:
-            sampleDisk( *this, I, p, pdf );
+            sampleDisk( *this, I, p, pdf, n );
             break;
         default:
             break;

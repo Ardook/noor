@@ -75,19 +75,28 @@ public:
         ) {
         cudatransform( _cameraToWorld, cameraToWorld );
         cudatransform( _rasterToCamera, rasterToCamera );
+        cudatransform( _worldToRaster,
+                       glm::inverse( rasterToCamera ) * 
+                       glm::inverse( cameraToWorld ) );
         _w = w;
         _h = h;
         _lens_radius = lens_radius;
         _focal_length = focal_length;
         _type = camera_type;
         _center = _w * ( _h >> 1 ) + ( _w >> 1 );
-        _dxCamera = _rasterToCamera.transformVector( make_float3( 1.f, 0, 0 ) );
-        _dyCamera = _rasterToCamera.transformVector( make_float3( 0, 1.f, 0 ) );
+        _dxCamera = _rasterToCamera.transformVector( make_float3( 1, 0, 0 ) );
+        _dyCamera = _rasterToCamera.transformVector( make_float3( 0, 1, 0 ) );
+
+        const float3 ipMin = _rasterToCamera.transformPoint( make_float3( 0 ) );
+        const float3 ipMax = _rasterToCamera.transformPoint( 
+            make_float3( (float)_w, (float)_h, 0 ) );
+        _image_area = fabsf( ( ipMax.x - ipMin.x ) * ( ipMax.y - ipMin.y ) );
     }
     CudaTransform _cameraToWorld;
     CudaTransform _rasterToCamera;
+    CudaTransform _worldToRaster;
     float3 _dxCamera, _dyCamera;
-    float _lens_radius, _focal_length;
+    float _lens_radius, _focal_length, _image_area;
     uint _w, _h;
     uint _center;
     CameraType _type;

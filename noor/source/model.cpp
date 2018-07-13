@@ -108,7 +108,8 @@ void Model::computeBBoxes() {
 void Model::loadCamera() {
     float lens_radius, focal_length;
     if ( _loader->getNumCameras() != 0 )
-        _loader->getCamera( _eye, _lookAt, _up, _fov, lens_radius, focal_length, _orthozoom );
+        _loader->getCamera( _eye, _lookAt, _up, _fov, lens_radius, 
+                            focal_length, _orthozoom );
     else {
         _lookAt = _scene_bbox.centroid();
         _eye = _lookAt + glm::vec3( 0.f, 0.f, 3.0f*_scene_bbox.radius() );
@@ -117,17 +118,19 @@ void Model::loadCamera() {
         _orthozoom = _scene_bbox.radius();
     }
 }
+
 void Model::loadLights() {
     const float world_radius = _scene_bbox.radius();
     _loader->getLights( _area_lights,
                         _point_lights,
                         _spot_lights,
-                        _distant_lights,
-                        world_radius );
+                        _distant_lights );
 }
+
 void Model::load() {
     if ( _loader == nullptr ) {
-        std::string msg = "File " + std::string( __FILE__ ) + " LINE " + std::to_string( __LINE__ ) + "\n";
+        std::string msg = "File " + std::string( __FILE__ ) + " LINE " + 
+            std::to_string( __LINE__ ) + "\n";
         msg += "Error: loader hasn't been initialized";
         std::cerr << msg << std::endl;
         exit( EXIT_FAILURE );
@@ -307,9 +310,11 @@ void Model::loadMaterial() {
     }
     // environment map HDR
     if ( _spec._model_spec._skydome_type == 0 )
-        _textures.emplace_back( _spec._model_spec._hdr_filename, cudaFilterModeLinear, cudaAddressModeClamp );
+        _textures.emplace_back( _spec._model_spec._hdr_filename, 
+                                cudaFilterModeLinear, cudaAddressModeClamp );
     else if ( _spec._model_spec._skydome_type == 1 )
-        _textures.emplace_back( skydome_res.x, skydome_res.y, 4, cudaFilterModeLinear, cudaAddressModeClamp );
+        _textures.emplace_back( skydome_res.x, skydome_res.y, 4, 
+                                cudaFilterModeLinear, cudaAddressModeClamp );
     else
         _textures.emplace_back( SKYDOME_COLOR );
 

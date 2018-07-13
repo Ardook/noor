@@ -60,8 +60,7 @@ public:
     void getLights( std::vector<CudaAreaLight>& area_light_data
                     , std::vector<CudaPointLight>& point_light_data
                     , std::vector<CudaSpotLight>& spot_light_data
-                    , std::vector<CudaDistantLight>& distant_light_data
-                    , float world_radius = 0 ) const override;
+                    , std::vector<CudaDistantLight>& distant_light_data ) const override;
 
     void getCamera( glm::vec3& eye, glm::vec3& lookAt, glm::vec3& up, float& fov, float& lens_radius, float& focal_length, float& orthozoom ) const override {
         return;

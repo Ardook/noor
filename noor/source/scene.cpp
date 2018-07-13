@@ -62,9 +62,10 @@ void Scene::load() {
     _spec->_reflection_bias = _scene_bias;
     _spec->_shadow_bias = 0.0001f * _scene_radius;
     _spec->_world_radius = _scene_radius;
+    _spec->_wr2 = _scene_radius * _scene_radius;
     _spec->_bvh_root_node = _cuda_payload->_bvh_root_node;
     _spec->_num_gpus = _host_spec._num_gpus;
-    _spec->_skydome_type = (SkydomeType) _host_spec._model_spec._skydome_type;
+    _spec->_skydome_type = (SkydomeType)_host_spec._model_spec._skydome_type;
     _camera = std::make_unique<Camera>(
         *this
         , _model->_eye
@@ -142,11 +143,17 @@ void Scene::updateCudaCamera() {
     }
 }
 
-void Scene::initCudaContext( GLuint* cudaTextureID ){
-    load_cuda_data( _cuda_payload, _hosek->_cuda_hosek_sky, _camera->_cuda_camera, 
-                    *_spec.get(), cudaTextureID );
+void Scene::initCudaContext( GLuint* cudaTextureID ) {
+    load_cuda_data( _cuda_payload, 
+                    _hosek->_cuda_hosek_sky, 
+                    _camera->_cuda_camera,
+                    *_spec.get(), 
+                    cudaTextureID );
 }
 
 void Scene::path_tracer() {
-    cuda_path_tracer( _frameCount );
+    if ( _spec->_debug_sky && _spec->_num_gpus == 1 )
+        debug_skydome( _frameCount, _camera->_w, _camera->_h );
+    else
+        cuda_path_tracer( _frameCount );
 }

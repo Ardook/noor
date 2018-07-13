@@ -77,7 +77,9 @@ void path_tracer_kernel( uint frame_number, uint gpu_offset ) {
 
     float4 lookAt = make_float4( 0.f );
 
-    const CudaRNG rng( gid, frame_number + clock64() );
+    //const CudaRNG rng( gid, frame_number + clock64() );
+    const CudaRNG rng( gid, frame_number );
+
     CudaRay ray = generateRay( x, y + gpu_offset, rng );
 
     const float4 new_color = pathtracer( ray, rng, lookAt, tid );
@@ -88,37 +90,35 @@ void path_tracer_kernel( uint frame_number, uint gpu_offset ) {
     }
 }
 
-//__global__
-//void debug_skydome_kernel(
-//    uint frame_number
-//    , int width
-//    , int height
-//) {
-//    uint x = blockIdx.x * blockDim.x + threadIdx.x;
-//    uint y = blockIdx.y * blockDim.y + threadIdx.y;
-//    uint id = y * _constant_camera._w + x;
-//    float2 u = make_float2( x / (float)( _constant_camera._w ), y / 
-//        (float)( _constant_camera._h ) );
-//    _framebuffer_manager.set( _skydome_manager.evaluate( u ), id );
-//    if ( _constant_spec.is_mis_enabled() ) {
-//        CudaRNG rng( id, frame_number + clock64() );
-//        u = _skydome_manager.importance_sample_uv( make_float2( rng(), rng() ) );
-//        u.x *= _constant_camera._w;
-//        u.y *= _constant_camera._h;
-//        id = int( u.y ) * ( _constant_camera._w ) + int( u.x );
-//        _framebuffer_manager.set( make_float4( 1.f, 0, 0, 1 ), id );
-//    }
-//}
+__global__
+void debug_skydome_kernel(
+    uint frame_number,
+    int width,
+    int height
+) {
+    const int x = blockIdx.x * blockDim.x + threadIdx.x;
+    const int y = blockIdx.y * blockDim.y + threadIdx.y;
+    int id = y * _constant_camera._w + x;
+    float2 u = make_float2( x / (float)( _constant_camera._w ), y / 
+        (float)( _constant_camera._h ) );
+    _framebuffer_manager.set( _skydome_manager.evaluate( u ), id );
+    if ( _constant_spec.is_mis_enabled() ) {
+        CudaRNG rng( id, frame_number );
+        u = _skydome_manager.importance_sample_uv( make_float2( rng(), rng() ) );
+        u.x *= _constant_camera._w;
+        u.y *= _constant_camera._h;
+        id = int( u.y ) * ( _constant_camera._w ) + int( u.x );
+        _framebuffer_manager.set( make_float4( 1.f, 0, 0, 1 ), id );
+    }
+}
 
-//void debug_skydome( uint frame_number ) {
-//    static const int width = _render_manager->_w;
-//    static const int height = _render_manager->_h;
-//    static const dim3 block( THREAD_W, THREAD_H, 1 );
-//    static const dim3 grid( width / block.x, height / block.y, 1 );
-//    debug_skydome_kernel << < grid, block >> > ( frame_number, width, height );
-//    checkNoorErrors( cudaPeekAtLastError() );
-//    checkNoorErrors( cudaDeviceSynchronize() );
-//}
+void debug_skydome( uint& frame_number, int width, int height ) {
+    static const dim3 block( THREAD_W, THREAD_H, 1 );
+    static const dim3 grid( width / block.x, height / block.y, 1 );
+    debug_skydome_kernel << < grid, block >> > ( frame_number, width, height );
+    _render_manager->update();
+    ++frame_number;
+}
 
 void cuda_path_tracer( uint& frame_number ) {
     static const dim3 block( THREAD_W, THREAD_H, 1 );
@@ -132,12 +132,14 @@ void cuda_path_tracer( uint& frame_number ) {
     };
     static const size_t shmsize = _render_manager->_shmsize;
     static const int offset = _render_manager->_gpu[0]->_task._h;
-
-    //for ( int i = 0; i< _render_manager->_num_gpus ; ++i ) {
     for ( int i = _render_manager->_num_gpus - 1; i >= 0; --i ) {
         checkNoorErrors( cudaSetDevice( i ) );
-        //checkNoorErrors( cudaFuncSetCacheConfig( path_tracer_kernel, cudaFuncCachePreferL1 ) );
-        path_tracer_kernel << <grid[i], block, shmsize, _render_manager->getStream( i ) >> > ( frame_number, i*offset );
+        path_tracer_kernel << <
+            grid[i],
+            block,
+            shmsize,
+            _render_manager->getStream( i )
+            >> > ( frame_number, i*offset );
     }
     _render_manager->update();
     ++frame_number;

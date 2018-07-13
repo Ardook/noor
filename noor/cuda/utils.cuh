@@ -404,6 +404,9 @@ namespace NOOR {
     }
 
     __forceinline__ __host__ __device__
+    float cosineHemispherePdf( float cosTheta ) { return cosTheta * NOOR_invPI; }
+
+    __forceinline__ __host__ __device__
         bool sameHemisphere( const float3 &wi, const float3 &wo ) {
         return dot( wi, wo ) > 0.f;
     }

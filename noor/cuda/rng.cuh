@@ -64,12 +64,6 @@ public:
         return prev & 0x00FFFFFF;
     }
 
-    __device__
-        unsigned int lcg2( unsigned int &prev ) const {
-        prev = ( prev * 8121 + 28411 ) % 134456;
-        return prev;
-    }
-
     // Generate random float in [0, 1)
     __device__
         float rnd( unsigned int &prev ) const {

@@ -52,8 +52,14 @@ float3 sampleLight( const CudaBSDF& bsdf,
         if ( _light_manager.isDeltaLight( light_idx ) || !MIS ) {
             return Li * f / light_pdf;
         } else {
-            const float scatter_pdf = bsdf.Pdf( I, I.getWo(), Lr._vis._wi, bsdf_flags );
-            const float light_weight = NOOR::powerHeuristic( 1.f, light_pdf, 1.f, scatter_pdf );
+            const float scatter_pdf = bsdf.Pdf( I, 
+                                                I.getWo(), 
+                                                Lr._vis._wi, 
+                                                bsdf_flags );
+            const float light_weight = NOOR::powerHeuristic( 1.f, 
+                                                             light_pdf, 
+                                                             1.f, 
+                                                             scatter_pdf );
             return Li * f * light_weight / light_pdf;
         }
     }
@@ -65,14 +71,20 @@ float3 sampleBSDF( const CudaBSDF& bsdf,
                    const CudaIntersection& I,
                    int light_idx
 ) {
-    BxDFType bsdf_flags = I.isSpecular() ? BSDF_ALL : BxDFType( BSDF_ALL & ~BSDF_SPECULAR );
+    BxDFType bsdf_flags = I.isSpecular() ? BSDF_ALL : 
+        BxDFType( BSDF_ALL & ~BSDF_SPECULAR );
     float3 Ld = _constant_spec._black;
     if ( _light_manager.isDeltaLight( light_idx ) ) return Ld;
     BxDFType sampled_type;
     const float2 u = make_float2( I._rng(), I._rng() );
     float scatter_pdf, light_pdf;
     float3 wi;
-    float3 f = bsdf.Sample_f( I, I.getWo(), wi, scatter_pdf, bsdf_flags, sampled_type );
+    float3 f = bsdf.Sample_f( I, 
+                              I.getWo(), 
+                              wi, 
+                              scatter_pdf, 
+                              bsdf_flags, 
+                              sampled_type );
     if ( NOOR::isBlack( f ) || scatter_pdf == 0 ) return Ld;
     f *= NOOR::absDot( wi, I.getSn() );
     float sampledSpecular = ( sampled_type & BSDF_SPECULAR ) != 0;
@@ -86,9 +98,12 @@ float3 sampleBSDF( const CudaBSDF& bsdf,
     }
     const CudaRay shadow_ray = I.spawnShadowRay( wi, 2.f*_constant_spec._world_radius );
     if ( _light_manager.intersect( shadow_ray, light_idx ) ) {
-        const CudaVisibility vis( I.getP(), shadow_ray.pointAtParameter( shadow_ray.getTmax() ) );
+        const CudaVisibility vis( I.getP(), 
+                                  shadow_ray.pointAtParameter( 
+                                  shadow_ray.getTmax() ) );
         if ( !occluded( I, vis ) ) {
-            Ld += _light_manager.Le( wi, light_idx ) * f * scatter_weight / scatter_pdf;
+            Ld += _light_manager.Le( wi, light_idx ) * f * 
+                scatter_weight / scatter_pdf;
         }
     } 
     return Ld;

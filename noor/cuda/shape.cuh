@@ -94,7 +94,7 @@ public:
     __device__
         float pdf(
         const CudaIntersection& I,
-        const float3& i
+        const float3& wi
         ) const;
     __device__
         bool intersect( const CudaRay& ray, float3& p, float3& n ) const;
@@ -104,7 +104,8 @@ public:
         void sample(
         const CudaIntersection& I,
         float3& p,
-        float& pdf
+        float& pdf,
+        float3* n = nullptr
         ) const;
 #endif
 };

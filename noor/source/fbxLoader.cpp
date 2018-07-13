@@ -515,7 +515,7 @@ void FBXLoader::getLights() {
                 break;
             case( FbxLight::eDirectional ):
                 // TODO: change to exact world radius
-                getDistantLight( light, _distant_lights, 100.f );
+                getDistantLight( light, _distant_lights );
                 break;
             case( FbxLight::eSpot ):
                 getSpotLight( light, _spot_lights );
@@ -530,7 +530,7 @@ void FBXLoader::getLights( std::vector<CudaAreaLight>& area_lights
                            , std::vector<CudaPointLight>& point_lights
                            , std::vector<CudaSpotLight>& spot_lights
                            , std::vector<CudaDistantLight>& distant_lights
-                           , float world_radius ) const {
+                           ) const {
     area_lights = std::move( _area_lights );
     point_lights = std::move( _point_lights );
     spot_lights = std::move( _spot_lights );
@@ -681,8 +681,7 @@ void FBXLoader::getSpotLight( const FbxLight* light, std::vector<CudaSpotLight>&
     );
 }
 void FBXLoader::getDistantLight( const FbxLight* light,
-                                 std::vector<CudaDistantLight>& distant_light_data,
-                                 float world_radius
+                                 std::vector<CudaDistantLight>& distant_light_data
 ) const {
     const glm::mat4 trs = getTransformation( light );
     const glm::vec4 direction = glm::normalize( trs * glm::vec4( 0, 0, 1, 0 ) );
@@ -696,7 +695,7 @@ void FBXLoader::getDistantLight( const FbxLight* light,
     const float intensity = static_cast<float>( light->Intensity.Get() ) / 100.0f;
     Ke *= intensity;
     const glm::vec3 world_center( 0.0f );
-    distant_light_data.emplace_back( V2F3( direction ), V2F3( Ke ), V2F3( world_center ), world_radius );
+    distant_light_data.emplace_back( V2F3( direction ), V2F3( Ke ) );
 }
 
 glm::vec3 FBXLoader::getMaterialDiffuse( int mat_idx ) const {

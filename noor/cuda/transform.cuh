@@ -52,7 +52,7 @@ public:
         return _translate;
     }
 
-    __device__ 
+    __device__ __host__
         float3 transformPoint( const float3& p ) const {
         return _translate + _scale_rotate * p;
     }

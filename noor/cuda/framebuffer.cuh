@@ -72,8 +72,7 @@ public:
     __device__
         void set( const float4& new_color, int index, uint frame_number ) {
         const float4 old_color = get( index, frame_number );
-        _buffer[index] = lerp( old_color, new_color, 1.0f / 
-                               static_cast<float>( frame_number ) );
+        _buffer[index] = lerp( old_color, new_color, 1.0f / frame_number );
     }
     void free() {
         checkNoorErrors( cudaFree( _buffer ) );

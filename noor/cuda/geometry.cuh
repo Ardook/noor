@@ -31,13 +31,15 @@ void sampleQuad(
     const CudaShape& quad,
     const CudaIntersection& I,
     float3& p,
-    float& pdf
+    float& pdf,
+    float3* n = nullptr
 ) {
     p = quad._center + quad._u*I._rng() + quad._v*I._rng() + _constant_spec._reflection_bias*quad._n;
     const float3 wi = I.getP() - p;
     const float dist2 = NOOR::length2( wi );
     pdf = dist2 / ( NOOR::absDot( quad._n, -1.0f*wi ) * quad._area );
     if ( isinf( pdf ) ) pdf = 0.f;
+    if ( n ) *n = quad._n;
 }
 
 __forceinline__ __device__
@@ -45,7 +47,8 @@ void sampleSphere(
     const CudaShape& sphere,
     const CudaIntersection& I,
     float3& p,
-    float& pdf
+    float& pdf,
+    float3* n = nullptr
 ) {
     const float2 r = make_float2( I._rng(), I._rng() );
     float3 w = normalize( sphere._center - I.getP() );
@@ -64,21 +67,22 @@ void sampleSphere(
     const float cosAlpha = ( dc * dc + sphere._radius2 - ds * ds ) / ( 2.f * dc * sphere._radius );
     const float sinAlpha = sqrtf( fmaxf( 0.f, 1.f - cosAlpha * cosAlpha ) );
     // Compute surface normal and sampled point on sphere
-    float3 n = NOOR::sphericalDirection( sinAlpha, cosAlpha, phi, -u, -v, -w );
-    p = sphere._center + sphere._radius * n;
+    const float3 N = NOOR::sphericalDirection( sinAlpha, cosAlpha, phi, -u, -v, -w );
+    p = sphere._center + sphere._radius * N;
     p *= sphere._radius / length( p - sphere._center );
-    p += _constant_spec._reflection_bias * n;
+    p += _constant_spec._reflection_bias * N;
     // uniform cone PDF
     pdf = NOOR::uniformConePdf( cosThetaMax );
+    if ( n ) *n = N;
 }
-
 
 __forceinline__ __device__
 void sampleDisk(
     const CudaShape& disk,
     const CudaIntersection& I,
     float3& p,
-    float& pdf
+    float& pdf,
+    float3* n = nullptr
 ) {
     float2 pOnDisk = NOOR::concentricSampleDisk( make_float2( I._rng(), I._rng() ) );
     p = make_float3( pOnDisk.x * disk._radius, pOnDisk.y * disk._radius, 0.f );
@@ -90,6 +94,7 @@ void sampleDisk(
     const float dist2 = NOOR::length2( wi );
     pdf = dist2 / ( NOOR::absDot( disk._n, -1.0f*wi ) * disk._area );
     if ( isinf( pdf ) ) pdf = 0.f;
+    if ( n ) *n = disk._n;
 }
 
 __forceinline__ __device__

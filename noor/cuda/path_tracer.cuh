@@ -108,7 +108,8 @@ constexpr uint NOOR_EMITTER = EMITTER | MESHLIGHT;
 constexpr uint NOOR_GLASS = GLASS | ROUGHGLASS;
 constexpr uint NOOR_TRANSPARENT = TRANSLUCENT | GLASS | ROUGHGLASS;
 constexpr uint NOOR_SPECULAR = MIRROR | GLASS | CLEARCOAT;
-constexpr uint NOOR_GLOSSY = NOOR_SPECULAR | ROUGHGLASS | CLEARCOAT | METAL | SUBSTRATE | GLOSSY;
+constexpr uint NOOR_GLOSSY = NOOR_SPECULAR | ROUGHGLASS | CLEARCOAT | 
+                             METAL | SUBSTRATE | GLOSSY;
 enum AreaMeshLightType { QUAD = 0, SPHERE = 1, DISK = 2 };
 enum SkydomeType { HDR = 0, PHYSICAL = 1, CONSTANT = 2 };
 enum HandedNess { LEFT_HANDED = 0, RIGHT_HANDED = 1 };
@@ -130,16 +131,26 @@ extern "C" {
     void update_cuda_hosek();
     void update_cuda_spec();
     void cuda_path_tracer( uint& frameCount );
+    void debug_skydome( uint& frameCount, int width, int height );
     void device_free_memory();
     void get_lookAt(float4& lookAt);
 }
-// This will output the proper CUDA error strings in the event that a CUDA host call returns an error
+// This will output the proper CUDA error strings in the event 
+// that a CUDA host call returns an error
 #define checkNoorErrors(val) checkError ( (val), #val, __FILE__, __LINE__ )
 template< typename T >
-static void checkError( T result, char const *const func, const char *const file, int const line ) {
+static void checkError( T result, 
+                        char const *const func, 
+                        const char *const file, 
+                        int const line ) {
     if ( result != cudaSuccess ) {
-        fprintf( stderr, "CUDA error at: %s:%d \nErrorCode: %d (%s) \nFunction: \"%s\" \n",
-                 file, line, static_cast<unsigned int>( result ), _cudaGetErrorEnum( result ), func );
+        fprintf( stderr, "CUDA error at: %s:%d \nErrorCode: \
+                 %d (%s) \nFunction: \"%s\" \n",
+                 file, 
+                 line, 
+                 static_cast<unsigned int>( result ), 
+                 _cudaGetErrorEnum( result ), 
+                 func );
         // Make sure we call CUDA Device Reset before exiting
         exit( EXIT_FAILURE );
     }

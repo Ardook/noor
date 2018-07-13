@@ -36,38 +36,29 @@ void update_skydome( cudaSurfaceObject_t surfwrite, int width, int height ) {
     surf2Dwrite( color, surfwrite, x * sizeof( float4 ), y );
 }
 
-template<class T>
 class CudaSkyDomeManagerTemplate {
-    T _tex;
+    CudaMipMap _tex;
     // Cuda array containing 2d texture images
-    CudaDistribution2DManager<T> _distribution2d_manager;
+    CudaDistribution2DManager<CudaMipMap> _distribution2d_manager;
     SkydomeType _type;
 
 public:
     CudaSkyDomeManagerTemplate() = default;
 
     __host__
-        CudaSkyDomeManagerTemplate( const T& tex, SkydomeType type ) :
+        CudaSkyDomeManagerTemplate( const CudaMipMap& tex, SkydomeType type ) :
         _tex( tex ),
-        _type( type ) {
-        if ( _type == PHYSICAL ) {
-            dim3 blockSize( 16, 16, 1 );
-            dim3 gridSize( ( (uint) _tex.width() + blockSize.x - 1 ) / blockSize.x,
-                ( (uint) _tex.height() + blockSize.y - 1 ) / blockSize.y, 1 );
-            update_skydome << <gridSize, blockSize >> > ( _tex.getWriteSurfaceObj(), _tex.width(), _tex.height() );
-            _tex.update();
-            checkNoorErrors( cudaPeekAtLastError() );
-            checkNoorErrors( cudaDeviceSynchronize() );
-        }
-        _distribution2d_manager = CudaDistribution2DManager<T>( _tex );
+        _type( type ),
+        _distribution2d_manager(_tex) {
+        if ( _type == PHYSICAL )
+            update();
     }
 
     __host__
         void update() {
         if ( _type == PHYSICAL ) {
             dim3 blockSize( 32, 32, 1 );
-            dim3 gridSize( ( (uint) _tex.width() + blockSize.x - 1 ) / blockSize.x,
-                ( (uint) _tex.height() + blockSize.y - 1 ) / blockSize.y, 1 );
+            dim3 gridSize( ( (uint) _tex.width() + blockSize.x - 1 ) / blockSize.x, ( (uint) _tex.height() + blockSize.y - 1 ) / blockSize.y, 1 );
             update_skydome << <gridSize, blockSize >> > ( _tex.getWriteSurfaceObj(), _tex.width(), _tex.height() );
             _tex.update();
             checkNoorErrors( cudaPeekAtLastError() );
@@ -84,6 +75,11 @@ public:
     __device__
         float Pdf( const float2& u ) const {
         return _distribution2d_manager._distribution2d.Pdf( u );
+    }
+
+    __device__
+        float3 evaluateLuminance() const {
+        return make_float3(_tex.evaluateLastLOD());
     }
 
     __device__
@@ -141,8 +137,7 @@ public:
     }
 };
 
-//using CudaSkyDomeManager = CudaSkyDomeManagerTemplate<Cuda2DTexture>;
-using CudaSkyDomeManager = CudaSkyDomeManagerTemplate<CudaMipMap>;
+using CudaSkyDomeManager = CudaSkyDomeManagerTemplate;
 __constant__
 CudaSkyDomeManager _skydome_manager;
 #endif /* CUDASKYDOME_CUH */

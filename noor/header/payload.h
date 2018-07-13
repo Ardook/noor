@@ -78,7 +78,6 @@ public:
     size_t _txi_size_bytes;
 
     std::vector<ImageTexture> _textures;
-    //ImageTexture _env_texture;
 
     std::vector<glm::uint32> _element_array;
     // area lights

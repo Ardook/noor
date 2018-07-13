@@ -34,7 +34,6 @@ template<class T>
 using myunique_ptr = std::unique_ptr< T, mydeleter<T> >;
 
 
-
 struct CudaRenderDevice {
     const CudaCamera& _host_camera;
     const CudaHosekSky& _host_hosek;
@@ -64,6 +63,7 @@ struct CudaRenderDevice {
         _host_framebuffer_manager.reset();
         checkNoorErrors( cudaDeviceReset() );
     }
+
     CudaRenderDevice(
         const std::unique_ptr<CudaPayload>& payload,
         const CudaHosekSky& hosek,
@@ -86,13 +86,13 @@ struct CudaRenderDevice {
             new CudaMeshManager( payload.get() ) );
         _host_material_manager = myunique_ptr<CudaMaterialManager>(
             new CudaMaterialManager( payload.get() ) );
+        _host_skydome_manager = myunique_ptr<CudaSkyDomeManager>(
+            new CudaSkyDomeManager( _host_texture_manager->getEnvTexture(),
+            _host_spec._skydome_type ) );
         _host_light_manager = myunique_ptr<CudaLightManager>(
             new CudaLightManager( payload.get() ) );
         _host_transform_manager = myunique_ptr<CudaTransformManager>(
             new CudaTransformManager( payload.get() ) );
-        _host_skydome_manager = myunique_ptr<CudaSkyDomeManager>(
-            new CudaSkyDomeManager( _host_texture_manager->getEnvTexture(),
-            _host_spec._skydome_type ) );
         _host_bxdf_manager = myunique_ptr<CudaBxDFManager>(
             new CudaBxDFManager( 1 ) );
         _host_framebuffer_manager = myunique_ptr<CudaFrameBufferManager>(
@@ -162,6 +162,7 @@ public:
     int _num_gpus;
     size_t _shmsize;
     float4 _host_lookAt{ make_float4( 0 ) };
+
     CudaRenderManager( const std::unique_ptr<CudaPayload>& payload,
                        const CudaHosekSky& hosek,
                        const CudaCamera& camera,
@@ -210,6 +211,7 @@ public:
     }
 
     void update() {
+        checkNoorErrors( cudaPeekAtLastError() );
         checkNoorErrors( cudaDeviceSynchronize() );
         for ( int gpu_id = _num_gpus - 1; gpu_id >= 0; --gpu_id ) {
             int offset = gpu_id*_gpu[0]->_task._h;

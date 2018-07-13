@@ -56,8 +56,7 @@ void ObjLoader::load( const std::string& filename ) {
 void ObjLoader::getLights( std::vector<CudaAreaLight>& area_light_data
                            , std::vector<CudaPointLight>& point_light_data
                            , std::vector<CudaSpotLight>& spot_light_data
-                           , std::vector<CudaDistantLight>& distant_light_data
-                           , float world_radius ) const {
+                           , std::vector<CudaDistantLight>& distant_light_data ) const {
     for ( int grp_idx = 0; grp_idx < getNumMaterialGroups(); ++grp_idx ) {
         const MaterialGroup& mg = getMaterialGroup( grp_idx );
         const std::string token( "light" );

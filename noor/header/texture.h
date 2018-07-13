@@ -24,9 +24,12 @@ SOFTWARE.
 
 #ifndef TEXTURE_H
 #define TEXTURE_H
-const cudaChannelFormatDesc _float4_channelDesc{ cudaCreateChannelDesc( 32, 32, 32, 32, cudaChannelFormatKindFloat ) };
-const cudaChannelFormatDesc _float2_channelDesc{ cudaCreateChannelDesc( 32, 32, 0, 0, cudaChannelFormatKindFloat ) };
-const cudaChannelFormatDesc _float_channelDesc{ cudaCreateChannelDesc( 32, 0, 0, 0, cudaChannelFormatKindFloat ) };
+const cudaChannelFormatDesc _float4_channelDesc{ 
+    cudaCreateChannelDesc( 32, 32, 32, 32, cudaChannelFormatKindFloat ) };
+const cudaChannelFormatDesc _float2_channelDesc{ 
+    cudaCreateChannelDesc( 32, 32, 0, 0, cudaChannelFormatKindFloat ) };
+const cudaChannelFormatDesc _float_channelDesc{ 
+    cudaCreateChannelDesc( 32, 0, 0, 0, cudaChannelFormatKindFloat ) };
 
 class Texture {
 protected:
@@ -47,16 +50,15 @@ public:
         int num_channels,
         cudaTextureFilterMode filter_mode,
         cudaTextureAddressMode address_mode,
-        cudaChannelFormatDesc channel_desc
+        cudaChannelFormatDesc channel_desc = _float4_channelDesc
     ) :
         _width( width ),
         _height( height ),
-        _num_channels( num_channels ),
+        _num_channels( num_channels == 3 ? 4 : num_channels ),
         _filter_mode( filter_mode ),
         _address_mode( address_mode ),
         _channel_desc( channel_desc ) 
     {
-        _num_channels = _num_channels == 3 ? 4 : _num_channels;
         int n = _width * _height * _num_channels;
         _size_bytes = sizeof( float ) * n;
         _data = new float[n];
@@ -138,11 +140,17 @@ public:
         Texture( 1, 1,
                  sizeof( T ) / sizeof( float ),
                  cudaFilterModePoint,
-                 cudaAddressModeClamp,
-                 _float4_channelDesc
+                 cudaAddressModeClamp
         )
     {
         memset( _data, 1, _size_bytes );
+        memcpy( _data, &c, sizeof( c ) );
+    }
+
+    template<int N>
+    ImageTexture( const float4 (&c)[N] ) :
+        Texture( N, 1, 4, cudaFilterModePoint, cudaAddressModeClamp )
+    {
         memcpy( _data, &c, sizeof( c ) );
     }
 

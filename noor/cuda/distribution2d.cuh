@@ -265,7 +265,11 @@ private:
         return clamp( interval, 0, n-1 );
     }
     __device__
-        float sampleContinuous1D( int row, int n, float u, float& pdf, int *off = nullptr ) const {
+        float sampleContinuous1D( int row, 
+                                  int n, 
+                                  float u, 
+                                  float& pdf, 
+                                  int *off = nullptr ) const {
         // Find surrounding CDF segments and offset
         int offset = findInterval( row, n, u );
 
@@ -286,7 +290,9 @@ private:
     }
 public:
     __device__
-        int sampleDiscrete1D( float u, float& pdf, float *uRemapped = nullptr ) const {
+        int sampleDiscrete1D( float u, 
+                              float& pdf, 
+                              float *uRemapped = nullptr ) const {
         // Find surrounding CDF segments and offset
 
         const int offset = findInterval( 0, _width, u );
@@ -302,7 +308,9 @@ public:
     }
 
     __device__
-        float sampleContinuous1D( float u, float& pdf, int *off = nullptr ) const {
+        float sampleContinuous1D( float u, 
+                                  float& pdf, 
+                                  int *off = nullptr ) const {
         return sampleContinuous1D( 0, _width, u, pdf, off );
     }
     __device__
@@ -313,7 +321,7 @@ public:
         float Pdf( const float2& p ) const {
         const int iu = clamp( int( p.x * _width ), 0, _width - 1 );
         const int iv = clamp( int( p.y * _height ), 0, _height - 1 );
-        return getFunc( iv, iu ) / getFuncInt( _height );
+        return getFunc( iv, iu ) / getMarginalFuncInt();
     }
     __device__
         float2 sampleContinuous2D( const float2 &u, float& pdf ) const {
@@ -323,8 +331,6 @@ public:
         const float y = sampleContinuous1D( _height, _height + 1, u.y, pdfs.y, &v );
         // conditional distribution
         const float x = sampleContinuous1D( v, _width + 1, u.x, pdfs.x );
-        if (x>=1 || y>=1)
-            printf( "x %f y %f\n", x, y );
         pdf = pdfs.x * pdfs.y;
         return make_float2( x, y );
     }

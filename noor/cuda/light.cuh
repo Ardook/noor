@@ -41,6 +41,7 @@ enum LightType {
 
 struct CudaLight {
     float3 _ke;
+    float3 _power;
     LightType _type;
 
     __host__ __device__
@@ -57,6 +58,11 @@ struct CudaLight {
     }
     __device__
         float3 Le( const float3& w ) const;
+
+    __device__
+        float3 power() const {
+        return _power;
+    }
 
     __device__
         float pdf_Li(
@@ -83,7 +89,23 @@ public:
 
 #ifdef __CUDACC__
     __device__
+        float3 setPower()const {
+        return ( _two_sided ? 2 : 1 ) * _ke * _shape._area * NOOR_PI;
+    }
+
+    __device__
         float3 Le( const float3& w ) const;
+    __device__
+        float3 sample_Le( const CudaIntersection& I,
+                          CudaRay& ray,
+                          float3& n,
+                          float& pdfPos,
+                          float& pdfDir )const;
+    __device__
+        void pdf_Le( const CudaRay& ray,
+                     const float3& n,
+                     float& pdfPos,
+                     float& pdfDir ) const;
     __device__
         float pdf_Li(
         const CudaIntersection& I,
@@ -100,16 +122,27 @@ public:
 
 class CudaInfiniteLight : public CudaLight {
 public:
-    float _world_radius;
     __host__ __device__
         CudaInfiniteLight(
         float world_radius
-        ) : CudaLight( make_float3( 0 ), Infinite )
-        , _world_radius( world_radius ) {}
+        ) : CudaLight( make_float3( 0 ), Infinite ) {}
 
 #ifdef __CUDACC__
     __device__
+        float3 setPower() const;
+    __device__
         float3 Le( const float3& w ) const;
+    __device__
+        float3 sample_Le( const CudaIntersection& I,
+                          CudaRay& ray,
+                          float3& n,
+                          float& pdfPos,
+                          float& pdfDir )const;
+    __device__
+        void pdf_Le( const CudaRay& ray,
+                     const float3& n,
+                     float& pdfPos,
+                     float& pdfDir ) const;
     __device__
         float pdf_Li(
         const CudaIntersection& I,
@@ -136,6 +169,10 @@ public:
         , _position( position ) {}
 
 #ifdef __CUDACC__
+    __device__
+        float3 setPower() const {
+        return NOOR_4PI * _ke;
+    }
     __device__
         float3 sample_Li(
         const CudaIntersection& I,
@@ -165,8 +202,11 @@ public:
         , _cosinner( cosinner )
         , _cosouter( cosouter ) {}
 
-
 #ifdef __CUDACC__
+    __device__
+        float3 setPower() const {
+        return _ke * NOOR_2PI * ( 1 - .5f * ( _cosinner + _cosouter ) ); 
+    }
     __device__
         float falloff( const float3& w ) const {
         float costheta = dot( _direction, w );
@@ -188,20 +228,18 @@ public:
 class CudaDistantLight : public CudaLight {
 public:
     float3 _direction;
-    float3 _world_center;
-    float _world_radius;
     __host__ __device__
         CudaDistantLight(
         const float3& direction
         , const float3& ke
-        , const float3& world_center
-        , float world_radius
         ) : CudaLight( ke, Distant )
         , _direction( normalize( direction ) )
-        , _world_center( world_center )
-        , _world_radius( world_radius ) {}
-
+    {}
 #ifdef __CUDACC__
+    __device__
+        float3 setPower()const {
+        return _ke * NOOR_PI * _constant_spec._wr2;
+    }
     __device__ float3 sample_Li(
         const CudaIntersection& I,
         CudaLightRecord& Lr,

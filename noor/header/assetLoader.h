@@ -126,8 +126,7 @@ public:
     virtual void getLights( std::vector<CudaAreaLight>& area_light_data
                             , std::vector<CudaPointLight>& point_light_data
                             , std::vector<CudaSpotLight>& spot_light_data
-                            , std::vector<CudaDistantLight>& distant_light_data
-                            , float world_radius = 0 ) const = 0;
+                            , std::vector<CudaDistantLight>& distant_light_data ) const = 0;
     virtual int getNumMaterials() const = 0;
     virtual int getNumCameras() const = 0;
     virtual int getNumMaterialGroups() const { return static_cast<int>( _material_groups.size() ); }

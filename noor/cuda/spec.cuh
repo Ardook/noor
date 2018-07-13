@@ -45,6 +45,7 @@ public:
     float _reflection_bias;
     float _shadow_bias;
     float _world_radius;
+    float _wr2;
     unsigned int _bvh_root_node;
     unsigned short _lighting_type;
     unsigned short _bounces;

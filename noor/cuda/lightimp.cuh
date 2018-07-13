@@ -33,11 +33,59 @@ float3 CudaLight::Le( const float3& w ) const {
 __forceinline__ __device__
 float3 CudaAreaLight::Le( const float3& w ) const {
     if ( _shape._type != SPHERE )
-        return ( _two_sided || dot( w, _shape._n ) < 0 ) ? _ke : _constant_spec._black;
+        return ( _two_sided || dot( w, _shape._n ) < 0 ) ?
+        _ke :
+        _constant_spec._black;
     else
         return _ke;
 }
 
+__forceinline__ __device__
+float3 CudaAreaLight::sample_Le( const CudaIntersection& I,
+                                 CudaRay& ray,
+                                 float3& n,
+                                 float& pdfPos,
+                                 float& pdfDir )const {
+    // Sample a point on the area light's _Shape_, _pShape_
+    float3 p;
+    _shape.sample( I, p, pdfPos, &n );
+
+    // Sample a cosine-weighted outgoing direction _w_ for area light
+    float3 w;
+    const float2 u = make_float2( I._rng(), I._rng() );
+    if ( _two_sided ) {
+        // Choose a side to sample and then remap u[0] to [0,1] before
+        // applying cosine-weighted hemisphere sampling for the chosen side.
+        if ( u.x < .5 ) {
+            w = NOOR::cosineSampleHemisphere( u, RIGHT_HANDED );
+        } else {
+            w = NOOR::cosineSampleHemisphere( u, RIGHT_HANDED );
+            w.z *= -1;
+        }
+        pdfDir = 0.5f * NOOR::cosineHemispherePdf( fabsf( w.z ) );
+    } else {
+        w = NOOR::cosineSampleHemisphere( u, RIGHT_HANDED );
+        pdfDir = NOOR::cosineHemispherePdf( w.y );
+    }
+
+    float3 v1, v2;
+    NOOR::coordinateSystem( n, v1, v2 );
+    w = w.x * v1 + w.y * v2 + w.z * n;
+    ray = CudaRay( p, w );
+    return Le( w );
+}
+
+__forceinline__ __device__
+void CudaAreaLight::pdf_Le( const CudaRay& ray,
+                            const float3& n,
+                            float& pdfPos,
+                            float& pdfDir ) const {
+    pdfPos = _shape.pdf();
+    pdfDir = _two_sided ? 
+        .5f * NOOR::cosineHemispherePdf( NOOR::absDot( n, ray.getDir() ) )
+        : NOOR::cosineHemispherePdf( dot( n, ray.getDir() ) );
+
+}
 __forceinline__ __device__
 float CudaAreaLight::pdf_Li(
     const CudaIntersection& I,
@@ -61,10 +109,53 @@ float3 CudaAreaLight::sample_Li(
 
 //-------------- Infinite Light ----------------
 __forceinline__ __device__
+float3 CudaInfiniteLight::setPower() const {
+    return NOOR_PI * _constant_spec._wr2 *
+        _skydome_manager.evaluateLuminance();
+}
+__forceinline__ __device__
 float3 CudaInfiniteLight::Le( const float3& w ) const {
     return ( _constant_spec.is_sky_light_enabled() ) ?
         _skydome_manager.evaluate( w ) :
         _constant_spec._black;
+}
+__forceinline__ __device__
+float3 CudaInfiniteLight::sample_Le( const CudaIntersection& I,
+                                 CudaRay& ray,
+                                 float3& n,
+                                 float& pdfPos,
+                                 float& pdfDir )const {
+    // Find $(u,v)$ sample coordinates in infinite light texture
+    float mapPdf;
+    float3 d = -1.f * _skydome_manager.importance_sample_dir( I._rng, mapPdf );
+    n = d;
+
+    // Compute origin for infinite light sample ray
+    float3 v1, v2;
+    NOOR::coordinateSystem( d, v1, v2 );
+    const float2 u = make_float2(I._rng(), I._rng());
+    const float2 cd = NOOR::concentricSampleDisk( u );
+    const float3 worldCenter = make_float3( 0 );
+    const float r = _constant_spec._world_radius;
+    const float3 pDisk = worldCenter + r * ( cd.x * v1 + cd.y * v2 );
+    ray = CudaRay( pDisk + r * d, -d );
+
+    // Compute _InfiniteAreaLight_ ray PDFs
+    pdfDir = mapPdf;
+    pdfPos = 1.f / ( NOOR_PI * _constant_spec._wr2 );
+    return Le( d );
+}
+
+__forceinline__ __device__
+void CudaInfiniteLight::pdf_Le( const CudaRay& ray,
+                            const float3& n,
+                            float& pdfPos,
+                            float& pdfDir ) const {
+    const float3 d = -1.f*ray.getDir();
+    const float theta = NOOR::sphericalTheta( d ), phi = NOOR::sphericalPhi( d );
+    pdfDir = _skydome_manager.Pdf( make_float2( phi * NOOR_inv2PI, theta * NOOR_invPI ) )
+        / ( 2.0f * NOOR_PI * NOOR_PI * sinf(theta) );
+    pdfPos = 1.f / ( NOOR_PI * _constant_spec._wr2 );
 }
 
 __forceinline__ __device__
@@ -89,7 +180,9 @@ float3 CudaInfiniteLight::sample_Li(
 ) const {
     Lr._vis._wi = _skydome_manager.importance_sample_dir( I._rng, pdf );
     if ( isinf( pdf ) || isnan( pdf ) ) pdf = 0.f;
-    Lr._vis = CudaVisibility( I.getP(), I.getP() + 2.f*_world_radius * Lr._vis._wi );
+    Lr._vis = CudaVisibility( I.getP(), I.getP() + 
+                              2.f * _constant_spec._world_radius * 
+                              Lr._vis._wi );
     return Le( Lr._vis._wi );
 }
 
@@ -142,7 +235,8 @@ float3 CudaDistantLight::sample_Li(
     float& pdf
 ) const {
     pdf = 1.0f;
-    Lr._vis = CudaVisibility( I.getP(), I.getP() + 2.f*_world_radius * _direction );
+    Lr._vis = CudaVisibility( I.getP(), I.getP() + 
+                              2.f * _constant_spec._world_radius );
     return _ke;
 }
 
@@ -165,16 +259,25 @@ void setup_lights(
     int i = 0;
     for ( ; i < num_area_lights; ++i ) {
         area_lights[i]._shape._light_idx = curr;
-        lights[curr++] = (CudaLight*) &area_lights[i];
+        area_lights[i].setPower();
+        lights[curr++] = (CudaLight*)&area_lights[i];
     }
-    for ( i = 0; i < num_point_lights; ++i )
-        lights[curr++] = (CudaLight*) &point_lights[i];
-    for ( i = 0; i < num_spot_lights; ++i )
-        lights[curr++] = (CudaLight*) &spot_lights[i];
-    for ( i = 0; i < num_distant_lights; ++i )
-        lights[curr++] = (CudaLight*) &distant_lights[i];
-    for ( i = 0; i < num_infinite_lights; ++i )
-        lights[curr++] = (CudaLight*) &infinite_lights[i];
+    for ( i = 0; i < num_point_lights; ++i ) {
+        point_lights[i].setPower();
+        lights[curr++] = (CudaLight*)&point_lights[i];
+    }
+    for ( i = 0; i < num_spot_lights; ++i ) {
+        spot_lights[i].setPower();
+        lights[curr++] = (CudaLight*)&spot_lights[i];
+    }
+    for ( i = 0; i < num_distant_lights; ++i ) {
+        distant_lights[i].setPower();
+        lights[curr++] = (CudaLight*)&distant_lights[i];
+    }
+    for ( i = 0; i < num_infinite_lights; ++i ) {
+        infinite_lights[i].setPower();
+        lights[curr++] = (CudaLight*)&infinite_lights[i];
+    }
 }
 
 struct CudaLightManager {
@@ -208,28 +311,42 @@ struct CudaLightManager {
         _num_lights += _num_infinite_lights;
 
         if ( _num_area_lights != 0 ) {
-            checkNoorErrors( NOOR::malloc( &_area_lights, _num_area_lights * sizeof( CudaAreaLight ) ) );
-            checkNoorErrors( NOOR::memcopy( _area_lights, (void*) &payload->_area_light_data[0], _num_area_lights * sizeof( CudaAreaLight ) ) );
+            checkNoorErrors( NOOR::malloc( &_area_lights,
+                             _num_area_lights * sizeof( CudaAreaLight ) ) );
+            checkNoorErrors( NOOR::memcopy( _area_lights,
+                (void*)&payload->_area_light_data[0],
+                             _num_area_lights * sizeof( CudaAreaLight ) ) );
         }
 
         if ( _num_point_lights != 0 ) {
-            checkNoorErrors( NOOR::malloc( &_point_lights, _num_point_lights * sizeof( CudaPointLight ) ) );
-            checkNoorErrors( NOOR::memcopy( _point_lights, (void*) &payload->_point_light_data[0], _num_point_lights * sizeof( CudaPointLight ) ) );
+            checkNoorErrors( NOOR::malloc( &_point_lights,
+                             _num_point_lights * sizeof( CudaPointLight ) ) );
+            checkNoorErrors( NOOR::memcopy( _point_lights,
+                (void*)&payload->_point_light_data[0],
+                             _num_point_lights * sizeof( CudaPointLight ) ) );
         }
 
         if ( _num_spot_lights != 0 ) {
-            checkNoorErrors( NOOR::malloc( &_spot_lights, _num_spot_lights * sizeof( CudaSpotLight ) ) );
-            checkNoorErrors( NOOR::memcopy( _spot_lights, (void*) &payload->_spot_light_data[0], _num_spot_lights * sizeof( CudaSpotLight ) ) );
+            checkNoorErrors( NOOR::malloc( &_spot_lights,
+                             _num_spot_lights * sizeof( CudaSpotLight ) ) );
+            checkNoorErrors( NOOR::memcopy( _spot_lights,
+                (void*)&payload->_spot_light_data[0],
+                             _num_spot_lights * sizeof( CudaSpotLight ) ) );
         }
 
         if ( _num_distant_lights != 0 ) {
-            checkNoorErrors( NOOR::malloc( &_distant_lights, _num_distant_lights * sizeof( CudaDistantLight ) ) );
-            checkNoorErrors( NOOR::memcopy( _distant_lights, (void*) &payload->_distant_light_data[0], _num_distant_lights * sizeof( CudaDistantLight ) ) );
+            checkNoorErrors( NOOR::malloc( &_distant_lights,
+                             _num_distant_lights * sizeof( CudaDistantLight ) ) );
+            checkNoorErrors( NOOR::memcopy( _distant_lights,
+                (void*)&payload->_distant_light_data[0],
+                             _num_distant_lights * sizeof( CudaDistantLight ) ) );
         }
 
         if ( _num_infinite_lights != 0 ) {
-            checkNoorErrors( NOOR::malloc( &_infinite_lights, _num_infinite_lights * sizeof( CudaInfiniteLight ) ) );
-            checkNoorErrors( NOOR::memcopy( _infinite_lights, (void*) &payload->_infinite_light_data[0], sizeof( CudaInfiniteLight ) ) );
+            checkNoorErrors( NOOR::malloc( &_infinite_lights,
+                             _num_infinite_lights * sizeof( CudaInfiniteLight ) ) );
+            checkNoorErrors( NOOR::memcopy( _infinite_lights,
+                (void*)&payload->_infinite_light_data[0], sizeof( CudaInfiniteLight ) ) );
         }
 
         checkNoorErrors( NOOR::malloc( &_lights, _num_lights * sizeof( CudaLight* ) ) );
@@ -276,18 +393,19 @@ struct CudaLightManager {
 
     __device__
         bool intersect( const CudaRay& ray, int light_idx ) const {
-        if ( _lights[light_idx]->isInfiniteLight() && _constant_spec.is_sky_light_enabled() ) {
+        if ( _lights[light_idx]->isInfiniteLight() &&
+             _constant_spec.is_sky_light_enabled() ) {
             ray.setTmax( 2.0f*_constant_spec._world_radius );
             return true;
         }
         if ( _lights[light_idx]->isDeltaLight() ) return false;
-        const CudaAreaLight* light = (CudaAreaLight*) _lights[light_idx];
+        const CudaAreaLight* light = (CudaAreaLight*)_lights[light_idx];
         return( light->_shape.intersect( ray ) );
     }
 
     __device__
         bool isDeltaLight( int light_idx ) const {
-        const CudaAreaLight* light = (CudaAreaLight*) _lights[light_idx];
+        const CudaAreaLight* light = (CudaAreaLight*)_lights[light_idx];
         return( light->isDeltaLight() );
     }
 
@@ -308,19 +426,24 @@ struct CudaLightManager {
         float3 Ld = _constant_spec._black;
         switch ( _lights[light_idx]->_type ) {
             case Area:
-                Ld = ( (const CudaAreaLight*) _lights[light_idx] )->sample_Li( I, Lr, pdf );
+                Ld = ( (const CudaAreaLight*)
+                       _lights[light_idx] )->sample_Li( I, Lr, pdf );
                 break;
             case Point:
-                Ld = ( (const CudaPointLight*) _lights[light_idx] )->sample_Li( I, Lr, pdf );
+                Ld = ( (const CudaPointLight*)
+                       _lights[light_idx] )->sample_Li( I, Lr, pdf );
                 break;
             case Spot:
-                Ld = ( (const CudaSpotLight*) _lights[light_idx] )->sample_Li( I, Lr, pdf );
+                Ld = ( (const CudaSpotLight*)
+                       _lights[light_idx] )->sample_Li( I, Lr, pdf );
                 break;
             case Distant:
-                Ld = ( (const CudaDistantLight*) _lights[light_idx] )->sample_Li( I, Lr, pdf );
+                Ld = ( (const CudaDistantLight*)
+                       _lights[light_idx] )->sample_Li( I, Lr, pdf );
                 break;
             case Infinite:
-                Ld = ( (const CudaInfiniteLight*) _lights[light_idx] )->sample_Li( I, Lr, pdf );
+                Ld = ( (const CudaInfiniteLight*)
+                       _lights[light_idx] )->sample_Li( I, Lr, pdf );
                 break;
             default:
                 break;
@@ -338,19 +461,24 @@ struct CudaLightManager {
         float pdf = 0.f;
         switch ( _lights[light_idx]->_type ) {
             case Area:
-                pdf = ( (const CudaAreaLight*) _lights[light_idx] )->pdf_Li( I, wi );
+                pdf = ( (const CudaAreaLight*)
+                        _lights[light_idx] )->pdf_Li( I, wi );
                 break;
             case Point:
-                pdf = ( (const CudaPointLight*) _lights[light_idx] )->pdf_Li( I, wi );
+                pdf = ( (const CudaPointLight*)
+                        _lights[light_idx] )->pdf_Li( I, wi );
                 break;
             case Spot:
-                pdf = ( (const CudaSpotLight*) _lights[light_idx] )->pdf_Li( I, wi );
+                pdf = ( (const CudaSpotLight*)
+                        _lights[light_idx] )->pdf_Li( I, wi );
                 break;
             case Distant:
-                pdf = ( (const CudaDistantLight*) _lights[light_idx] )->pdf_Li( I, wi );
+                pdf = ( (const CudaDistantLight*)
+                        _lights[light_idx] )->pdf_Li( I, wi );
                 break;
             case Infinite:
-                pdf = ( (const CudaInfiniteLight*) _lights[light_idx] )->pdf_Li( I, wi );
+                pdf = ( (const CudaInfiniteLight*)
+                        _lights[light_idx] )->pdf_Li( I, wi );
                 break;
             default:
                 break;
@@ -366,15 +494,15 @@ struct CudaLightManager {
         ) const {
         switch ( _lights[light_idx]->_type ) {
             case Area:
-                return ( (const CudaAreaLight*) _lights[light_idx] )->Le( wi );
+                return ( (const CudaAreaLight*)_lights[light_idx] )->Le( wi );
             case Point:
-                return ( (const CudaPointLight*) _lights[light_idx] )->Le( wi );
+                return ( (const CudaPointLight*)_lights[light_idx] )->Le( wi );
             case Spot:
-                return ( (const CudaSpotLight*) _lights[light_idx] )->Le( wi );
+                return ( (const CudaSpotLight*)_lights[light_idx] )->Le( wi );
             case Distant:
-                return ( (const CudaDistantLight*) _lights[light_idx] )->Le( wi );
+                return ( (const CudaDistantLight*)_lights[light_idx] )->Le( wi );
             case Infinite:
-                return ( (const CudaInfiniteLight*) _lights[light_idx] )->Le( wi );
+                return ( (const CudaInfiniteLight*)_lights[light_idx] )->Le( wi );
             default:
                 return _constant_spec._black;
         }
