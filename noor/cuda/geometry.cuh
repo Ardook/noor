@@ -42,6 +42,7 @@ void sampleQuad(
     if ( n ) *n = quad._n;
 }
 
+// PBRT sphere sampling
 __forceinline__ __device__
 void sampleSphere(
     const CudaShape& sphere,
@@ -117,6 +118,7 @@ bool intersectQuad(
     return true;
 }
 
+// Mitsuba Ray Sphere Intersection
 __forceinline__ __device__
 bool intersectSphere( const CudaShape& sphere, const CudaRay& ray ) {
     const float3 o = ray.getOrigin() - sphere._center;
