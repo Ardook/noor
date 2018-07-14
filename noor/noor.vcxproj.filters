@@ -281,13 +281,13 @@
     <None Include="scene\MEL\uber.mel">
       <Filter>scene\MEL</Filter>
     </None>
-    <None Include="..\docs\index.md">
-      <Filter>pages</Filter>
-    </None>
     <None Include="mel\shelf_NOOR.mel">
       <Filter>mel</Filter>
     </None>
-    <None Include="..\docs\_includes\screenshots.html">
+    <None Include="..\docs\index.html">
+      <Filter>pages</Filter>
+    </None>
+    <None Include="..\docs\screenshot.html">
       <Filter>pages</Filter>
     </None>
   </ItemGroup>
