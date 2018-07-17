@@ -47,15 +47,15 @@ public:
     CudaFrameBufferManager( const CudaRenderTask& task ):
         _managed(task._gpu_id != 0) 
     {
-        //if ( !_managed )
+        if ( !_managed )
             //checkNoorErrors( cudaMallocManaged( (void **)&_buffer, task._size ) );
             checkNoorErrors( cudaMalloc( (void **)&_buffer, task._size ) );
             //checkNoorErrors( cudaMallocManaged( (void **)&_buffer, w * h * sizeof( float4 ) ) );
             //checkNoorErrors( cudaHostAlloc( (void **)&_buffer, w * h * sizeof( float4 ), cudaHostAllocMapped ) );
             //checkNoorErrors( cudaHostAlloc( (void **)&_buffer, w * h * sizeof( float4 ), cudaHostAllocDefault ) );
-            //checkNoorErrors( cudaHostAlloc( (void **)&_buffer, task._size, cudaHostAllocWriteCombined ) );
-        //else
-            //checkNoorErrors( cudaMallocManaged( (void **)&_buffer, task._size ) );
+            //checkNoorErrors( cudaHostAlloc( (void **)&_buffer, task._size, cudaHostAllocDefault ) );
+        else
+            checkNoorErrors( cudaMallocManaged( (void **)&_buffer, task._size ) );
           //  checkNoorErrors( cudaHostAlloc( (void **)&_buffer, task._size, cudaHostAllocMapped ) );
     }
 
