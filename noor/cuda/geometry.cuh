@@ -34,7 +34,8 @@ void sampleQuad(
     float& pdf,
     float3* n = nullptr
 ) {
-    p = quad._center + quad._u*I._rng() + quad._v*I._rng() + _constant_spec._reflection_bias*quad._n;
+    p = quad._center + quad._u*I._rng() + quad._v*I._rng() + 
+        _constant_spec._reflection_bias*quad._n;
     const float3 wi = I.getP() - p;
     const float dist2 = NOOR::length2( wi );
     pdf = dist2 / ( NOOR::absDot( quad._n, -1.0f*wi ) * quad._area );
@@ -56,7 +57,8 @@ void sampleSphere(
     float3 u, v;
     NOOR::coordinateSystem( w, u, v );
     // Compute theta and phi values for sample in cone
-    const float sinThetaMax2 = sphere._radius2 / NOOR::length2( I.getP() - sphere._center );
+    const float sinThetaMax2 = sphere._radius2 / 
+        NOOR::length2( I.getP() - sphere._center );
     const float cosThetaMax = sqrtf( fmaxf( 0.f, 1.f - sinThetaMax2 ) );
     const float cosTheta = ( 1.f - r.x ) + r.x * cosThetaMax;
     const float sinTheta = sqrtf( fmaxf( 0.f, 1.f - cosTheta * cosTheta ) );
@@ -64,8 +66,10 @@ void sampleSphere(
 
     // Compute angle alpha from center of sphere to sampled point on surface
     const float dc = length( I.getP() - sphere._center );
-    const float ds = dc * cosTheta - sqrtf( fmaxf( 0.f, sphere._radius2 - dc * dc * sinTheta * sinTheta ) );
-    const float cosAlpha = ( dc * dc + sphere._radius2 - ds * ds ) / ( 2.f * dc * sphere._radius );
+    const float ds = dc * cosTheta - sqrtf( fmaxf( 0.f, sphere._radius2 - 
+                                            dc * dc * sinTheta * sinTheta ) );
+    const float cosAlpha = ( dc * dc + sphere._radius2 - ds * ds ) / 
+        ( 2.f * dc * sphere._radius );
     const float sinAlpha = sqrtf( fmaxf( 0.f, 1.f - cosAlpha * cosAlpha ) );
     // Compute surface normal and sampled point on sphere
     const float3 N = NOOR::sphericalDirection( sinAlpha, cosAlpha, phi, -u, -v, -w );

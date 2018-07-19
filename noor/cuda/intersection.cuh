@@ -208,8 +208,8 @@ public:
         const float3 p = dot( v._wi, _rec->_geometry._n ) >= 0.0f ?
             v._from + _constant_spec._reflection_bias * _rec->_geometry._n :
             v._from - _constant_spec._reflection_bias * _rec->_geometry._n;
-        float dist = length( p - v._to );
-        dist -= dist * _constant_spec._shadow_bias;
+        const float dist = length( p - v._to );
+        //dist -= dist * _constant_spec._shadow_bias;
         return CudaRay( p, v._wi, dist );
     }
     __device__

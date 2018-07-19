@@ -480,8 +480,8 @@ public:
     }
 };
 
-//using CudaTextureManager = CudaTextureManagerTemplate<Cuda2DTexture>;
-using CudaTextureManager = CudaTextureManagerTemplate<CudaMipMap>;
+using CudaTextureManager = CudaTextureManagerTemplate<Cuda2DTexture>;
+//using CudaTextureManager = CudaTextureManagerTemplate<CudaMipMap>;
 __constant__
 CudaTextureManager _texture_manager;
 #endif /* CUDATEXTURE_CUH */

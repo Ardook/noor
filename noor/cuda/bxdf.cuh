@@ -299,7 +299,7 @@ public:
         float3 Eval( const CudaIntersection& I,
                   const float3 &wo,
                   const float3 &wi ) const {
-        return T( I )*NOOR_invPI;
+        return R( I )*NOOR_invPI;
     }
 
     __device__

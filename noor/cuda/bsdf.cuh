@@ -231,7 +231,8 @@ public:
         const CudaONB onb( I.getSn(), I.getSdpdu(), I.getSdpdv() );
         const float3 wo = onb.toLocal( woWorld );
         const float3 wi = onb.toLocal( wiWorld );
-        const bool reflect = dot( wiWorld, I.getGn() ) * dot( woWorld, I.getGn() ) > 0;
+        const bool reflect = dot( wiWorld, I.getGn() ) * 
+                             dot( woWorld, I.getGn() ) > 0;
         float3 f = _constant_spec._black;
         for ( int i = 0; i < _nbxdfs; ++i )
             if ( _bxdfs[i]->MatchesFlags( flags ) &&
@@ -259,7 +260,8 @@ public:
         }
         const float2 u = make_float2( I._rng(), I._rng() );
         const int comp = min( (int) floorf( u.x * matchingComps ), matchingComps - 1 );
-        const float2 uRemapped = make_float2( fminf( u.x * matchingComps - comp, NOOR_ONE_MINUS_EPSILON ), u.y );
+        const float2 uRemapped = make_float2( fminf( u.x * matchingComps - comp, 
+                                              NOOR_ONE_MINUS_EPSILON ), u.y );
         CudaBxDF *bxdf = nullptr;
         int count = comp;
         for ( int i = 0; i < _nbxdfs; ++i ) {
