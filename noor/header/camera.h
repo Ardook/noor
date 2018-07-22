@@ -167,6 +167,17 @@ public:
         _outofsync = true;
     }
 
+    void updateLensRadius( float delta ) {
+        _lens_radius += delta;
+        _lens_radius *= NOOR::sign( _lens_radius );
+        _outofsync = true;
+    }
+    void updateFocalLength( float delta ) {
+        _focal_length += delta;
+        _focal_length *= NOOR::sign( _focal_length );
+        _outofsync = true;
+    }
+
     void updateCudaCamera() {
         if ( _outofsync ) {
             _cuda_camera.update( _cameraToWorld, _rasterToCamera, _w, _h, 

@@ -219,7 +219,7 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;WIN64;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>c:\dev\thirdparty\fbx\include;c:\dev\thirdparty\glfw\include;c:\dev\thirdparty\glew\include;c:\dev\thirdparty\glm;c:\dev\thirdparty\glm_obj\include;$(SolutionDir)$(ProjectName)\header;$(SolutionDir)$(ProjectName)\cuda;$(SolutionDir)$(ProjectName)\external;$(CudaSamplesInclude);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)thirdparty\fbx\include;$(SolutionDir)thirdparty\glfw\include;$(SolutionDir)thirdparty\glew\include;$(SolutionDir)thirdparty\glm_obj\include;$(SolutionDir)thirdparty\glm;$(SolutionDir)$(ProjectName)\header;$(SolutionDir)$(ProjectName)\cuda;$(SolutionDir)$(ProjectName)\external;$(CudaSamplesInclude);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <MultiProcessorCompilation>false</MultiProcessorCompilation>
@@ -230,7 +230,7 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;glm_obj.lib;opengl32.lib;glew32.lib;cudart.lib;glfw3.lib;libfbxsdk-md.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>C:\dev\thirdparty\glew\lib\$(configuration);C:\dev\thirdparty\glfw\lib\$(configuration);C:\dev\thirdparty\glm_obj\lib\$(configuration);C:\dev\thirdparty\fbx\lib\$(configuration);%(AdditionalLibraryDirectories);$(CudaToolkitLibDir)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)thirdparty\glew\lib\$(configuration);$(SolutionDir)thirdparty\glfw\lib\$(configuration);$(SolutionDir)thirdparty\glm_obj\lib\$(configuration);$(SolutionDir)thirdparty\fbx\lib\$(configuration);%(AdditionalLibraryDirectories);$(CudaToolkitLibDir)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
       <Command>echo copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"
@@ -280,7 +280,7 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
       <WarningLevel>Level3</WarningLevel>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;WIN64;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>c:\dev\thirdparty\fbx\include;c:\dev\thirdparty\glfw\include;c:\dev\thirdparty\glew\include;c:\dev\thirdparty\glm;c:\dev\thirdparty\glm_obj\include;$(SolutionDir)$(ProjectName)\header;$(SolutionDir)$(ProjectName)\cuda;$(SolutionDir)$(ProjectName)\external;$(CudaSamplesInclude);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)thirdparty\fbx\include;$(SolutionDir)thirdparty\glfw\include;$(SolutionDir)thirdparty\glew\include;$(SolutionDir)thirdparty\glm_obj\include;$(SolutionDir)thirdparty\glm;$(SolutionDir)$(ProjectName)\header;$(SolutionDir)$(ProjectName)\cuda;$(SolutionDir)$(ProjectName)\external;$(CudaSamplesInclude);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -305,7 +305,7 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
       <OptimizeReferences>true</OptimizeReferences>
       <SubSystem>Console</SubSystem>
       <AdditionalDependencies>cudart.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;glm_obj.lib;opengl32.lib;glew32.lib;glfw3.lib;libfbxsdk-md.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>C:\dev\thirdparty\glew\lib\$(configuration);C:\dev\thirdparty\glfw\lib\$(configuration);C:\dev\thirdparty\glm_obj\lib\$(configuration);C:\dev\thirdparty\fbx\lib\$(configuration);%(AdditionalLibraryDirectories);$(CudaToolkitLibDir)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)thirdparty\glew\lib\$(configuration);$(SolutionDir)thirdparty\glfw\lib\$(configuration);$(SolutionDir)thirdparty\glm_obj\lib\$(configuration);$(SolutionDir)thirdparty\fbx\lib\$(configuration);%(AdditionalLibraryDirectories);$(CudaToolkitLibDir)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
       <Command>echo copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"

@@ -44,7 +44,6 @@ struct CudaIntersectionRecord {
     uint _ins_idx{ 0 };
     uint _tid{ 0 };
     MaterialType _material_type{ DIFFUSE };
-    //CudaIntersection* _I{ nullptr };
 
     CudaIntersectionRecord() = default;
 
@@ -400,22 +399,16 @@ public:
         void computeDifferential( const CudaRay& ray, 
                                   const float3& _dpdu, 
                                   const float3& _dpdv ) {
-        if ( !ray.isDifferential() ) {
-            return;
-        }
+        if ( !ray.isDifferential() )  return; 
         const float d = dot( _rec->_geometry._n, _rec->_geometry._p );
         const float tx = -( dot( _rec->_geometry._n, ray.getOriginDx() ) - d ) / 
             dot( _rec->_geometry._n, ray.getDirDx() );
-        if ( isinf( tx ) || isnan( tx ) ) {
-            return;
-        }
+        if ( isinf( tx ) || isnan( tx ) ) return; 
         const float3 px = ray.getOriginDx() + tx * ray.getDirDx();
 
         const float ty = -( dot( _rec->_geometry._n, ray.getOriginDy() ) - d ) / 
             dot( _rec->_geometry._n, ray.getDirDy() );
-        if ( isinf( ty ) || isnan( ty ) ) {
-            return;
-        }
+        if ( isinf( ty ) || isnan( ty ) ) return; 
         const float3 py = ray.getOriginDy() + ty * ray.getDirDy();
 
         _differential._dpdx = px - _rec->_geometry._p;

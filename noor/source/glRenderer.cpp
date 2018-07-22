@@ -54,6 +54,8 @@ namespace {
         TONEMAP_UNCHARTED = GLFW_KEY_F12,
         EXPOSURE_INC = GLFW_KEY_KP_ADD,
         EXPOSURE_DEC = GLFW_KEY_KP_SUBTRACT,
+        FOCAL_INC = GLFW_KEY_RIGHT_BRACKET,
+        FOCAL_DEC = GLFW_KEY_LEFT_BRACKET,
         QUIT = GLFW_KEY_ESCAPE
     };
 
@@ -97,7 +99,9 @@ namespace {
     glm::mat4 mvp;
 
     float exposure = 1.0f;
-    const float delta_exposure = .25f;
+    const float delta_exposure = .1f;
+    const float delta_lens_radius = .001f;
+    const float delta_focal_length = .025f;
 
     const float scene_near = 0.001f;
     const float scene_far = 1000.0f;
@@ -159,9 +163,10 @@ void displayFps( unsigned int frame_count ) {
 }
 
 void screenshot( bool flip = true ) {
-    const std::string root_dir( "C:\\Users\\ardavan\\Desktop\\noor\\docs\\screenshots\\" );
-    const std::string dir_50( root_dir + "50percent\\" );
-    const std::string dir_100( root_dir + "100percent\\" );
+    //const std::string root_dir( "C:\\Users\\ardavan\\Desktop\\noor\\docs\\screenshots\\" );
+    const std::string root_dir( "../../docs/screenshots/" );
+    const std::string dir_50( root_dir + "50percent/" );
+    const std::string dir_100( root_dir + "100percent/" );
 
     std::stringstream filename;
     time_t rawtime = std::time( nullptr );
@@ -267,6 +272,12 @@ void keyboard( GLFWwindow* window, int key, int scancode, int action, int mode )
                                                         GL_FRAGMENT_SHADER,
                                                         "tonemapUncharted2" );
                 break;
+            case FOCAL_INC:
+                scene->updateCameraFocalLength( delta_focal_length );
+                break;
+            case FOCAL_DEC:
+                scene->updateCameraFocalLength( -1.f*delta_focal_length );
+                break;
             case EXPOSURE_INC:
                 exposure += delta_exposure;
                 glUniform1f( exposure_uniform, exposure );
@@ -313,7 +324,10 @@ void mouse( GLFWwindow* window, int button, int action, int mods ) {
 
 void motion( GLFWwindow* window, double x, double y ) {
     scene->motion( static_cast<int>( x ), static_cast<int>( y ) );
+}
 
+void scroll_callback( GLFWwindow* window, double xoffset, double yoffset ) {
+    scene->updateCameraLensRadius( yoffset*delta_lens_radius );
 }
 
 void renderCuda() {
@@ -366,6 +380,7 @@ void initGLFW() {
     glfwSetMouseButtonCallback( window, mouse );
     glfwSetCursorPosCallback( window, motion );
     glfwSetFramebufferSizeCallback( window, reshape );
+    glfwSetScrollCallback( window, scroll_callback );
     glfwSwapInterval( 0 );
     // Set this to true so GLEW knows to use a modern approach to retrieving 
     // function pointers and extensions

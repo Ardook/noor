@@ -57,11 +57,13 @@ Model::Model( const Spec& spec, Stat& stat ) :
 
 // create loader based on the file type/extension (obj, FBX, and etc.)
 std::unique_ptr<AssetLoader> Model::loaderFactory( const std::string& filename ) {
-    const std::experimental::filesystem::path p( filename );
+    namespace fs = std::experimental::filesystem;
+    const fs::path p( filename );
     const std::string file_extension( ( p.extension() ).string() );
     if ( file_extension == ".obj" ) {
         _texture_dir = std::string( p.parent_path().string() + R"(\)" );
-        return std::make_unique<ObjLoader>( filename );
+        const std::string abspath (( fs::system_complete( p ) ).string());
+        return std::make_unique<ObjLoader>( abspath );
     } else if ( file_extension == ".fbx" ) {
         _texture_dir = "";
         return std::make_unique<FBXLoader>( filename );

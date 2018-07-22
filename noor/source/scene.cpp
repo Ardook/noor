@@ -102,6 +102,15 @@ void Scene::setCameraType( CameraType type ) const {
     _camera->setCameraType( type );
 }
 
+void Scene::updateCameraLensRadius( float delta ){
+    _camera->updateLensRadius( delta );
+}
+
+void Scene::updateCameraFocalLength( float delta ){
+    _camera->updateFocalLength( delta );
+}
+
+
 void Scene::enableSky() const {
     _spec->enable_sky_light();
 }

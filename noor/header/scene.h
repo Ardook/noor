@@ -61,6 +61,8 @@ public:
     const BBox& getSceneBBox() const { return _scene_bbox; }
     float getSceneRadius() const { return _scene_radius; }
     void setCameraType( CameraType type ) const;
+    void updateCameraLensRadius( float delta );
+    void updateCameraFocalLength( float delta );
     void updateSky( float theta, float phi ) const;
     void updateCudaSpec();
     void updateCudaSky();
