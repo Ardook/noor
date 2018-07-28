@@ -24,6 +24,7 @@ bld/
 
 # Docs and Scenes
 docs/scenes/
+docs/markdeep/
 thirdparty/
 
 # Visual Studio 2015 cache/options directory
