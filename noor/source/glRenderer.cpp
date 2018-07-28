@@ -100,7 +100,7 @@ namespace {
 
     float exposure = 1.0f;
     const float delta_exposure = .1f;
-    const float delta_lens_radius = .001f;
+    const float delta_lens_radius = .005f;
     const float delta_focal_length = .025f;
 
     const float scene_near = 0.001f;

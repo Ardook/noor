@@ -22,6 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 #include "path_tracer_data.cuh"
+
 __forceinline__ __device__
 float4 pathtracer(
     CudaRay& ray,
