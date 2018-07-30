@@ -284,10 +284,10 @@
     <None Include="mel\shelf_NOOR.mel">
       <Filter>mel</Filter>
     </None>
-    <None Include="..\docs\markdeep\index.html">
+    <None Include="..\docs\index.html">
       <Filter>pages</Filter>
     </None>
-    <None Include="..\docs\markdeep\screenshot.html">
+    <None Include="..\docs\screenshot.html">
       <Filter>pages</Filter>
     </None>
   </ItemGroup>

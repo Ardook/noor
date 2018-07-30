@@ -81,6 +81,7 @@ class Camera {
 
     // GLFW button states
     int _button;
+    int _mods;
     int _prev_button_state;
     int _curr_button_state;
     // pixel coordinate state
@@ -136,14 +137,14 @@ public:
         _type( PERSP )
     {
         reset( w, h );
-        _cuda_camera.update( _cameraToWorld, _rasterToCamera, _w, _h, 
+        _cuda_camera.update( _cameraToWorld, _rasterToCamera, _w, _h,
                              _lens_radius, _focal_length, _type );
     }
 
     void reset( int w, int h ) {
         _w = w;
         _h = h;
-        _aspect = _w / (float) _h;
+        _aspect = _w / (float)_h;
         _r = ( _w > _h ? _h : _w ) * 0.5f;
         _r2 = _r * _r;
         _rsq2 = _r / glm::root_two<float>();
@@ -167,39 +168,41 @@ public:
         _outofsync = true;
     }
 
-    void updateLensRadius( float delta ) {
-        _lens_radius += delta;
-        _lens_radius *= NOOR::sign( _lens_radius );
+    void updateLensRadius() {
+        static float deltaLensRadius = .0001f;
+        _lens_radius += deltaLensRadius * (_prev_xy.x - _curr_xy.x);
+        _lens_radius = _lens_radius < 0 ? 0 : _lens_radius;
         _outofsync = true;
     }
-    void updateFocalLength( float delta ) {
-        _focal_length += delta;
-        _focal_length *= NOOR::sign( _focal_length );
+
+    void updateFocalLength() {
+        static float deltaFocalLength = .005f;
+        _focal_length += deltaFocalLength * (_prev_xy.x - _curr_xy.x);
+        _focal_length = _focal_length < .01f ? .01f : _focal_length;
         _outofsync = true;
     }
 
     void updateCudaCamera() {
         if ( _outofsync ) {
-            _cuda_camera.update( _cameraToWorld, _rasterToCamera, _w, _h, 
+            _cuda_camera.update( _cameraToWorld, _rasterToCamera, _w, _h,
                                  _lens_radius, _focal_length, _type );
             update_cuda_camera();
             _outofsync = false;
         }
     }
 
-    void mouse( int button, int action ) {
+    void mouse( int button, int action, int mods ) {
         _button = button;
+        _mods = mods;
         _prev_button_state = _curr_button_state;
         _curr_button_state = action;
     }
 
     void updateLookAt() {
         if ( _type == ENV || _type == ORTHO ) return;
-        //const glm::vec4 lookAt = F2V4( get_lookAt() );
-        float4 tmp;
-        get_lookAt( tmp );
-        const glm::vec4 lookAt = F2V4( tmp );
-        _lookAt = ( tmp.w > 0.0f ) ? lookAt : _lookAt;
+        float4 lookAt;
+        get_lookAt( lookAt );
+        _lookAt = ( lookAt.w > 0.0f ) ? F2V4(lookAt) : _lookAt;
     }
 
     void motion( int x, int y ) {
@@ -210,10 +213,16 @@ public:
         if ( _curr_button_state == GLFW_PRESS ) {
             switch ( _button ) {
                 case GLFW_MOUSE_BUTTON_RIGHT:
-                    zoom();
+                    _mods == GLFW_MOD_SHIFT ?
+                        updateLensRadius()
+                        :
+                        zoom();
                     break;
                 case GLFW_MOUSE_BUTTON_LEFT:
-                    orbit();
+                    _mods == GLFW_MOD_SHIFT ?
+                        updateFocalLength()
+                        :
+                        orbit();
                     break;
                 case GLFW_MOUSE_BUTTON_MIDDLE:
                     strafe();

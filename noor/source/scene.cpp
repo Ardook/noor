@@ -40,7 +40,7 @@ Scene::Scene( const Spec& spec ) :
 glm::uint32 Scene::getWidthPixels()const { return _host_spec._camera_spec._w; }
 glm::uint32 Scene::getHeightPixels()const { return _host_spec._camera_spec._h; }
 void Scene::reset( int w, int h ) { _camera->reset( w, h ); }
-void Scene::mouse( int button, int action ) { _camera->mouse( button, action ); }
+void Scene::mouse( int button, int action, int mods ) { _camera->mouse( button, action, mods ); }
 void Scene::motion( int x, int y ) { _camera->motion( x, y ); }
 const glm::mat4& Scene::getViewMatrix() const { return _camera->getViewMatrix(); }
 const glm::mat4& Scene::getProjectionMatrix() const { return _camera->getProjectionMatrix(); }
@@ -101,15 +101,6 @@ void Scene::disableDebugSky() const {
 void Scene::setCameraType( CameraType type ) const {
     _camera->setCameraType( type );
 }
-
-void Scene::updateCameraLensRadius( float delta ){
-    _camera->updateLensRadius( delta );
-}
-
-void Scene::updateCameraFocalLength( float delta ){
-    _camera->updateFocalLength( delta );
-}
-
 
 void Scene::enableSky() const {
     _spec->enable_sky_light();

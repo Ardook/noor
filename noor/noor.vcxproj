@@ -115,8 +115,8 @@
     <ClCompile Include="source\texture.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\docs\markdeep\index.html" />
-    <None Include="..\docs\markdeep\screenshot.html" />
+    <None Include="..\docs\index.html" />
+    <None Include="..\docs\screenshot.html" />
     <None Include="mel\shelf_NOOR.mel" />
     <None Include="scene\MEL\uber.mel" />
     <None Include="shader\bvhvis.fs" />

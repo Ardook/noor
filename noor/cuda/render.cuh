@@ -222,12 +222,12 @@ public:
                 _gpu[0]->_task._h * gpu_id,
                 _gpu[gpu_id]->getBuffer(),
                 _gpu[gpu_id]->_task._size,
-                cudaMemcpyDeviceToDevice,
-                //cudaMemcpyDefault,
+                cudaMemcpyDefault,
                 _gpu[gpu_id]->_stream
             )
             );
         }
+        //checkNoorErrors( cudaDeviceSynchronize() );
         _host_lookAt = _device_lookAt;
     }
 

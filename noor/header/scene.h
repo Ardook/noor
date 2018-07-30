@@ -55,14 +55,12 @@ public:
     glm::uint32 getWidthPixels() const;
     glm::uint32 getHeightPixels() const;
     void reset( int w, int h );
-    void mouse( int button, int action );
+    void mouse( int button, int action, int mods );
     void motion( int x, int y );
 
     const BBox& getSceneBBox() const { return _scene_bbox; }
     float getSceneRadius() const { return _scene_radius; }
     void setCameraType( CameraType type ) const;
-    void updateCameraLensRadius( float delta );
-    void updateCameraFocalLength( float delta );
     void updateSky( float theta, float phi ) const;
     void updateCudaSpec();
     void updateCudaSky();

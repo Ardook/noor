@@ -272,12 +272,6 @@ void keyboard( GLFWwindow* window, int key, int scancode, int action, int mode )
                                                         GL_FRAGMENT_SHADER,
                                                         "tonemapUncharted2" );
                 break;
-            case FOCAL_INC:
-                scene->updateCameraFocalLength( delta_focal_length );
-                break;
-            case FOCAL_DEC:
-                scene->updateCameraFocalLength( -1.f*delta_focal_length );
-                break;
             case EXPOSURE_INC:
                 exposure += delta_exposure;
                 glUniform1f( exposure_uniform, exposure );
@@ -319,15 +313,11 @@ void keyboard( GLFWwindow* window, int key, int scancode, int action, int mode )
 }
 
 void mouse( GLFWwindow* window, int button, int action, int mods ) {
-    scene->mouse( button, action );
+    scene->mouse( button, action, mods );
 }
 
 void motion( GLFWwindow* window, double x, double y ) {
     scene->motion( static_cast<int>( x ), static_cast<int>( y ) );
-}
-
-void scroll_callback( GLFWwindow* window, double xoffset, double yoffset ) {
-    scene->updateCameraLensRadius( yoffset*delta_lens_radius );
 }
 
 void renderCuda() {
@@ -380,7 +370,6 @@ void initGLFW() {
     glfwSetMouseButtonCallback( window, mouse );
     glfwSetCursorPosCallback( window, motion );
     glfwSetFramebufferSizeCallback( window, reshape );
-    glfwSetScrollCallback( window, scroll_callback );
     glfwSwapInterval( 0 );
     // Set this to true so GLEW knows to use a modern approach to retrieving 
     // function pointers and extensions
