@@ -42,10 +42,6 @@ namespace {
         CUDA_PERSP = GLFW_KEY_5,
         CUDA_ORTHO = GLFW_KEY_6,
         CUDA_ENV = GLFW_KEY_7,
-        SUN_CW = GLFW_KEY_LEFT,
-        SUN_CCW = GLFW_KEY_RIGHT,
-        SUN_UP = GLFW_KEY_UP,
-        SUN_DOWN = GLFW_KEY_DOWN,
         SCREEN_SHOT_FLIP = GLFW_KEY_F1,
         SCREEN_SHOT_NO_FLIP = GLFW_KEY_F2,
         TONEMAP_GAMMACORRECT = GLFW_KEY_F9,
@@ -54,8 +50,6 @@ namespace {
         TONEMAP_UNCHARTED = GLFW_KEY_F12,
         EXPOSURE_INC = GLFW_KEY_KP_ADD,
         EXPOSURE_DEC = GLFW_KEY_KP_SUBTRACT,
-        FOCAL_INC = GLFW_KEY_RIGHT_BRACKET,
-        FOCAL_DEC = GLFW_KEY_LEFT_BRACKET,
         QUIT = GLFW_KEY_ESCAPE
     };
 
@@ -106,11 +100,6 @@ namespace {
     const float scene_near = 0.001f;
     const float scene_far = 1000.0f;
 
-    float sun_lat = 45.0f;
-    float sun_lon = 45.0f;
-    const float sun_lat_delta = 1.5;
-    const float sun_lon_delta = 2.0f;
-
     Timer fpsTimer;
     unsigned frame_count = 0;
 
@@ -149,7 +138,8 @@ void displayFps( unsigned int frame_count ) {
 
     current_time = glfwGetTime();
     if ( current_time - last_update_time > 0.05f ) {
-        fps = ( frame_count - last_frame_count ) / ( current_time - last_update_time );
+        fps = ( frame_count - last_frame_count ) / 
+            ( current_time - last_update_time );
         last_frame_count = frame_count;
         last_update_time = current_time;
     }
@@ -163,7 +153,6 @@ void displayFps( unsigned int frame_count ) {
 }
 
 void screenshot( bool flip = true ) {
-    //const std::string root_dir( "C:\\Users\\ardavan\\Desktop\\noor\\docs\\screenshots\\" );
     const std::string root_dir( "../../docs/screenshots/" );
     const std::string dir_50( root_dir + "50percent/" );
     const std::string dir_100( root_dir + "100percent/" );
@@ -286,7 +275,7 @@ void keyboard( GLFWwindow* window, int key, int scancode, int action, int mode )
         glUniformSubroutinesuiv( GL_FRAGMENT_SHADER, 1, &tonemapType );
         return;
     }
-    if ( action == GLFW_REPEAT && keymap[CUDA_SKY_LIGHT] ) {
+    /*if ( action == GLFW_REPEAT && keymap[CUDA_SKY_LIGHT] ) {
         switch ( key ) {
             case SUN_CW:
                 sun_lon += sun_lon_delta;
@@ -309,7 +298,7 @@ void keyboard( GLFWwindow* window, int key, int scancode, int action, int mode )
                 scene->updateSky( glm::radians( sun_lat ), glm::radians( sun_lon ) );
                 break;
         }
-    }
+    }*/
 }
 
 void mouse( GLFWwindow* window, int button, int action, int mods ) {

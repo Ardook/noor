@@ -40,15 +40,19 @@ Scene::Scene( const Spec& spec ) :
 glm::uint32 Scene::getWidthPixels()const { return _host_spec._camera_spec._w; }
 glm::uint32 Scene::getHeightPixels()const { return _host_spec._camera_spec._h; }
 void Scene::reset( int w, int h ) { _camera->reset( w, h ); }
-void Scene::mouse( int button, int action, int mods ) { _camera->mouse( button, action, mods ); }
-void Scene::motion( int x, int y ) { _camera->motion( x, y ); }
-const glm::mat4& Scene::getViewMatrix() const { return _camera->getViewMatrix(); }
-const glm::mat4& Scene::getProjectionMatrix() const { return _camera->getProjectionMatrix(); }
+void Scene::mouse( int button, int action, int mods ) {
+    _mouse->updateState( button, action, mods );
+}
+void Scene::motion( int x, int y ) {
+    _mouse->updateMotion( x, y );
+    _mouse->cameraMode() ? _camera->motion(): _hosek->motion();
+}
 
 void Scene::load() {
     _cuda_payload = std::make_unique<CudaPayload>();
     Stat stat;
     _model = std::make_unique<Model>( _host_spec, stat );
+    _mouse = std::make_unique<Mouse>( _host_spec._camera_spec._w, _host_spec._camera_spec._h );
     _model->loadCudaPayload( _cuda_payload );
     _scene_bbox = _model->getSceneBBox();
     _scene_radius = _scene_bbox.radius();
@@ -84,10 +88,6 @@ void Scene::load() {
     else
         _spec->disable_sky_light();
     std::cout << stat << std::endl;
-}
-
-void Scene::updateSky( float theta, float phi ) const {
-    _hosek->update( theta, phi );
 }
 
 void Scene::enableDebugSky() const {
@@ -144,11 +144,12 @@ void Scene::updateCudaCamera() {
 }
 
 void Scene::initCudaContext( GLuint* cudaTextureID ) {
-    load_cuda_data( _cuda_payload, 
-                    _hosek->_cuda_hosek_sky, 
+    load_cuda_data( _cuda_payload,
+                    _hosek->_cuda_hosek_sky,
                     _camera->_cuda_camera,
-                    *_spec.get(), 
+                    *_spec.get(),
                     cudaTextureID );
+    _cuda_payload.reset();
 }
 
 void Scene::path_tracer() {

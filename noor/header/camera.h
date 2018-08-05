@@ -79,15 +79,6 @@ class Camera {
     float _aspect;
     float _orthozoom;
 
-    // GLFW button states
-    int _button;
-    int _mods;
-    int _prev_button_state;
-    int _curr_button_state;
-    // pixel coordinate state
-    glm::ivec2 _prev_xy;
-    glm::ivec2 _curr_xy;
-
     // projection transformation
     glm::mat4 _cameraToScreen;
     // screen to raster transformation
@@ -125,11 +116,8 @@ public:
         _orthozoom( ortho_zoom ),
         _lens_radius( lens_radius ),
         _focal_length( focal_length ),
-        _scene_radius( scene.getSceneRadius() ),
-        _scale( glm::length( eye - _lookAt ) ),
+        _scene_radius( scene._scene_radius ),
         _rotate_speed( 1.5f ),
-        _prev_button_state( GLFW_RELEASE ),
-        _curr_button_state( GLFW_RELEASE ),
         _view( 1.f ),
         _rotation( 1.f ),
         _cameraToWorld( 1.f ),
@@ -137,6 +125,8 @@ public:
         _type( PERSP )
     {
         reset( w, h );
+        _focal_length = glm::length( eye - _lookAt );
+        _scale = _focal_length;
         _cuda_camera.update( _cameraToWorld, _rasterToCamera, _w, _h,
                              _lens_radius, _focal_length, _type );
     }
@@ -169,16 +159,14 @@ public:
     }
 
     void updateLensRadius() {
-        static float deltaLensRadius = .0001f;
-        _lens_radius += deltaLensRadius * (_prev_xy.x - _curr_xy.x);
+        _lens_radius += _focal_length * (_scene._mouse->_dt.x);
         _lens_radius = _lens_radius < 0 ? 0 : _lens_radius;
         _outofsync = true;
     }
 
     void updateFocalLength() {
-        static float deltaFocalLength = .005f;
-        _focal_length += deltaFocalLength * (_prev_xy.x - _curr_xy.x);
-        _focal_length = _focal_length < .01f ? .01f : _focal_length;
+        _focal_length += _scale * ( _scene._mouse->_dt.x );
+        _focal_length = _focal_length < .001f ? .01f : _focal_length;
         _outofsync = true;
     }
 
@@ -191,59 +179,50 @@ public:
         }
     }
 
-    void mouse( int button, int action, int mods ) {
-        _button = button;
-        _mods = mods;
-        _prev_button_state = _curr_button_state;
-        _curr_button_state = action;
-    }
-
     void updateLookAt() {
         if ( _type == ENV || _type == ORTHO ) return;
         float4 lookAt;
         get_lookAt( lookAt );
-        _lookAt = ( lookAt.w > 0.0f ) ? F2V4(lookAt) : _lookAt;
+        _lookAt = ( lookAt.w > 0.0f ) ? F2V4( lookAt ) : _lookAt;
     }
 
-    void motion( int x, int y ) {
-        _prev_xy = _curr_xy;
-        _curr_xy.x = x;
-        _curr_xy.y = y;
-
-        if ( _curr_button_state == GLFW_PRESS ) {
-            switch ( _button ) {
-                case GLFW_MOUSE_BUTTON_RIGHT:
-                    _mods == GLFW_MOD_SHIFT ?
-                        updateLensRadius()
-                        :
-                        zoom();
-                    break;
-                case GLFW_MOUSE_BUTTON_LEFT:
-                    _mods == GLFW_MOD_SHIFT ?
-                        updateFocalLength()
-                        :
-                        orbit();
-                    break;
-                case GLFW_MOUSE_BUTTON_MIDDLE:
-                    strafe();
-                    break;
-            }
-        } else if ( _curr_button_state == GLFW_RELEASE && _prev_button_state == GLFW_PRESS ) {
-            _prev_button_state = GLFW_RELEASE;
-            if ( _button != GLFW_MOUSE_BUTTON_LEFT ) {
+    void motion() {
+        if ( _scene._mouse->buttonReleased() ) {
+            if ( _scene._mouse->_button != GLFW_MOUSE_BUTTON_LEFT ) {
                 updateLookAt();
             }
+            return;
+        }
+        if ( _scene._mouse->buttonPressed( GLFW_MOUSE_BUTTON_RIGHT, GLFW_MOD_SHIFT ) ) {
+            updateLensRadius();
+            return;
+        }
+        if ( _scene._mouse->buttonPressed( GLFW_MOUSE_BUTTON_RIGHT ) ){
+            zoom();
+            return;
+        }
+        if ( _scene._mouse->buttonPressed( GLFW_MOUSE_BUTTON_LEFT, GLFW_MOD_SHIFT ) ) {
+            updateFocalLength();
+            return;
+        }
+        if ( _scene._mouse->buttonPressed( GLFW_MOUSE_BUTTON_LEFT ) ){
+            orbit();
+            return;
+        }
+        if ( _scene._mouse->buttonPressed( GLFW_MOUSE_BUTTON_MIDDLE ) ){
+            strafe();
+            return;
         }
     }
 
     void orbit() {
-        if ( _curr_xy == _prev_xy ) {
+        if ( _scene._mouse->_curr_xy == _scene._mouse->_prev_xy ) {
             /* Zero rotation */
             _dq = NOOR::QUAT_IDENTITY;
             return;
         }
-        const glm::vec3 _curr = onSphere( _curr_xy );
-        const glm::vec3 _prev = onSphere( _prev_xy );
+        const glm::vec3 _curr = onSphere( _scene._mouse->_curr_xy );
+        const glm::vec3 _prev = onSphere( _scene._mouse->_prev_xy );
         const glm::vec3 _axis = glm::normalize( glm::cross( _curr, _prev ) );
         const float _angle = glm::angle( _curr, _prev );
         _dq = glm::normalize( glm::angleAxis( _angle*_rotate_speed, _axis ) );
@@ -252,21 +231,19 @@ public:
     }
 
     void strafe() {
-        const glm::vec2 delta( _curr_xy - _prev_xy );
-        if ( delta.x != 0.0f ) {
-            _lookAt -= getRight() * delta.x * _strafe_speed.x * _scale;
+        if ( _scene._mouse->_delta.x != 0.0f ) {
+            _lookAt -= getRight() * _scene._mouse->_delta.x * _strafe_speed.x * _scale;
         }
-        if ( delta.y != 0.0f ) {
-            _lookAt += getUp() * delta.y * _strafe_speed.y * _scale;
+        if ( _scene._mouse->_delta.y != 0.0f ) {
+            _lookAt += getUp() * _scene._mouse->_delta.y * _strafe_speed.y * _scale;
         }
         updateView();
     }
 
     void zoom() {
         if ( _type == ENV || _type == ORTHO ) return;
-        const glm::vec2 delta( _curr_xy - _prev_xy );
-        if ( delta.x != 0.0f ) {
-            _eye -= getForward() * delta.x * _zoom_speed * _scale;
+        if ( _scene._mouse->_delta.x != 0.0f ) {
+            _eye -= getForward() * _scene._mouse->_delta.x * _zoom_speed * _scale;
         }
         updateView();
     }
@@ -346,8 +323,12 @@ private:
     void updateView() {
         _scale = glm::length( _eye - _lookAt );
         const glm::mat4 R = _rotation * glm::toMat4( _q );
-        _cameraToWorld = glm::translate( _lookAt ) * R * glm::translate( glm::vec3( 0, 0, _scale ) );
-        _view = glm::translate( glm::vec3( 0, 0, -_scale ) ) * glm::transpose( R ) * glm::translate( -_lookAt );
+        _cameraToWorld = glm::translate( _lookAt ) *
+            R *
+            glm::translate( glm::vec3( 0, 0, _scale ) );
+        _view = glm::translate( glm::vec3( 0, 0, -_scale ) ) *
+            glm::transpose( R ) *
+            glm::translate( -_lookAt );
         _eye = getEye();
         _outofsync = true;
     }

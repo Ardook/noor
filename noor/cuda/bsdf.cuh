@@ -178,6 +178,57 @@ float3 Sample_f(
     }
 }
 
+__forceinline__ __device__
+void Sample_f(
+    CudaBxDF* bxdf,
+    CudaIntersection& I,
+    const float3 &wo,
+    float3 &wi,
+    const float2 &u
+) {
+    switch ( bxdf->getIndex() ) {
+        // reflections
+        case ShadowCatcher:
+            ( (CudaShadowCatcher*)bxdf )->Sample_f( I, wo, wi, u );
+            break;
+        case LambertReflection:
+            ( (CudaLambertianReflection*)bxdf )->Sample_f( I, wo, wi, u );
+            break;
+        case SpecularReflectionNoOp:
+        case SpecularReflectionDielectric:
+            ( (CudaSpecularReflection*)bxdf )->Sample_f( I, wo, wi, u );
+            break;
+        case MicrofacetReflectionDielectric:
+        case MicrofacetReflectionConductor:
+            ( (CudaMicrofacetReflection*)bxdf )->Sample_f( I, wo, wi, u );
+            break;
+
+            // transmissions
+        case LambertTransmission:
+            ( (CudaLambertianTransmission*)bxdf )->Sample_f( I, wo, wi, u );
+            break;
+        case SpecularTransmission:
+            ( (CudaSpecularTransmission*)bxdf )->Sample_f( I, wo, wi, u );
+            break;
+        case MicrofacetTransmission:
+            ( (CudaMicrofacetTransmission*)bxdf )->Sample_f( I, wo, wi, u );
+            break;
+
+            // multi-lobes
+        case FresnelBlend:
+            ( (CudaFresnelBlend*)bxdf )->Sample_f( I, wo, wi, u );
+            break;
+        case FresnelSpecular:
+            ( (CudaFresnelSpecular*)bxdf )->Sample_f( I, wo, wi, u );
+            break;
+        case ClearCoat:
+            ( (CudaClearCoat*)bxdf )->Sample_f( I, wo, wi, u );
+            break;
+        default:
+            break;
+    }
+}
+
 class CudaBSDF {
 public:
     CudaBxDF* _bxdfs[8];
@@ -304,6 +355,22 @@ public:
                     f += ::Eval( _bxdfs[i], I, wo, wi );
         }
         return f;
+    }
+    __device__
+        void Sample_f(
+        CudaIntersection& I
+        ) const {
+        const int matchingComps = _nbxdfs;
+        const float2 u = make_float2( I._rng(), I._rng() );
+        const int comp = min( (int)floorf( u.x * matchingComps ), matchingComps - 1 );
+        const float2 uRemapped = make_float2( fminf( u.x * matchingComps - comp, NOOR_ONE_MINUS_EPSILON ), u.y );
+        CudaBxDF *bxdf = _bxdfs[comp];
+
+        const CudaONB onb( I.getSn(), I.getSdpdu(), I.getSdpdv() );
+        const float3 wo = onb.toLocal( I.getWo() );
+        float3 wi;
+        ::Sample_f( bxdf, I, wo, wi, u );
+        I.getWi() = onb.toWorld( wi );
     }
 
 };

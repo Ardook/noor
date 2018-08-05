@@ -30,49 +30,95 @@ class HosekSky;
 class CudaPayload;
 class CudaSpec;
 enum CameraType;
+
+struct Mouse {
+    // GLFW button states
+    GLint _button;
+    GLint _mods{ 0 };
+    GLint _prev_button_state{ GLFW_RELEASE };
+    GLint _curr_button_state{ GLFW_RELEASE };
+    int _w, _h;
+    // pixel coordinate state
+    glm::ivec2 _prev_xy{ 0 };
+    glm::ivec2 _curr_xy{ 0 };
+    glm::ivec2 _delta{ 0 };
+    glm::vec2 _dt{ 0 };
+
+    Mouse( int w, int h ) :_w( w ), _h( h ) {}
+    void updateState( GLint button, GLint action, GLint mods ) {
+        _button = button;
+        _prev_button_state = _curr_button_state;
+        _curr_button_state = action;
+        _mods = mods;
+    }
+    void updateMotion( int x, int y ) {
+        _prev_xy = _curr_xy;
+        _curr_xy = glm::ivec2( x, y );
+        _delta = _curr_xy - _prev_xy;
+        _dt.x = _delta.x / (float)_w;
+        _dt.y = _delta.y / (float)_h;
+    }
+
+    bool buttonReleased()const {
+        return ( _curr_button_state == GLFW_RELEASE &&
+                 _prev_button_state == GLFW_PRESS );
+    }
+
+    bool buttonPressed( GLuint button )const {
+        return ( _curr_button_state == GLFW_PRESS && _button == button );
+    }
+
+    bool buttonPressed( GLuint button, GLuint mods )const {
+        return  buttonPressed( button ) && _mods == mods;
+    }
+
+    bool cameraMode() const {
+        return ( _mods == 0 || _mods == GLFW_MOD_SHIFT );
+    }
+
+    bool skyMode() const {
+        return ( _mods == GLFW_MOD_ALT );
+    }
+};
+
 class Scene {
 public:
     std::unique_ptr<Model> _model;
     std::unique_ptr<Camera> _camera;
+    std::unique_ptr<Mouse> _mouse;
     std::unique_ptr<HosekSky> _hosek;
     std::unique_ptr<CudaSpec> _spec;
     std::unique_ptr<CudaPayload> _cuda_payload;
     BBox _scene_bbox;
+    Spec _host_spec;
     float _scene_radius;
     float _scene_bias;
     unsigned int _frameCount;
-    void load();
-    Spec _host_spec;
     ~Scene();
     Scene( const Spec& spec );
-    const glm::mat4& getViewMatrix() const;
-    const glm::mat4& getProjectionMatrix() const;
-    void resetCudaRenderBuffer() {
-        _frameCount = 1;
-    }
-    bool syncCudaSpecRequired() const { return _frameCount == 1; }
-    glm::uint32& getFrameCount() { return _frameCount; }
+    void load();
+
     glm::uint32 getWidthPixels() const;
     glm::uint32 getHeightPixels() const;
+
     void reset( int w, int h );
     void mouse( int button, int action, int mods );
     void motion( int x, int y );
 
-    const BBox& getSceneBBox() const { return _scene_bbox; }
-    float getSceneRadius() const { return _scene_radius; }
+    bool isSkydomeEnabled() const;
+    void resetCudaRenderBuffer() { _frameCount = 1; }
     void setCameraType( CameraType type ) const;
-    void updateSky( float theta, float phi ) const;
     void updateCudaSpec();
     void updateCudaSky();
     void updateCudaCamera();
     void enableDebugSky() const;
     void disableDebugSky() const;
-    void path_tracer();
     void enableSky() const;
     void disableSky() const;
     void enableMIS() const;
     void disableMIS() const;
-    bool isSkydomeEnabled() const;
-    void initCudaContext( GLuint* cudaTextureID);
+
+    void initCudaContext( GLuint* cudaTextureID );
+    void path_tracer();
 };
 #endif /* SCENE_H */

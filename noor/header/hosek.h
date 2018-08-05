@@ -28,32 +28,56 @@ class HosekSky {
     friend class Scene;
     Scene& _scene;
     CudaHosekSky _cuda_hosek_sky;
-    float _turbidity{ 4.0f };
-    float _sun_theta{ NOOR_PI_over_4 };
-    float _sun_phi{ NOOR_PI_over_4 };
+    float _turbidity{ 3.5f };
+    float _scale{ 250.f };
+    float _solar_radius{ 2.f };
+    float _sun_lon{ NOOR_PI_over_4 };
+    float _sun_lat{ NOOR_PI_over_4 };
     float3 _ground_albedo{ make_float3( 1.0f ) };
     float3 _solar_dir;
     bool _outofsync{ true };
+
 public:
     HosekSky( Scene& scene ) :
         _scene( scene )
     {
-        update( _sun_theta, _sun_phi );
+        update();
     }
 
     HosekSky( const HosekSky& sky ) = default;
     HosekSky& operator=( const HosekSky& sky ) = default;
 
-    void update( float sun_theta, float sun_phi, float scale = 250.0f, float solar_radius = 2.f ) {
-        _sun_theta = sun_theta;
-        _sun_phi = sun_phi;
-        const float elevation = NOOR_PI_over_2 - _sun_theta;
-        arhosek_rgb_skymodelstate_alloc_update( (ArHosekSkyModelState*) &_cuda_hosek_sky._state_r, _turbidity, _ground_albedo.x, elevation );
-        arhosek_rgb_skymodelstate_alloc_update( (ArHosekSkyModelState*) &_cuda_hosek_sky._state_g, _turbidity, _ground_albedo.y, elevation );
-        arhosek_rgb_skymodelstate_alloc_update( (ArHosekSkyModelState*) &_cuda_hosek_sky._state_b, _turbidity, _ground_albedo.z, elevation );
-        _cuda_hosek_sky._solar_scale = scale;
-        _cuda_hosek_sky._solar_dir = NOOR::sphericalDirection( _sun_theta, _sun_phi );
-        _cuda_hosek_sky._solar_radius = solar_radius*_cuda_hosek_sky._state_r._solar_radius;
+
+    void motion() {
+        if ( _scene._mouse->buttonPressed( GLFW_MOUSE_BUTTON_LEFT, GLFW_MOD_ALT) ){
+            _sun_lon += NOOR_2PI * _scene._mouse->_dt.x;
+            _sun_lat += NOOR_PI_over_2 * _scene._mouse->_dt.y;
+            _sun_lon = _sun_lon <= 0.0f ? NOOR_2PI : _sun_lon;
+            _sun_lat = glm::clamp( _sun_lat, 0.0f, NOOR_PI_over_2 );
+            update();
+        }
+    }
+
+    void update() {
+        const float elevation = NOOR_PI_over_2 - _sun_lat;
+        arhosek_rgb_skymodelstate_alloc_update( 
+            (ArHosekSkyModelState*) &_cuda_hosek_sky._state_r, 
+            _turbidity, 
+            _ground_albedo.x, 
+            elevation );
+        arhosek_rgb_skymodelstate_alloc_update( 
+            (ArHosekSkyModelState*) &_cuda_hosek_sky._state_g, 
+            _turbidity, 
+            _ground_albedo.y, 
+            elevation );
+        arhosek_rgb_skymodelstate_alloc_update( 
+            (ArHosekSkyModelState*) &_cuda_hosek_sky._state_b, 
+            _turbidity, 
+            _ground_albedo.z, 
+            elevation );
+        _cuda_hosek_sky._solar_scale = _scale;
+        _cuda_hosek_sky._solar_dir = NOOR::sphericalDirection( _sun_lat, _sun_lon );
+        _cuda_hosek_sky._solar_radius = _solar_radius * _cuda_hosek_sky._state_r._solar_radius;
         _cuda_hosek_sky._ground_albedo = _ground_albedo;
         _outofsync = true;
     }
