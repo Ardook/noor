@@ -48,12 +48,15 @@ const std::vector<std::string> hdr_files = {
     /*19*/std::string( texture_dir + "hdri/symmetrical_garden_4k.hdr" ),
     /*20*/std::string( texture_dir + "hdri/aft_lounge_4k.hdr" ),
     /*21*/std::string( texture_dir + "hdri/royal_esplanade_4k.hdr" ),
-    /*22*/std::string( texture_dir + "hdri/canada_montreal_loft_max_sunny.exr" ),
-    /*23*/std::string( texture_dir + "hdri/canada_montreal_nad_cafeteria_bright.exr" ),
-    /*24*/std::string( texture_dir + "hdri/canada_montreal_nad_photorealism.exr" ),
-    /*25*/std::string( texture_dir + "hdri/canada_montreal_pierre_bathroom.exr" ),
-    /*26*/std::string( texture_dir + "hdri/canada_montreal_pierre_kitchen.exr" ),
-    /*27*/std::string( texture_dir + "hdri/canada_montreal_thea.exr" ),
+    /*22*/std::string( texture_dir + "hdri/satara_night_8k.hdr" ),
+    /*23*/std::string( texture_dir + "hdri/umhlanga_sunrise_8k.hdr" ),
+    /*24*/std::string( texture_dir + "hdri/cayley_interior_8k.hdr" ),
+    /*25*/std::string( texture_dir + "hdri/canada_montreal_loft_max_sunny.exr" ),
+    /*26*/std::string( texture_dir + "hdri/canada_montreal_nad_cafeteria_bright.exr" ),
+    /*27*/std::string( texture_dir + "hdri/canada_montreal_nad_photorealism.exr" ),
+    /*28*/std::string( texture_dir + "hdri/canada_montreal_pierre_bathroom.exr" ),
+    /*29*/std::string( texture_dir + "hdri/canada_montreal_pierre_kitchen.exr" ),
+    /*30*/std::string( texture_dir + "hdri/canada_montreal_thea.exr" ),
 };
 
 
