@@ -40,12 +40,14 @@ float4 pathtracer(
             if ( bounce == 0 ) {
                 lookAt = make_float4( I.getP(), 1.f );
             }
-            if ( I.isEmitter() && !I.isMeshLight() ) {
-                L += beta * _material_manager.getEmmitance( I );
-                break;
-            } else if ( I.isMeshLight() && (bounce == 0 || specular_bounce ) ) {
-                L += beta * _light_manager.Le( ray.getDir(), I.getInsIdx() );
-                break;
+            if ( I.isEmitter()){ 
+                if ( !I.isMeshLight() ) {
+                    L += beta * _material_manager.getEmmitance( I );
+                    break;
+                } else if ( bounce == 0 || specular_bounce ) {
+                    L += beta * _light_manager.Le( ray.getDir(), I.getInsIdx() );
+                    break;
+                }
             }
             accumulate( I, ray, beta, L );
             // check the outgoing direction is on the correct side
@@ -88,7 +90,6 @@ void path_tracer_kernel( uint frame_number, uint gpu_offset ) {
 
     if ( gid + gpu_offset*_constant_camera._w == _constant_camera._center ) {
         _device_lookAt = lookAt;
-        _framebuffer_manager.set( make_float4(1000,0,0,1), gid, frame_number );
     }
 }
 
