@@ -133,7 +133,7 @@ public:
                 return false;
             }
         }
-        rec._bc = make_float2( u, v );
+        rec._uv = make_float2( u, v );
         rec._tri_idx = tri_idx;
         rec._material_type = materialType();
         ray.setTmax( t );

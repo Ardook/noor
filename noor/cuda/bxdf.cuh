@@ -116,20 +116,6 @@ static bool Refract( const float3 &wi, const float3 &n, float eta, float3 &wt ) 
 }
 
 #include "distribution.cuh"
-// BSDF Declarations
-enum BxDFType {
-    BSDF_REFLECTION = 1 << 0,
-    BSDF_TRANSMISSION = 1 << 1,
-    BSDF_DIFFUSE = 1 << 2,
-    BSDF_GLOSSY = 1 << 3,
-    BSDF_SPECULAR = 1 << 4,
-    BSDF_CONDUCTOR = 1 << 5,
-    BSDF_DIELECTRIC = 1 << 6,
-    BSDF_NOOP = 1 << 7,
-    BSDF_ALL = BSDF_DIFFUSE | BSDF_GLOSSY | BSDF_SPECULAR |
-    BSDF_REFLECTION | BSDF_TRANSMISSION |
-    BSDF_CONDUCTOR | BSDF_DIELECTRIC | BSDF_NOOP
-};
 
 enum BxDFIndex {
     //reflections

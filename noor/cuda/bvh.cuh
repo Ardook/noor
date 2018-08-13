@@ -23,7 +23,6 @@ SOFTWARE.
 */
 #ifndef CUDABVH_CUH
 #define CUDABVH_CUH
-//#include "moller_triangle.cuh"
 #include "triangle.cuh"
 
 class CudaBVHNode {

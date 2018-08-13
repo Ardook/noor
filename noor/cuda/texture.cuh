@@ -120,7 +120,7 @@ public:
     template<class T>
     __device__
         T evaluate( const CudaIntersection& I, const float2& uvscale ) const {
-        const float2 uv = uvscale * I._uv;
+        const float2 uv = uvscale * I.getUV();
         return tex2D<T>( _read_tex_obj, uv.x, uv.y );
     }
     template<class T>
@@ -129,11 +129,11 @@ public:
                         const float2& uvscale, 
                         float du = 0, 
                         float dv = 0 ) const {
-        const float2 gradx = uvscale.x*make_float2( I._differential._dudx, 
-                                                    I._differential._dvdx );
-        const float2 grady = uvscale.y*make_float2( I._differential._dudy, 
-                                                    I._differential._dvdy );
-        const float2 uv = uvscale * ( I._uv + make_float2( du, dv ) );
+        const float2 gradx = uvscale.x*make_float2( I.getDifferential()._dudx, 
+                                                    I.getDifferential()._dvdx );
+        const float2 grady = uvscale.y*make_float2( I.getDifferential()._dudy, 
+                                                    I.getDifferential()._dvdy );
+        const float2 uv = uvscale * ( I.getUV() + make_float2( du, dv ) );
         return tex2DGrad<T>( _read_tex_obj, uv.x, uv.y, gradx, grady );
     }
 protected:

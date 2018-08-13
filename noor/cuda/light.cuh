@@ -27,7 +27,7 @@ SOFTWARE.
 class CudaIntersection;
 class CudaRNG;
 class CudaRay;
-class CudaLightRecord;
+struct CudaLightRecord;
 
 // LightFlags Declarations
 enum LightType {

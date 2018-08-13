@@ -47,10 +47,10 @@ bool correct_sidedness( CudaIntersection& I ) {
 /* Based on PBRT bump mapping */
 __forceinline__ __device__
 void bump( const CudaIntersection& I, ShadingFrame& frame ) {
-    float du = .5f * ( fabsf( I._differential._dudx ) + 
-                       fabsf( I._differential._dudy ) );
-    float dv = .5f * ( fabsf( I._differential._dvdx ) + 
-                       fabsf( I._differential._dvdy ) );
+    float du = .5f * ( fabsf( I.getDifferential()._dudx ) + 
+                       fabsf( I.getDifferential()._dudy ) );
+    float dv = .5f * ( fabsf( I.getDifferential()._dvdx ) + 
+                       fabsf( I.getDifferential()._dvdy ) );
 
     du = du == 0 ? 0.001f : du;
     dv = dv == 0 ? 0.001f : dv;

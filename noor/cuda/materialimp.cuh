@@ -50,108 +50,108 @@ public:
     }
     __device__
         const float2& getBumpUVScale( const CudaIntersection& I ) const {
-        const CudaMaterial* m = &_materials[I._mat_idx];
+        const CudaMaterial* m = &_materials[I.getMatIdx()];
         return m->_bump_uvscale;
     }
     __device__
         const float2& getRoughnessUVScale( const CudaIntersection& I ) const {
-        const CudaMaterial* m = &_materials[I._mat_idx];
+        const CudaMaterial* m = &_materials[I.getMatIdx()];
         return m->_roughness_uvscale;
     }
     __device__
         const float2& getMetalnessUVScale( const CudaIntersection& I ) const {
-        const CudaMaterial* m = &_materials[I._mat_idx];
+        const CudaMaterial* m = &_materials[I.getMatIdx()];
         return m->_metalness_uvscale;
     }
     __device__
         const float2& getDiffuseUVScale( const CudaIntersection& I ) const {
-        const CudaMaterial* m = &_materials[I._mat_idx];
+        const CudaMaterial* m = &_materials[I.getMatIdx()];
         return m->_diffuse_uvscale;
     }
     __device__
         const float2& getSpecularUVScale( const CudaIntersection& I ) const {
-        const CudaMaterial* m = &_materials[I._mat_idx];
+        const CudaMaterial* m = &_materials[I.getMatIdx()];
         return m->_specular_uvscale;
     }
     __device__
         const float2& getTransparencyUVScale( const CudaIntersection& I ) const {
-        const CudaMaterial* m = &_materials[I._mat_idx];
+        const CudaMaterial* m = &_materials[I.getMatIdx()];
         return m->_transparency_uvscale;
     }
     __device__
         const float2& getEmittanceUVScale( const CudaIntersection& I ) const {
-        const CudaMaterial* m = &_materials[I._mat_idx];
+        const CudaMaterial* m = &_materials[I.getMatIdx()];
         return m->_emittance_uvscale;
     }
     __device__
         float getEmitterScale( const CudaIntersection& I ) const {
-        const CudaMaterial* m = &_materials[I._mat_idx];
+        const CudaMaterial* m = &_materials[I.getMatIdx()];
         return m->_emitter_scale;
     }
     __device__
         float getBumpFactor( const CudaIntersection& I ) const {
-        const CudaMaterial* m = &_materials[I._mat_idx];
+        const CudaMaterial* m = &_materials[I.getMatIdx()];
         return m->_bumpfactor;
     }
     __device__
         float getCoatWeight( const CudaIntersection& I ) const {
-        const CudaMaterial* m = &_materials[I._mat_idx];
+        const CudaMaterial* m = &_materials[I.getMatIdx()];
         return m->_coat_weight;
     }
     __device__
         float getCoatRoughness( const CudaIntersection& I ) const {
-        const CudaMaterial* m = &_materials[I._mat_idx];
+        const CudaMaterial* m = &_materials[I.getMatIdx()];
         return m->_coat_roughness;
     }
     __device__
         float getCoatThickness( const CudaIntersection& I ) const {
-        const CudaMaterial* m = &_materials[I._mat_idx];
+        const CudaMaterial* m = &_materials[I.getMatIdx()];
         return m->_coat_thickness;
     }
     __device__
         float getCoatSigma( const CudaIntersection& I ) const {
-        const CudaMaterial* m = &_materials[I._mat_idx];
+        const CudaMaterial* m = &_materials[I.getMatIdx()];
         return m->_coat_sigma;
     }
     __device__
         float getCoatIOR( const CudaIntersection& I ) const {
-        const CudaMaterial* m = &_materials[I._mat_idx];
+        const CudaMaterial* m = &_materials[I.getMatIdx()];
         return m->_coat_ior;
     }
     __device__
         float getBump( const CudaIntersection& I, float du = 0, float dv = 0 ) const {
         const float2& uvscale = getBumpUVScale( I );
-        const CudaTexture& tex = getBumpTexture( I._mat_idx );
+        const CudaTexture& tex = getBumpTexture( I.getMatIdx() );
         return	tex.evaluateGrad<float>( I, uvscale, du, dv );
     }
     __device__
         float3 getDiffuse( const CudaIntersection& I ) const {
         const float2& uvscale = getDiffuseUVScale( I );
-        const CudaTexture& tex = getDiffuseTexture( I._mat_idx );
+        const CudaTexture& tex = getDiffuseTexture( I.getMatIdx() );
         return make_float3( tex.evaluateGrad<float4>( I, uvscale ) );
     }
     __device__
         float3 getEmmitance( const CudaIntersection& I ) const {
         const float2& uvscale = getEmittanceUVScale( I );
-        const CudaTexture& tex = getEmmitanceTexture( I._mat_idx );
+        const CudaTexture& tex = getEmmitanceTexture( I.getMatIdx() );
         return getEmitterScale(I) * make_float3( tex.evaluateGrad<float4>( I, uvscale ) );
     }
     __device__
         float3 getSpecular( const CudaIntersection& I ) const {
         const float2& uvscale = getSpecularUVScale( I );
-        const CudaTexture& tex = getSpecularTexture( I._mat_idx );
+        const CudaTexture& tex = getSpecularTexture( I.getMatIdx() );
         return make_float3( tex.evaluateGrad<float4>( I, uvscale ) );
     }
     __device__
         float getMetalness( const CudaIntersection& I ) const {
         const float2& uvscale = getMetalnessUVScale( I );
-        const CudaTexture& tex = getMetalnessTexture( I._mat_idx );
+        const CudaTexture& tex = getMetalnessTexture( I.getMatIdx() );
         return tex.evaluate<float>( I, uvscale );
     }
     __device__
         float2 getRoughness( const CudaIntersection& I ) const {
         const float2& uvscale = getRoughnessUVScale( I );
-        const CudaTexture& tex = getRoughnessTexture( I._mat_idx );
+        const CudaTexture& tex = getRoughnessTexture( I.getMatIdx() );
         const float4 roughness = tex.evaluate<float4>( I, uvscale );
         return make_float2( roughness.x, roughness.y );
     }
@@ -164,24 +164,24 @@ public:
     __device__
         float3 getTransmission( const CudaIntersection& I ) const {
         const float2& uvscale = make_float2( 1.0f );
-        const CudaTexture& tex = getTransmissionTexture( I._mat_idx );
+        const CudaTexture& tex = getTransmissionTexture( I.getMatIdx() );
         return make_float3( tex.evaluateGrad<float4>( I, uvscale ) );
     }
     __device__
         float3 getIorDielectric( const CudaIntersection& I ) const {
-        const CudaMaterial* m = &_materials[I._mat_idx];
+        const CudaMaterial* m = &_materials[I.getMatIdx()];
         return make_float3(m->_coat_ior);
     }
     __device__
         float3 getIorConductor( const CudaIntersection& I ) const {
         const float2& uvscale = make_float2( 1.0f );
-        const CudaTexture& tex = getIorTexture( I._mat_idx );
+        const CudaTexture& tex = getIorTexture( I.getMatIdx() );
         return make_float3( tex.evaluateGrad<float4>( I, uvscale ) );
     }
     __device__
         float3 getK( const CudaIntersection& I ) const {
         const float2& uvscale = make_float2( 1.0f );
-        const CudaTexture& tex = getConductorKTexture( I._mat_idx );
+        const CudaTexture& tex = getConductorKTexture( I.getMatIdx() );
         return	make_float3( tex.evaluateGrad<float4>( I, uvscale ) );
     }
 private:

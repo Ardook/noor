@@ -102,7 +102,21 @@ enum MaterialType {
     BUMP = 1 << 13,
     MESHLIGHT = 1 << 14
 };
-
+// BSDF Declarations
+enum BxDFType {
+    BSDF_NONE = 1 << 0,
+    BSDF_REFLECTION = 1 << 0,
+    BSDF_TRANSMISSION = 1 << 1,
+    BSDF_DIFFUSE = 1 << 2,
+    BSDF_GLOSSY = 1 << 3,
+    BSDF_SPECULAR = 1 << 4,
+    BSDF_CONDUCTOR = 1 << 5,
+    BSDF_DIELECTRIC = 1 << 6,
+    BSDF_NOOP = 1 << 7,
+    BSDF_ALL = BSDF_DIFFUSE | BSDF_GLOSSY | BSDF_SPECULAR |
+    BSDF_REFLECTION | BSDF_TRANSMISSION |
+    BSDF_CONDUCTOR | BSDF_DIELECTRIC | BSDF_NOOP
+};
 constexpr uint NOOR_NO_BUMP_ALPHA = ~(BUMP | ALPHA);
 constexpr uint NOOR_EMITTER = EMITTER | MESHLIGHT;
 constexpr uint NOOR_GLASS = GLASS | ROUGHGLASS;

@@ -36,18 +36,25 @@ float4 pathtracer(
     for ( uchar bounce = 0; bounce < _constant_spec._bounces; ++bounce ) {
         CudaIntersectionRecord rec( tid );
         if ( intersect( ray, rec ) ) {
-            CudaIntersection I( ray, rng, &rec );
+            CudaIntersection I( ray, rng, rec );
             if ( bounce == 0 ) {
                 lookAt = make_float4( I.getP(), 1.f );
             }
-            if ( I.isEmitter()){ 
-                if ( !I.isMeshLight() ) {
-                    L += beta * _material_manager.getEmmitance( I );
-                    break;
-                } else if ( bounce == 0 || specular_bounce ) {
+            //if ( I.isEmitter()){ 
+            //    if ( !I.isMeshLight() ) {
+            //        L += beta * _material_manager.getEmmitance( I );
+            //        break;
+            //    } else if ( bounce == 0 || specular_bounce ) {
+            //        L += beta * _light_manager.Le( ray.getDir(), I.getInsIdx() );
+            //        break;
+            //    }
+            //}
+            if ( I.isEmitter() && ( bounce == 0 || specular_bounce )) {
+                if ( I.isMeshLight() )
                     L += beta * _light_manager.Le( ray.getDir(), I.getInsIdx() );
-                    break;
-                }
+                else
+                    L += beta * _material_manager.getEmmitance( I );
+                break;
             }
             accumulate( I, ray, beta, L );
             // check the outgoing direction is on the correct side
