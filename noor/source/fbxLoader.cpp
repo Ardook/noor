@@ -78,7 +78,13 @@ void FBXLoader::processSceneGraph( FbxNode* node ) {
     }
 }
 
-void FBXLoader::getCamera( glm::vec3& eye, glm::vec3& lookAt, glm::vec3& up, float& fov, float& lens_radius, float& focal_length, float& orthozoom ) const {
+void FBXLoader::getCamera( glm::vec3& eye, 
+                           glm::vec3& lookAt, 
+                           glm::vec3& up, 
+                           float& fov, 
+                           float& lens_radius, 
+                           float& focal_length, 
+                           float& orthozoom ) const {
     if ( _fbx_camera != nullptr ) {
         eye = fbx2glm_vector( _fbx_camera->Position.Get() );
         lookAt = fbx2glm_vector( _fbx_camera->InterestPosition.Get() );
@@ -110,10 +116,15 @@ void FBXLoader::load( const std::string& filename ) {
         // bounding boxes are computed later in Model.cpp
         std::list<FbxNode*>& nodes = l.second;
         auto it = nodes.cbegin();
-        _meshes.emplace_back( curr_mesh_start, getNumTriangles( fbxmesh ), getTransformation( *it ) );
+        _meshes.emplace_back( curr_mesh_start, 
+                              getNumTriangles( fbxmesh ), 
+                              getTransformation( *it ) );
         ++it;
         while ( it != nodes.cend() ) {
-            _meshes.emplace_back( curr_mesh_start, getNumTriangles( fbxmesh ), getTransformation( *it ), curr_instance_id );
+            _meshes.emplace_back( curr_mesh_start, 
+                                  getNumTriangles( fbxmesh ), 
+                                  getTransformation( *it ), 
+                                  curr_instance_id );
             ++it;
         }
         curr_mesh_start += getNumTriangles( fbxmesh );
@@ -635,7 +646,8 @@ void FBXLoader::getAreaLight( const FbxLight* light,
     area_light_data.emplace_back( shape, V2F3( Ke ), twoSided );
 }
 
-void FBXLoader::getPointLight( const FbxLight* light, std::vector<CudaPointLight>& point_light_data ) const {
+void FBXLoader::getPointLight( const FbxLight* light, 
+                               std::vector<CudaPointLight>& point_light_data ) const {
     const glm::mat4 trs = getTransformation( light );
 
     glm::vec3 position( trs[3].x, trs[3].y, trs[3].z );
@@ -651,7 +663,8 @@ void FBXLoader::getPointLight( const FbxLight* light, std::vector<CudaPointLight
     point_light_data.emplace_back( V2F3( position ), V2F3( Ke ) );
 }
 
-void FBXLoader::getSpotLight( const FbxLight* light, std::vector<CudaSpotLight>& spot_light_data ) const {
+void FBXLoader::getSpotLight( const FbxLight* light, 
+                              std::vector<CudaSpotLight>& spot_light_data ) const {
     const glm::mat4 trs = getTransformation( light );
     const glm::vec4 direction = glm::normalize( trs * glm::vec4( 0, 0, 1, 0 ) );
 
@@ -685,6 +698,7 @@ void FBXLoader::getDistantLight( const FbxLight* light,
 ) const {
     const glm::mat4 trs = getTransformation( light );
     const glm::vec4 direction = glm::normalize( trs * glm::vec4( 0, 0, 1, 0 ) );
+
 
     const FbxDouble3 color = light->Color.Get();
     glm::vec3 Ke;

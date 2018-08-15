@@ -236,7 +236,7 @@ float3 CudaDistantLight::sample_Li(
 ) const {
     pdf = 1.0f;
     Lr._vis = CudaVisibility( I.getP(), I.getP() + 
-                              2.f * _constant_spec._world_radius );
+                              2.f * _constant_spec._world_radius * _direction );
     return _ke;
 }
 
