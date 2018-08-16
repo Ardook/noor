@@ -49,11 +49,10 @@ float4 pathtracer(
             //        break;
             //    }
             //}
-            if ( I.isEmitter() && ( bounce == 0 || specular_bounce )) {
-                if ( I.isMeshLight() )
-                    L += beta * _light_manager.Le( ray.getDir(), I.getInsIdx() );
-                else
-                    L += beta * _material_manager.getEmmitance( I );
+            if ( I.isEmitter() && ( bounce == 0 || specular_bounce ) ) {
+                L += beta * (I.isMeshLight() ?
+                    _light_manager.Le( ray.getDir(), I.getInsIdx() ) :
+                    _material_manager.getEmmitance( I ));
                 break;
             }
             accumulate( I, ray, beta, L );
@@ -109,7 +108,7 @@ void debug_skydome_kernel(
     const int x = blockIdx.x * blockDim.x + threadIdx.x;
     const int y = blockIdx.y * blockDim.y + threadIdx.y;
     int id = y * _constant_camera._w + x;
-    float2 u = make_float2( x / (float)( _constant_camera._w ), y / 
+    float2 u = make_float2( x / (float)( _constant_camera._w ), y /
         (float)( _constant_camera._h ) );
     _framebuffer_manager.set( _skydome_manager.evaluate( u ), id );
     if ( _constant_spec.is_mis_enabled() ) {

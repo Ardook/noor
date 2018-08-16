@@ -58,8 +58,11 @@ public:
         void update() {
         if ( _type == PHYSICAL ) {
             dim3 blockSize( 32, 32, 1 );
-            dim3 gridSize( ( (uint) _tex.width() + blockSize.x - 1 ) / blockSize.x, ( (uint) _tex.height() + blockSize.y - 1 ) / blockSize.y, 1 );
-            update_skydome << <gridSize, blockSize >> > ( _tex.getWriteSurfaceObj(), _tex.width(), _tex.height() );
+            dim3 gridSize( ( (uint) _tex.width() + blockSize.x - 1 ) / blockSize.x, 
+                           ( (uint) _tex.height() + blockSize.y - 1 ) / blockSize.y, 1 );
+            update_skydome << <gridSize, blockSize >> > ( _tex.getWriteSurfaceObj(),
+                                                          _tex.width(), 
+                                                          _tex.height() );
             _tex.update();
             checkNoorErrors( cudaPeekAtLastError() );
             checkNoorErrors( cudaDeviceSynchronize() );

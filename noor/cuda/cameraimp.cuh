@@ -256,7 +256,6 @@ public:
 __constant__
 CudaCamera _constant_camera;
 
-
 __forceinline__ __device__
 CudaRay generateRay( uint x, uint y, const CudaRNG& rng ) {
     switch ( _constant_camera._type ) {
