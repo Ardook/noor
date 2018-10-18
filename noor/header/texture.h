@@ -66,15 +66,15 @@ public:
             ( _num_channels == 2 ? _float2_channelDesc : _float_channelDesc );
     }
 
-    ~Texture() {
+    virtual ~Texture() {
         if ( _data != nullptr ) {
             delete[] _data;
             _data = nullptr;
         }
     }
 
-    Texture( const Texture& t ) = default;
-    //	ImageTexture& operator=(const ImageTexture& tex) = delete;
+	Texture(const Texture& tex) = delete;
+	Texture& operator=(const Texture& tex) = delete;
 
     Texture( Texture&& tex ) :
         _width( tex._width )
@@ -134,6 +134,11 @@ class ImageTexture : public Texture {
     void load( const std::string& filename );
 public:
     ImageTexture() = default;
+	ImageTexture(const ImageTexture& c) = delete;
+	ImageTexture& operator=(const ImageTexture& c) = delete;
+
+	ImageTexture(ImageTexture&& c) = default;
+	ImageTexture& operator=(ImageTexture&& c) = default;
 
     template<typename T>
     ImageTexture( const T& c ) :
